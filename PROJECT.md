@@ -1,0 +1,570 @@
+# Samal Dental Care — Project Reference
+
+As-built documentation for the clinic website, patient booking platform and
+management console.
+
+> **Scope of this document.** `ARCHITECTURE.md` is the *plan* written before
+> implementation and is kept for its reasoning and phase breakdown. This file
+> describes what actually exists and where it diverged. Where the two disagree,
+> this one is correct. `README.md` is the short operational guide.
+
+**Repository:** https://github.com/Das-Rabindra/clinic
+**Origin:** a single 1,209-line `index.html` (vanilla HTML/CSS/JS, no backend,
+no build step), preserved unchanged at `legacy/index.original.html` and in git
+history at commit `68e0b14`.
+
+---
+
+## 1. What this is
+
+One deployable Node.js application serving two audiences.
+
+**Patients** browse the clinic, services, photos, hours and genuine Google
+reviews; see live availability; book through a five-step wizard; receive a
+booking reference; add the visit to their calendar; and look up or cancel a
+booking using that reference plus the mobile number it was made with.
+
+**The clinic** signs in at `/admin` and runs the practice without touching
+code: appointments, patients, enquiries, website content, photos, opening
+hours, holidays, doctors, integrations and an audit trail.
+
+**Size:** 106 source files, ~13,700 lines, 28 database tables, 43 indexes,
+87 route handlers, 92 tests.
+
+---
+
+## 2. Architecture
+
+The original project had no architecture to extend — but its *idiom* (vanilla,
+dependency-light, no build step) was worth keeping. Introducing React or Next
+would have been an unforced rewrite of a design that already worked.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Public site (SSR, EJS)          Admin console (vanilla ES modules)│
+│  progressive enhancement          /admin — session-cookie gated    │
+└────────────────┬──────────────────────────────┬──────────────────┘
+                 │  fetch() JSON                │
+┌────────────────▼──────────────────────────────▼──────────────────┐
+│  Express 5 — routes → validation (zod) → services → repositories  │
+├───────────────────────────────────────────────────────────────────┤
+│  Domain services                                                  │
+│   AvailabilityService · AppointmentService · NotificationService   │
+│   GoogleReviewsService · MediaService · AuditService · Calendar    │
+├───────────────────────────────────────────────────────────────────┤
+│  Repositories — the only SQL in the codebase                      │
+├───────────────────────────────────────────────────────────────────┤
+│  SQLite (WAL)  ·  Storage abstraction (local FS → S3-ready)       │
+│  Durable job runner (jobs table, survives restart)                │
+└───────────────────────────────────────────────────────────────────┘
+```
+
+**Stack:** Node 22 · Express 5 · SQLite (`better-sqlite3`, WAL) · EJS · zod ·
+sharp · multer · nodemailer · vanilla ES modules. **No build step** — the code
+that ships is the code that runs.
+
+### Why these choices
+
+| Decision | Reasoning | What it would take to change |
+|---|---|---|
+| **SQLite, not Postgres** | One clinic, one location, a few thousand appointments a year. WAL + `BEGIN IMMEDIATE` gives real serialised writes and real unique constraints — all the double-booking guarantee needs. Removes a service from the deployment; backup is a file copy. | All SQL is confined to `src/repositories/`. A Postgres port touches one directory. |
+| **No Redis** | Reminders live in a `jobs` table polled in-process. Durable across restarts, no extra container. | `RUN_JOBS=false` already splits the worker into its own process. |
+| **Server-rendered public site** | Content stays crawlable and the page is useful before any JavaScript runs. | — |
+| **Vanilla client JS** | Matches the original codebase, no bundler, no framework churn. The admin is ~3,600 lines of plain ES modules. | Introduce a bundler only if the admin outgrows this. |
+| **No ORM** | Hand-written prepared statements are clearer than a query builder at this size, and make the concurrency guarantee explicit. | — |
+
+---
+
+## 3. Code map
+
+```
+src/
+  config/          env.js (only place process.env is read), constants.js
+  db/              index.js (connection + tx helpers), migrate.js, seed.js,
+                   migrations/001_init.sql
+  repositories/    16 modules — every SQL statement in the codebase
+  services/        availability · appointment · notification/** · google/**
+                   media · storage/** · calendar · seo · audit · clinic.view
+  jobs/            scheduler.js + handlers (reminders, follow-up, review sync)
+  middleware/      auth · csrf · ratelimit · validate · security · error
+  routes/          public.routes.js (SSR) · api/** (public + auth)
+                   admin/** (13 modules) · admin.pages.js · oauth.routes.js
+  views/           public/index.ejs + partials · admin/{app,login}.ejs
+public/
+  css/site.css     the original design, preserved verbatim, then extended
+  css/admin.css    admin console
+  js/site.js       nav, FAQ, gallery, lightbox, lazy map, scroll reveal
+  js/booking.js    the five-step booking wizard
+  js/admin/        core.js + app.js (router) + pages/ (11 screens)
+  img/             logo assets decoded from the original base64
+test/              9 files, 92 tests
+legacy/            the original index.html, untouched
+```
+
+**Layering rule:** routes never contain SQL, repositories never contain
+business logic, services never touch `req`/`res`. Controllers never call a
+notification provider — they emit an event.
+
+---
+
+## 4. Data model
+
+28 tables. Every table carries `id`, `created_at`, `updated_at`; soft delete
+(`deleted_at`) where records are operationally referenced.
+
+**Identity** `users` · `sessions` · `password_resets`
+**Clinic** `clinic_settings` (singleton) · `clinic_hours` · `holidays` · `blocked_slots`
+**People** `doctors` · `doctor_schedules` · `patients`
+**Catalogue** `services` · `service_categories`
+**Scheduling** `appointments` · `appointment_slots` ★ · `appointment_status_history`
+**Media** `media` · `gallery_items` ★
+**Content** `faqs` · `enquiries` · `reviews` · `review_sync_state`
+**Ops** `notifications` · `notification_logs` · `admin_notifications` · `jobs`
+· `integrations` · `audit_logs` · `schema_migrations`
+
+### ★ Two constraints carry real weight
+
+**`appointment_slots`** is the double-booking guarantee. An appointment
+materialises one row per slot-interval it occupies:
+
+```sql
+UNIQUE (doctor_id, date, slot_min)
+```
+
+A 60-minute treatment on a 30-minute grid inserts two rows. Any overlapping
+booking violates the constraint *at the database*, not in a race-prone
+`SELECT`-then-`INSERT`. Cancelling deletes the rows, freeing the time.
+
+**`gallery_items`** makes unconsented publication structurally impossible:
+
+```sql
+CHECK (category <> 'treatment' OR is_published = 0 OR consent_confirmed = 1)
+```
+
+This holds against a direct database write, not just the UI — there is a test
+that bypasses the service layer to prove it.
+
+---
+
+## 5. Core mechanisms
+
+### 5.1 Availability engine — `src/services/availability.service.js`
+
+Slots are **never** accepted from the client. They are derived server-side:
+
+```
+doctor schedule (falls back to clinic hours for that weekday)
+  − break period
+  − holidays / temporary closures
+  − admin-blocked time
+  − slots already occupied by appointments
+  − slots inside the booking lead time
+  − slots where the treatment would not finish before closing
+  = offered slots
+```
+
+All arithmetic is `(date, minutes-from-midnight)` in the clinic's timezone.
+`src/utils/time.js` is the single place that converts to and from UTC
+instants, using `Intl` so it is DST-correct by construction (tested against
+`America/New_York` on both sides of the transition, even though India has no
+DST).
+
+### 5.2 Booking — `src/services/appointment.service.js`
+
+```
+validateSlot()            → a good error message
+  ↓
+BEGIN IMMEDIATE
+  upsert patient by phone (one patient per number)
+  insert appointment (pending, or confirmed if auto_confirm)
+  insert N appointment_slots      ← UNIQUE fires here on collision
+  insert status history + audit row
+COMMIT                            → 409 SLOT_TAKEN if the constraint fires
+  ↓
+enqueue notifications (never inline, never blocking)
+```
+
+The pre-check produces readable errors; **the constraint produces the
+guarantee**. `test/concurrency.test.mjs` runs 16 separate OS processes at a
+shared timestamp barrier against one slot: exactly one wins, 15 are cleanly
+rejected, zero errors.
+
+### 5.3 Notifications — separation is the point
+
+Creating an appointment and delivering a message are **separate concerns**.
+
+```
+AppointmentCreated ─┬→ jobs(kind=notification) → NotificationService.dispatch
+                    │                               │
+                    │                      ┌────────┴────────┐
+                    │                  WhatsApp            Email
+                    │                  Cloud API           SMTP
+                    └→ admin_notifications (in-dashboard bell)
+```
+
+The appointment commits first. Messages are rows drained by a background
+worker. A provider outage produces a `failed` notification with the error body
+captured in `notification_logs`, retried with exponential backoff and surfaced
+in the dashboard with a **Retry** button. An unconfigured provider records
+`not_configured` — never silently dropped, **never faked as sent**.
+
+*An appointment is never lost because Meta returned a 500.*
+
+### 5.4 Media — `src/services/media.service.js`
+
+```
+upload → magic-byte sniff (never the client's Content-Type)
+       → reject non-JPEG/PNG/WebP
+       → size + pixel-count caps
+       → sharp re-encode  ← this is what strips EXIF, including GPS
+       → derive display (≤2000px WebP) + 480px thumbnail
+       → content-hashed key → StorageDriver.put()
+```
+
+Re-encoding is deliberate: it destroys EXIF GPS coordinates and device
+identifiers, which matters for patient treatment photos. Observed results:
+2045 KB PNG → 111 KB WebP; 2246 KB JPEG → 166 KB.
+
+`LocalDriver` today; an `S3Driver` implements the same five-method interface.
+The database stores keys and metadata, never bytes.
+
+---
+
+## 6. API
+
+87 handlers. Public routes are unauthenticated and rate-limited; admin routes
+require a session, a CSRF token on writes, and write an audit row.
+
+**Public** `/api/…`
+```
+GET  csrf · clinic · hours · services · doctors · faqs · gallery · reviews
+GET  appointments/availability?date=&service_id=&doctor_id=
+GET  appointments/calendar?from=&days=
+POST appointments                        create a booking
+GET  appointments/:ref?phone=            patient self-service lookup
+GET  appointments/:ref/calendar.ics      ICS download
+POST appointments/:ref/cancel            phone-verified cancellation
+POST enquiries
+```
+
+**Auth** `/api/auth/…` — `login · logout · me · change-password ·
+forgot-password · reset-password · sessions · sessions/revoke-others`
+
+**Admin** `/api/admin/…` — `dashboard · alerts · clinic (+hours, holidays,
+blocked-slots) · doctors (+schedule) · services · appointments (+confirm,
+cancel, reschedule, status, availability/grid) · patients · enquiries ·
+gallery (+media, publish, consent) · reviews (+sync, connect, google/*) ·
+faqs · notifications (+retry) · users · integrations · seo · audit-logs`
+
+**Conventions:** errors return `{ error, code }` and, for validation,
+`{ fields: { name: message } }`. Codes are stable strings (`SLOT_TAKEN`,
+`CONSENT_REQUIRED`, `CSRF`, `RATE_LIMITED`) so clients branch on `code`, never
+on message text.
+
+---
+
+## 7. UI/UX design
+
+### 7.1 Design language
+
+The original site's visual identity was preserved exactly — palette,
+typography, spacing, motion and the signature "smile arc" motif. Everything
+added was built from the same tokens so the platform reads as one product.
+
+**Palette** — botanical, warm, deliberately not clinical-blue.
+
+| Token | Value | Role |
+|---|---|---|
+| `--ink` | `#26302C` | Body text, near-black pine |
+| `--pine` | `#1F3D3A` | Brand primary — trust, clinical calm |
+| `--pine-700` | `#16302D` | Headings, hover/pressed |
+| `--sage` | `#7C9885` | Secondary, soft botanical |
+| `--honey` | `#C79A4B` | Accent — CTA warmth, focus rings |
+| `--honey-700` | `#AD8138` | Accent hover |
+| `--paper` | `#FAF8F3` | Background, warm neutral |
+| `--paper-dim` | `#F1EDE4` | Section alternation |
+| `--line` | `#E4DFD3` | Hairline borders |
+
+Semantic additions in the admin: `--ok #4A7C59`, `--warn #B58234`,
+`--danger #B04A3A`, each with a tinted background for status pills.
+
+**Typography** — three families, each with one job.
+
+| Family | Use | Notes |
+|---|---|---|
+| **Fraunces** | Display — headings, stat values, booking titles | Warm characterful serif, used with restraint |
+| **Inter** | Body, UI, forms | High legibility at small sizes |
+| **IBM Plex Mono** | Phone numbers, times, booking refs, eyebrow labels, table headers | Signals "data" — times align, refs are unambiguous |
+
+Headings use `clamp()` so the scale is fluid rather than stepped:
+`h1: clamp(36px, 5.4vw, 58px)`, `h2: clamp(28px, 4vw, 42px)`.
+
+**Motion** — one easing curve (`cubic-bezier(.22,.61,.36,1)`) and two
+durations (`180ms` interactive, `420ms` reveal). Every animation is disabled
+under `prefers-reduced-motion`, in both stylesheets.
+
+**The smile arc** — a single hand-drawn arc used as a section underline. It
+stands in for a confident smile without resorting to tooth iconography, and
+appears four times on the homepage.
+
+### 7.2 Public site anatomy
+
+`Header → Hero → Credential strip → About/Doctor → Clinic story → Services →
+Gallery → Reviews → FAQ → Booking → Location → CTA band → Footer`
+plus a sticky mobile action bar and a floating WhatsApp button.
+
+Every section is server-rendered from the database. Empty states are honest:
+with no synced reviews the section says so rather than inventing testimonials,
+and `AggregateRating` structured data is emitted **only** when real reviews
+exist.
+
+### 7.3 The booking wizard
+
+The original form collected a name and phone and opened WhatsApp. It is now
+five steps against live availability:
+
+```
+1 Treatment  →  2 Date  →  3 Time  →  4 Your details  →  5 Confirm
+                    ↑            ↑
+        only days with free slots are selectable
+                    availability fetched per date
+```
+
+Design decisions worth keeping:
+
+- **Only free slots are shown.** The calendar disables days with no
+  availability and marks bookable days with a dot, so a patient never taps
+  into an empty day.
+- **Times are grouped** Morning / Afternoon / Evening rather than presented as
+  one long list.
+- **The slot can vanish mid-flow.** If someone books it first, the wizard
+  returns to step 3 with a clear message and reloads availability, rather than
+  failing at the final step.
+- **Confirmation gives a real reference** (`SDC-2026-00001`) plus Add to
+  Calendar, WhatsApp and Book Another. The reference plus mobile number is
+  what unlocks self-service lookup and cancellation.
+- **Client validation is UX only.** Every rule is re-checked server-side.
+- **No-JS fallback:** the section tells the patient to call or WhatsApp.
+
+### 7.4 Admin information architecture
+
+```
+Dashboard
+Appointments   Calendar (day/week/month) · All Appointments · Pending Requests
+People         Patient Directory · Enquiries
+Website        Homepage · Services · Gallery · Reviews · FAQ
+Clinic         Clinic Information · Working Hours · Holidays & Blocks · Doctors
+System         Notifications · Integrations · Admin Users · SEO · Audit Log
+```
+
+Sidebar badges surface pending appointments, new enquiries and failed
+notifications so the operational queue is visible without navigating.
+
+**Working Hours** deserves specific mention. It began as a six-column table
+that needed horizontal scrolling on a phone to reach the closing time — the
+field a clinic changes most often. It is now a card per day with a real
+toggle switch, 42px touch targets, an optional break, and a **"Set every day
+at once"** bar for applying one schedule across the week. Each day remains
+independently editable.
+
+### 7.5 Responsive strategy
+
+Mobile is the primary case — most clinic traffic is phones.
+
+- **Verified, not assumed.** Puppeteer drives Chromium at 360, 390, 768 and
+  1280px across the public site and seven admin screens, asserting
+  `scrollWidth <= clientWidth`. **Zero horizontal overflow at every size.**
+- **The root cause of overflow was fixed, not hidden.** Grid and flex items
+  default to `min-width: auto`, so a wide child (the wizard's step strip, a
+  data table) stretched its track past the viewport. `min-width: 0` on those
+  tracks is the actual fix; `overflow: hidden` would have masked it.
+- **Data tables scroll inside their own container** with a "swipe to see more"
+  hint rather than dragging the page sideways.
+- **Touch targets** are ≥42px in the admin's editable surfaces.
+- Below 400px the header's duplicate "Book Appointment" is dropped — the
+  sticky bottom bar already carries it.
+
+### 7.6 Accessibility
+
+Inherited from the original and maintained throughout: skip link,
+`aria-expanded` on the nav toggle, `aria-modal` lightbox with Escape and arrow
+keys, `aria-pressed` on selection controls, focus returned to the trigger on
+close, a `:focus-visible` ring in honey at 2.5px, real `<label>` elements, and
+the day toggle built on a genuine checkbox rather than a styled `<div>`.
+
+Known gap: the admin has not been tested with a screen reader.
+
+---
+
+## 8. Security
+
+| Area | Implementation |
+|---|---|
+| Passwords | `scrypt` (N=16384, 32-byte salt), `timingSafeEqual` comparison |
+| Sessions | 256-bit token, **stored only as SHA-256** — a database leak yields no usable cookie |
+| Cookies | `httpOnly`, `SameSite=Lax`, sliding 8h expiry, 30d absolute cap, server-side revocation |
+| `Secure` flag | Derived from the **actual scheme** (`PUBLIC_URL` https, or `TRUST_PROXY`) — not from `NODE_ENV` |
+| Lockout | 15 minutes after 8 consecutive failures |
+| Enumeration | Identical error and comparable timing for unknown accounts |
+| CSRF | Double-submit token on every non-GET admin and booking route |
+| Rate limits | Login 8/15min · booking 6/h · enquiry 5/h · lookup 20/10min, per IP |
+| Validation | zod on every body and query — server-side always |
+| SQL | Prepared statements with bound parameters throughout |
+| XSS | EJS `<%= %>`; JSON-LD serialised through `jsonForScript()` which escapes `<`, `>`, `&` and U+2028/29 |
+| Uploads | Magic-byte sniffing, re-encode, pixel and size caps, content-hashed names |
+| Secrets | Integration credentials AES-256-GCM at rest, never returned by any endpoint |
+| Headers | CSP, `nosniff`, `frame-ancestors 'none'`, `Referrer-Policy`, HSTS behind TLS; `/admin` is `no-store` |
+| Authorization | Ranked roles — `owner` > `admin` > `staff` |
+| Audit | Every state-changing admin action writes `audit_logs` with before/after |
+
+**Secrets never reach the client.** WhatsApp tokens, the Google client secret
+and OAuth refresh tokens live server-side only; the admin UI is told *whether*
+a secret exists, never its value. Verified by a test that scans every admin
+endpoint's response.
+
+---
+
+## 9. Testing
+
+92 tests, `node:test`, no external runner. Each file gets an isolated
+temporary database.
+
+| File | Tests | Covers |
+|---|---|---|
+| `security.test.mjs` | 22 | Auth, lockout, enumeration, RBAC, CSRF, SQL injection, XSS, headers, cookie `Secure` derivation, secret handling |
+| `api.test.mjs` | 20 | Public API shape, availability, patient self-service, ICS, enquiries, rate limiting |
+| `booking.test.mjs` | 15 | Create, cancel, reschedule, status history, notification isolation, reminder dedupe |
+| `availability.test.mjs` | 12 | Hours, breaks, closures, holidays, blocks, multi-slot durations, DST |
+| `media.test.mjs` | 11 | Ingest, **EXIF/GPS stripping**, magic bytes, consent gate incl. direct DB write |
+| `updates.test.mjs` | 9 | Partial-update semantics across settings, doctors, services, gallery, FAQs |
+| `concurrency.test.mjs` | 3 | **16 OS processes racing one slot**, parallel distinct slots, overlap |
+
+The concurrency test spawns real child processes against a shared SQLite file
+with a timestamp barrier — in-process tests cannot exercise this, because
+`better-sqlite3` serialises writes within a process.
+
+```bash
+npm test
+```
+
+---
+
+## 10. Deployment
+
+Multi-stage Dockerfile: native modules compile in a builder with a full
+toolchain, then only `node_modules` and application source land in a slim
+runtime. Runs as the unprivileged `node` user under `tini`, with a
+`HEALTHCHECK` against `/healthz`. Image ~388 MB.
+
+```bash
+cp .env.example .env
+echo "APP_SECRET=$(openssl rand -hex 32)" >> .env    # required
+docker compose up -d --build
+```
+
+Two named volumes carry all state — **these are the backup surface**:
+
+| Volume | Contents |
+|---|---|
+| `clinic-data` | SQLite database (credentials, appointments, patients, audit) |
+| `clinic-uploads` | Uploaded media |
+
+Compose refuses to start without `APP_SECRET` rather than falling back to an
+insecure default. Migrations and seeding are idempotent and run on every boot.
+
+### Behind a reverse proxy
+
+Set `TRUST_PROXY=true` and `PUBLIC_URL=https://your-domain` so secure cookies,
+canonical URLs and the OAuth redirect are correct. Terminate TLS at the proxy.
+
+---
+
+## 11. Integrations
+
+All three are implemented against real APIs. Each reports **"not configured"**
+until the clinic supplies credentials — nothing is stubbed, and nothing is
+faked as working.
+
+| Integration | Needs | Behaviour without it |
+|---|---|---|
+| **WhatsApp Cloud API** | Phone number ID, permanent token, approved templates (`booking_received`, `appointment_confirmed`, `reminder_24h`, `reminder_2h`, `rescheduled`, `cancelled`, `follow_up`, `new_appointment_admin`) | Bookings work; messages queue as `not_configured`, retryable once configured |
+| **Google Business Profile** | OAuth client ID + secret, redirect URI registered, location selected | Reviews section shows its honest empty state |
+| **SMTP** | Host, port, credentials | Email skipped; WhatsApp and dashboard unaffected |
+
+Reviews come from the official Business Profile API — **no HTML scraping**.
+Reviews are upserted by Google's review id, so re-syncing updates rather than
+duplicates. A failed sync never clears existing reviews: the public site keeps
+serving the last good data and the admin sees *"Google Reviews could not be
+synchronized. Last successful sync: …"*.
+
+Adding a provider means implementing one interface and registering it in
+`services/notification/index.js`. Nothing else changes.
+
+---
+
+## 12. Patient photo privacy
+
+Treatment photographs are handled deliberately:
+
+- Publishing anything in the **Patient work** category requires explicit
+  consent confirmation, recorded with **who** confirmed it and **when**.
+- Enforced by a `CHECK` constraint, so it holds against a direct database
+  write — not only through the UI.
+- Withdrawing consent unpublishes immediately.
+- Every upload is re-encoded, destroying **all EXIF including GPS**.
+- The admin steers titles toward *"Before & After — Smile Restoration"* rather
+  than patient names; consent metadata is never exposed publicly.
+
+---
+
+## 13. Bugs found during development
+
+Recorded because each represents a class worth watching for.
+
+| Bug | Impact | Fix |
+|---|---|---|
+| `Secure` cookie on plain HTTP | Login returned 200 but browsers discarded the cookie — **sign-in silently impossible**. Missed because curl is more permissive than browsers. | Derive `Secure` from the real scheme; regression test asserts its absence on HTTP |
+| `JSON.stringify` in JSON-LD | `</script>` in FAQ content could break out of the script tag — **stored XSS** | `jsonForScript()` unicode-escapes `<`, `>`, `&`, U+2028/29 |
+| zod `.partial()` keeps `.default()` | A one-field PUT rewrote unsent fields — could reset a gallery item's category or clear a consent flag | `partialUpdate()` strips defaults |
+| `nullableStr()` collapsed `undefined` to `null` | **Data loss** — setting the hero image nulled doctor name, phone, address and 30 other fields | Transform preserves `undefined`; four regression tests |
+| Grid `min-width: auto` | Public site scrolled sideways on mobile | `min-width: 0` on affected tracks |
+| Booleans bound to SQLite | 500 on any update sending a boolean | Coerced to 0/1 at the single statement boundary |
+
+The recurring lesson: **an absent field must mean "leave alone"**. Three of six
+bugs were variations of that.
+
+---
+
+## 14. Known gaps
+
+**Operational, before real patients**
+- Default admin password must be changed
+- HTTPS must be in front — patient names and phone numbers are otherwise in clear text
+- No automated backup schedule; the volumes need a cron job or snapshot policy
+
+**Product**
+- Google review sync has no automatic schedule; it is manual or job-triggered
+- Admin not screen-reader tested
+- No patient-facing login or portal (lookup is by reference + phone)
+- Rate limiting is in-process; horizontal scaling needs a shared store
+- Single-clinic assumption throughout, though the schema permits multiple doctors
+
+**Deliberately deferred** — the schema was shaped so none of these require a
+rewrite: online payments, prescriptions, treatment plans, invoices, clinical
+records, multi-branch, Google Calendar two-way sync, loyalty campaigns.
+
+---
+
+## 15. Conventions for contributors
+
+- **Routes** contain no SQL. **Repositories** contain no business logic.
+  **Services** never touch `req`/`res`.
+- Every new admin write gets an `audit()` call and a zod schema.
+- Partial updates use `partialUpdate(schema)` — never bare `.partial()`.
+- Client-side validation is UX; the server re-validates unconditionally.
+- New notification channels implement the provider interface; controllers emit
+  events and never call a provider directly.
+- Comments explain **why**, not what. The codebase favours a short note on a
+  non-obvious constraint over narrating the obvious.
+- Run `npm test` before committing. The concurrency test is slow (~6s) and is
+  the one most worth keeping green.

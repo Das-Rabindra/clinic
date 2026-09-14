@@ -3,6 +3,11 @@
 > Transformation of a single static `index.html` into a production dental-clinic
 > website **+** clinic-management system **+** patient booking platform.
 > The original file is preserved verbatim at `legacy/index.original.html`.
+>
+> **This is the plan, written before implementation.** It is kept for its
+> reasoning and phase breakdown. For what was actually built — including where
+> reality diverged, the UI/UX design system, and bugs found along the way — see
+> **[PROJECT.md](PROJECT.md)**. Where the two disagree, PROJECT.md is correct.
 
 ---
 

@@ -61,10 +61,18 @@ reference plus mobile number.
 
 ---
 
+## Documentation
+
+| Document | What it covers |
+|---|---|
+| **[PROJECT.md](PROJECT.md)** | Full reference — architecture as built, data model, APIs, UI/UX design system, security, testing, deployment, known gaps |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | The original pre-implementation plan and phase breakdown |
+| README (this file) | Quick start and day-to-day operations |
+
 ## Architecture
 
 Node 22 · Express 5 · SQLite (WAL) · EJS · zod · sharp · vanilla ES modules.
-No build step. See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the full design.
+No build step. See **[PROJECT.md](PROJECT.md)** for the full design.
 
 ```
 src/
