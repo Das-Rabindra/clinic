@@ -1,7 +1,8 @@
 /**
- * Seeds the database with the content that was previously hardcoded in
- * index.html (CLINIC / SERVICES / GALLERY / FAQS), so the migration loses
- * nothing. Idempotent: safe to run on every boot.
+ * Seeds the database with the content that was previously hardcoded in the
+ * original single-file site (CLINIC / SERVICES / GALLERY / FAQS), so the
+ * migration loses nothing. That file is preserved at
+ * legacy/index.original.html. Idempotent: safe to run on every boot.
  *
  * Nothing here invents clinical claims, prices or reviews - it is exactly the
  * content the original file shipped with, now editable from the admin panel.
@@ -15,7 +16,7 @@ import * as settingsRepo from '../repositories/settings.repo.js';
 import * as contentRepo from '../repositories/content.repo.js';
 import { config } from '../config/env.js';
 
-/* Content carried over verbatim from the original index.html */
+/* Content carried over verbatim from legacy/index.original.html */
 const CLINIC = {
   name: 'Samal Dental Care',
   doctor_name: 'Dr. Sonali S. Samal',
