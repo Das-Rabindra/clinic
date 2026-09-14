@@ -13,10 +13,13 @@ everything behind them.
 
 ### Docker (recommended)
 
+Brings up PostgreSQL and the app together.
+
 ```bash
 cp .env.example .env
-# REQUIRED — generate a secret:
-echo "APP_SECRET=$(openssl rand -hex 32)" >> .env
+# REQUIRED — generate both secrets:
+echo "APP_SECRET=$(openssl rand -hex 32)"        >> .env
+echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)" >> .env
 # Optional: create the first admin on first boot
 echo "SEED_ADMIN_EMAIL=you@example.com"    >> .env
 echo "SEED_ADMIN_PASSWORD=a-long-password" >> .env
@@ -24,19 +27,34 @@ echo "SEED_ADMIN_PASSWORD=a-long-password" >> .env
 docker compose up -d --build
 ```
 
+### Vercel
+
+Add the Neon Postgres and Blob integrations (they set `DATABASE_URL` and
+`BLOB_READ_WRITE_TOKEN`), set `APP_SECRET`, `PUBLIC_URL` and `CRON_SECRET`, then
+push. `vercel.json` routes all traffic to `api/index.js` and registers the cron
+that drains the reminder queue.
+
 Website → http://localhost:8090 · Admin → http://localhost:8090/admin
 
 ### Without Docker
 
+Needs a PostgreSQL instance.
+
 ```bash
 npm install
+export DATABASE_URL=postgres://user:pass@localhost:5432/clinic
 export APP_SECRET=$(openssl rand -hex 32)
 npm run create-admin      # interactive; prompts for email and password
 npm start
 ```
 
-`npm test` runs the full suite (79 tests, including the concurrency and
-consent-gate tests).
+`npm test` runs the full suite (92 tests, including the concurrency and
+consent-gate tests). It needs a Postgres it can create databases on:
+
+```bash
+docker run -d --name clinic-pg -e POSTGRES_PASSWORD=devpass \
+  -p 55432:5432 postgres:16-alpine
+```
 
 ---
 
@@ -71,8 +89,9 @@ reference plus mobile number.
 
 ## Architecture
 
-Node 22 · Express 5 · SQLite (WAL) · EJS · zod · sharp · vanilla ES modules.
-No build step. See **[PROJECT.md](PROJECT.md)** for the full design.
+Node 22 · Express 5 · PostgreSQL · EJS · zod · sharp · vanilla ES modules.
+No build step. Runs both as a long-running server (Docker) and serverless
+(Vercel) from one codebase. See **[PROJECT.md](PROJECT.md)** for the full design.
 
 ```
 src/
@@ -142,13 +161,13 @@ Treatment photographs are handled deliberately:
 ## Operations
 
 ```bash
-docker compose logs -f app          # logs
-docker compose exec app node scripts/create-admin.js   # add an admin
-docker run --rm -v clinic-data:/data -v "$PWD:/backup" alpine \
-  tar czf /backup/clinic-backup-$(date +%F).tar.gz /data   # back up
+docker compose logs -f app                              # logs
+docker compose exec app node scripts/create-admin.js    # add an admin
+docker compose exec db pg_dump -U clinic clinic > backup-$(date +%F).sql
 ```
 
-Backups are two volumes: `clinic-data` (SQLite) and `clinic-uploads` (media).
+Backups are two volumes: `clinic-pgdata` (the database) and `clinic-uploads`
+(media). On Vercel, Neon provides point-in-time restore.
 
 ### Behind a reverse proxy
 

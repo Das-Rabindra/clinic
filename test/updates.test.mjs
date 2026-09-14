@@ -11,21 +11,23 @@ import assert from 'node:assert/strict';
 import sharp from 'sharp';
 import { setupEnv, bootDb, startServer, cleanup } from './helpers.mjs';
 
-const dir = setupEnv('updates');
+let ctx;
+const SUITE = 'updates';
 let srv, usersRepo, galleryRepo, mediaService, csrf;
 const PASSWORD = 'UpdateTestPass123';
 
 before(async () => {
+  ctx = await setupEnv(SUITE);
   await bootDb();
   usersRepo = await import('../src/repositories/users.repo.js');
   galleryRepo = await import('../src/repositories/gallery.repo.js');
   mediaService = await import('../src/services/media.service.js');
-  usersRepo.create({ email: 'up@clinic.test', name: 'Up', password: PASSWORD, role: 'owner' });
+  await usersRepo.create({ email: 'up@clinic.test', name: 'Up', password: PASSWORD, role: 'owner' });
   srv = await startServer();
   await srv.call('/api/auth/login', { json: { email: 'up@clinic.test', password: PASSWORD } });
   csrf = srv.csrf();
 });
-after(async () => { await srv.close(); cleanup(dir); });
+after(async () => { await srv.close(); await cleanup(ctx); });
 
 const put = (path, json) => srv.call(path, { method: 'PUT', headers: { 'X-CSRF-Token': csrf }, json });
 const post = (path, json) => srv.call(path, { method: 'POST', headers: { 'X-CSRF-Token': csrf }, json });
@@ -33,7 +35,7 @@ const post = (path, json) => srv.call(path, { method: 'POST', headers: { 'X-CSRF
 const image = async (name) => {
   const buffer = await sharp({ create: { width: 400, height: 300, channels: 3, background: '#7C9885' } })
     .jpeg().toBuffer();
-  return mediaService.ingestImage({ buffer, originalname: name }, { folder: 'clinic', userId: 1 });
+  return await mediaService.ingestImage({ buffer, originalname: name }, { folder: 'clinic', userId: 1 });
 };
 
 describe('doctor partial update', () => {

@@ -54,21 +54,34 @@ would have been an unforced rewrite of a design that already worked.
 ├───────────────────────────────────────────────────────────────────┤
 │  Repositories — the only SQL in the codebase                      │
 ├───────────────────────────────────────────────────────────────────┤
-│  SQLite (WAL)  ·  Storage abstraction (local FS → S3-ready)       │
-│  Durable job runner (jobs table, survives restart)                │
+│  PostgreSQL  ·  Storage abstraction (local FS | Vercel Blob)      │
+│  Durable job runner (jobs table; interval or cron-driven)         │
 └───────────────────────────────────────────────────────────────────┘
 ```
 
-**Stack:** Node 22 · Express 5 · SQLite (`better-sqlite3`, WAL) · EJS · zod ·
-sharp · multer · nodemailer · vanilla ES modules. **No build step** — the code
-that ships is the code that runs.
+**Stack:** Node 22 · Express 5 · PostgreSQL (`pg`) · EJS · zod · sharp ·
+multer · nodemailer · vanilla ES modules. **No build step** — the code that
+ships is the code that runs.
+
+**Two deployment shapes, one codebase:**
+
+| | Long-running server (Docker) | Serverless (Vercel) |
+|---|---|---|
+| Entry | `src/server.js` | `api/index.js` |
+| Database | Postgres container | Neon / Vercel Postgres |
+| Uploads | local disk (`/uploads`) | Vercel Blob |
+| Jobs | in-process interval | `/api/cron` on a schedule |
+| Rate limiting | in-process Map | `rate_limits` table |
+
+The application code is identical; only the driver behind each seam changes.
 
 ### Why these choices
 
 | Decision | Reasoning | What it would take to change |
 |---|---|---|
-| **SQLite, not Postgres** | One clinic, one location, a few thousand appointments a year. WAL + `BEGIN IMMEDIATE` gives real serialised writes and real unique constraints — all the double-booking guarantee needs. Removes a service from the deployment; backup is a file copy. | All SQL is confined to `src/repositories/`. A Postgres port touches one directory. |
-| **No Redis** | Reminders live in a `jobs` table polled in-process. Durable across restarts, no extra container. | `RUN_JOBS=false` already splits the worker into its own process. |
+| **Postgres** | Started on SQLite for zero-ops simplicity, moved to Postgres so the app can run on serverless platforms where the filesystem is ephemeral. Postgres also gives genuine concurrent writes rather than SQLite's single-writer model. | All SQL is confined to `src/repositories/`; the query adapter in `src/db/index.js` is the only dialect-aware file. |
+| **No Redis** | Reminders live in a `jobs` table, drained by an interval on a server or by `/api/cron` on serverless. Durable across restarts, no extra service. | `RUN_JOBS=false` splits the worker out. |
+| **No ORM** | Hand-written parameterised SQL is clearer at this size and makes the concurrency guarantee explicit. | — |
 | **Server-rendered public site** | Content stays crawlable and the page is useful before any JavaScript runs. | — |
 | **Vanilla client JS** | Matches the original codebase, no bundler, no framework churn. The admin is ~3,600 lines of plain ES modules. | Introduce a bundler only if the admin outgrows this. |
 | **No ORM** | Hand-written prepared statements are clearer than a query builder at this size, and make the concurrency guarantee explicit. | — |
@@ -188,6 +201,12 @@ The pre-check produces readable errors; **the constraint produces the
 guarantee**. `test/concurrency.test.mjs` runs 16 separate OS processes at a
 shared timestamp barrier against one slot: exactly one wins, 15 are cleanly
 rejected, zero errors.
+
+Reference numbers (`SDC-2026-00001`, `SDC-P-00001`) come from Postgres
+sequences rather than `SELECT MAX(...)+1`. The latter is not concurrency-safe:
+two bookings for *different* slots committing at the same instant computed the
+same reference and one failed. Sequence values may skip when a transaction
+rolls back, which is harmless for a reference code.
 
 ### 5.3 Notifications — separation is the point
 
@@ -439,9 +458,15 @@ temporary database.
 | `updates.test.mjs` | 9 | Partial-update semantics across settings, doctors, services, gallery, FAQs |
 | `concurrency.test.mjs` | 3 | **16 OS processes racing one slot**, parallel distinct slots, overlap |
 
-The concurrency test spawns real child processes against a shared SQLite file
-with a timestamp barrier — in-process tests cannot exercise this, because
-`better-sqlite3` serialises writes within a process.
+The concurrency test spawns real child processes against a shared Postgres
+database with a timestamp barrier. Each file runs against its own database,
+created and dropped by the harness, so suites never see each other's rows.
+
+```bash
+docker run -d --name clinic-pg -e POSTGRES_PASSWORD=devpass \
+  -p 55432:5432 postgres:16-alpine     # once
+npm test
+```
 
 ```bash
 npm test
@@ -451,26 +476,35 @@ npm test
 
 ## 10. Deployment
 
-Multi-stage Dockerfile: native modules compile in a builder with a full
-toolchain, then only `node_modules` and application source land in a slim
-runtime. Runs as the unprivileged `node` user under `tini`, with a
-`HEALTHCHECK` against `/healthz`. Image ~388 MB.
+### Docker (long-running server)
+
+`docker compose` brings up Postgres and the app together.
 
 ```bash
 cp .env.example .env
-echo "APP_SECRET=$(openssl rand -hex 32)" >> .env    # required
+echo "APP_SECRET=$(openssl rand -hex 32)"      >> .env   # required
+echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)" >> .env   # required
 docker compose up -d --build
 ```
 
-Two named volumes carry all state — **these are the backup surface**:
+Compose refuses to start without either secret rather than falling back to an
+insecure default. Migrations and seeding are idempotent and run on every boot,
+serialised by a Postgres advisory lock so concurrent instances are safe.
 
-| Volume | Contents |
-|---|---|
-| `clinic-data` | SQLite database (credentials, appointments, patients, audit) |
-| `clinic-uploads` | Uploaded media |
+State lives in two volumes — **the backup surface**: `clinic-pgdata` (the
+database) and `clinic-uploads` (media).
 
-Compose refuses to start without `APP_SECRET` rather than falling back to an
-insecure default. Migrations and seeding are idempotent and run on every boot.
+### Vercel (serverless)
+
+1. Create a Postgres database (Neon integration) — it sets `DATABASE_URL`.
+2. Create a Blob store — it sets `BLOB_READ_WRITE_TOKEN`.
+3. Set `APP_SECRET`, `PUBLIC_URL` and `CRON_SECRET` in project settings.
+4. Push. `vercel.json` routes everything to `api/index.js` and registers the
+   cron that drains the job queue.
+
+Vercel's Hobby cron runs once a day, which is enough for 24-hour reminders but
+not 2-hour ones. Any external pinger hitting `/api/cron` with the
+`CRON_SECRET` bearer token gives finer granularity for free.
 
 ### Behind a reverse proxy
 
@@ -529,6 +563,7 @@ Recorded because each represents a class worth watching for.
 | `nullableStr()` collapsed `undefined` to `null` | **Data loss** — setting the hero image nulled doctor name, phone, address and 30 other fields | Transform preserves `undefined`; four regression tests |
 | Grid `min-width: auto` | Public site scrolled sideways on mobile | `min-width: 0` on affected tracks |
 | Booleans bound to SQLite | 500 on any update sending a boolean | Coerced to 0/1 at the single statement boundary |
+| `SELECT MAX(...)+1` for reference numbers | Two bookings for *different* slots at the same instant computed the same reference; one failed and was misreported as "slot taken". Invisible under SQLite, which serialises writes. | Postgres sequences, and slot conflicts now identified by constraint name rather than any unique violation |
 
 The recurring lesson: **an absent field must mean "leave alone"**. Three of six
 bugs were variations of that.
@@ -540,13 +575,14 @@ bugs were variations of that.
 **Operational, before real patients**
 - Default admin password must be changed
 - HTTPS must be in front — patient names and phone numbers are otherwise in clear text
-- No automated backup schedule; the volumes need a cron job or snapshot policy
+- No automated backup schedule; the database needs a snapshot policy (Neon has
+  point-in-time restore; a self-hosted Postgres needs `pg_dump` on a timer)
 
 **Product**
 - Google review sync has no automatic schedule; it is manual or job-triggered
 - Admin not screen-reader tested
 - No patient-facing login or portal (lookup is by reference + phone)
-- Rate limiting is in-process; horizontal scaling needs a shared store
+- Vercel Hobby cron runs daily, so 2-hour reminders need an external pinger
 - Single-clinic assumption throughout, though the schema permits multiple doctors
 
 **Deliberately deferred** — the schema was shaped so none of these require a

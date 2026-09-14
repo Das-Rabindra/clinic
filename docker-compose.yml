@@ -1,17 +1,35 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: samal-dental-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: clinic
+      POSTGRES_USER: clinic
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - clinic-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clinic -d clinic"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   app:
     build: .
     image: samal-dental-care:latest
     container_name: samal-dental-care
     restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "${PORT_PUBLISH:-8090}:8090"
     environment:
       NODE_ENV: production
       PORT: 8090
+      DATABASE_URL: postgres://clinic:${POSTGRES_PASSWORD}@db:5432/clinic
       # REQUIRED. Generate once with: openssl rand -hex 32
-      # The ":?" makes compose refuse to start without a secret rather than
-      # silently booting with an insecure default.
       APP_SECRET: "${APP_SECRET:?set APP_SECRET in .env - generate one with openssl rand -hex 32}"
       PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8090}
       TRUST_PROXY: ${TRUST_PROXY:-false}
@@ -38,15 +56,14 @@ services:
 
       RUN_JOBS: "true"
     volumes:
-      - clinic-data:/data
       - clinic-uploads:/uploads
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8090/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 15s
+      start_period: 20s
 
 volumes:
-  clinic-data:
+  clinic-pgdata:
   clinic-uploads:

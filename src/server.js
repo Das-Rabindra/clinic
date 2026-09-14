@@ -6,8 +6,8 @@ import { seed } from './db/seed.js';
 import { closeDb } from './db/index.js';
 import * as scheduler from './jobs/scheduler.js';
 
-migrate();
-seed();
+await migrate();
+await seed();
 
 const app = createApp();
 const server = app.listen(config.port, '0.0.0.0', () => {
@@ -16,7 +16,7 @@ const server = app.listen(config.port, '0.0.0.0', () => {
   console.log(`  Website  : ${config.publicUrl}`);
   console.log(`  Admin    : ${config.publicUrl}/admin`);
   console.log(`  Env      : ${config.env}`);
-  console.log(`  Database : ${config.paths.db}`);
+  console.log(`  Database : ${config.database.url.replace(/:[^:@]*@/, ':***@')}`);
   console.log(`  Uploads  : ${config.paths.uploadDir}\n`);
 });
 
@@ -35,9 +35,9 @@ if (config.isProd && !config.session.secureCookies) {
 function shutdown(signal) {
   console.log(`\n[server] ${signal} received, shutting down`);
   scheduler.stop();
-  server.close(() => { closeDb(); process.exit(0); });
+  server.close(async () => { await closeDb(); process.exit(0); });
   // Don't hang forever on lingering keep-alive connections.
-  setTimeout(() => { closeDb(); process.exit(0); }, 8000).unref();
+  setTimeout(async () => { await closeDb(); process.exit(0); }, 8000).unref();
 }
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));

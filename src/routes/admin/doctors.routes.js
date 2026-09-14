@@ -7,15 +7,17 @@ import { WEEKDAYS } from '../../config/constants.js';
 
 const router = Router();
 
-router.get('/', (_req, res) => {
-  const doctors = doctorsRepo.list();
-  res.json(doctors.map(d => ({ ...d, schedule: doctorsRepo.schedule(d.id) })));
+router.get('/', async (_req, res) => {
+  const doctors = await doctorsRepo.list();
+  res.json(await Promise.all(
+    doctors.map(async (d) => ({ ...d, schedule: await doctorsRepo.schedule(d.id) }))
+  ));
 });
 
-router.get('/:id', (req, res) => {
-  const d = doctorsRepo.findById(Number(req.params.id));
+router.get('/:id', async (req, res) => {
+  const d = await doctorsRepo.findById(Number(req.params.id));
   if (!d) return res.status(404).json({ error: 'Doctor not found.', code: 'NOT_FOUND' });
-  res.json({ ...d, schedule: doctorsRepo.schedule(d.id) });
+  res.json({ ...d, schedule: await doctorsRepo.schedule(d.id) });
 });
 
 const doctorSchema = z.object({
@@ -34,39 +36,39 @@ const doctorSchema = z.object({
   display_order: z.coerce.number().int().min(0).max(999).default(0),
 });
 
-router.post('/', validate(doctorSchema), (req, res) => {
-  const created = doctorsRepo.create(req.body);
-  audit(ctxFrom(req), {
+router.post('/', validate(doctorSchema), async (req, res) => {
+  const created = await doctorsRepo.create(req.body);
+  await audit(ctxFrom(req), {
     action: 'doctor.create', entity: 'doctor', entity_id: created.id,
     summary: `Added ${created.name}`, after: created,
   });
   res.status(201).json({ ok: true, doctor: created });
 });
 
-router.put('/:id', validate(partialUpdate(doctorSchema)), (req, res) => {
+router.put('/:id', validate(partialUpdate(doctorSchema)), async (req, res) => {
   const id = Number(req.params.id);
-  const before = doctorsRepo.findById(id);
+  const before = await doctorsRepo.findById(id);
   if (!before) return res.status(404).json({ error: 'Doctor not found.', code: 'NOT_FOUND' });
-  doctorsRepo.update(id, req.body);
-  const after = doctorsRepo.findById(id);
-  audit(ctxFrom(req), {
+  await doctorsRepo.update(id, req.body);
+  const after = await doctorsRepo.findById(id);
+  await audit(ctxFrom(req), {
     action: 'doctor.update', entity: 'doctor', entity_id: id,
     summary: `Updated ${after.name}`, before, after,
   });
   res.json({ ok: true, doctor: after });
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   const id = Number(req.params.id);
-  const before = doctorsRepo.findById(id);
+  const before = await doctorsRepo.findById(id);
   if (!before) return res.status(404).json({ error: 'Doctor not found.', code: 'NOT_FOUND' });
-  if (doctorsRepo.list({ activeOnly: true }).length <= 1 && before.is_active) {
+  if ((await doctorsRepo.list({ activeOnly: true })).length <= 1 && before.is_active) {
     return res.status(409).json({
       error: 'This is the only active dentist. Add another before removing this one.', code: 'LAST_DOCTOR',
     });
   }
-  doctorsRepo.softDelete(id);
-  audit(ctxFrom(req), {
+  await doctorsRepo.softDelete(id);
+  await audit(ctxFrom(req), {
     action: 'doctor.delete', entity: 'doctor', entity_id: id,
     summary: `Removed ${before.name}`, before,
   });
@@ -82,26 +84,26 @@ router.put('/:id/schedule', validate(z.object({
     open_min: zMinutes, close_min: zMinutes,
     break_start_min: zMinutes.nullish(), break_end_min: zMinutes.nullish(),
   })).max(7),
-})), (req, res) => {
+})), async (req, res) => {
   const id = Number(req.params.id);
-  const doctor = doctorsRepo.findById(id);
+  const doctor = await doctorsRepo.findById(id);
   if (!doctor) return res.status(404).json({ error: 'Doctor not found.', code: 'NOT_FOUND' });
 
   for (const s of req.body.schedule) {
-    if (s.inherit) { doctorsRepo.clearSchedule(id, s.weekday); continue; }
+    if (s.inherit) { await doctorsRepo.clearSchedule(id, s.weekday); continue; }
     if (s.is_open && s.close_min <= s.open_min) {
       return res.status(400).json({
         error: `${WEEKDAYS[s.weekday]}: closing time must be after opening time.`, code: 'VALIDATION',
       });
     }
-    doctorsRepo.upsertSchedule(id, s.weekday, s);
+    await doctorsRepo.upsertSchedule(id, s.weekday, s);
   }
-  audit(ctxFrom(req), {
+  await audit(ctxFrom(req), {
     action: 'doctor.schedule.update', entity: 'doctor', entity_id: id,
     summary: `Updated working hours for ${doctor.name}`,
-    after: doctorsRepo.schedule(id),
+    after: await doctorsRepo.schedule(id),
   });
-  res.json({ ok: true, schedule: doctorsRepo.schedule(id) });
+  res.json({ ok: true, schedule: await doctorsRepo.schedule(id) });
 });
 
 export default router;

@@ -3,9 +3,10 @@
  * module with the same five exports; nothing else in the app changes.
  */
 import * as local from './local.js';
+import * as blob from './blob.js';
 import { config } from '../../config/env.js';
 
-const drivers = { local };
+const drivers = { local, blob };
 
 export function driver() {
   const d = drivers[config.storage.driver];

@@ -27,9 +27,9 @@ export class BookingError extends Error {
   }
 }
 
-const isUniqueViolation = (err) =>
-  String(err?.code || '').includes('SQLITE_CONSTRAINT_UNIQUE') ||
-  /UNIQUE constraint failed: appointment_slots/.test(String(err?.message));
+/* Postgres raises 23505 (unique_violation) when two bookings collide on
+   appointment_slots — the double-booking guarantee. */
+import { isSlotConflict, isUniqueViolation } from '../db/index.js';
 
 /**
  * Create an appointment.
@@ -39,7 +39,7 @@ const isUniqueViolation = (err) =>
  * guarantee. Two patients racing for the last slot: one commits, the other gets
  * a clean 409 SLOT_TAKEN.
  */
-export function createAppointment(input, ctx = {}) {
+export async function createAppointment(input, ctx = {}) {
   const {
     name, phone, email, date, time, serviceId, doctorId,
     reason, message, isNewPatient = true, source = 'website',
@@ -48,10 +48,10 @@ export function createAppointment(input, ctx = {}) {
   const normalisedPhone = normalisePhone(phone);
   if (!normalisedPhone) throw new BookingError('INVALID_PHONE', 'Please enter a valid 10-digit mobile number.', { status: 400 });
 
-  const service = serviceId ? servicesRepo.findBookable(serviceId) : null;
+  const service = serviceId ? await servicesRepo.findBookable(serviceId) : null;
   if (serviceId && !service) throw new BookingError('INVALID_SERVICE', 'That treatment is not available for online booking.', { status: 400 });
 
-  const check = availability.validateSlot({ date, time, serviceId, doctorId });
+  const check = await availability.validateSlot({ date, time, serviceId, doctorId });
   if (!check.ok) {
     const messages = {
       CLOSED: 'The clinic is closed on that day.',
@@ -66,20 +66,20 @@ export function createAppointment(input, ctx = {}) {
   }
 
   const slot = check.slot;
-  const doctor = doctorsRepo.findById(slot.doctor_id);
+  const doctor = await doctorsRepo.findById(slot.doctor_id);
 
   let result;
   try {
-    result = tx(() => {
-      const { patient, created } = patientsRepo.upsertByPhone({
+    result = await tx(async () => {
+      const { patient, created } = await patientsRepo.upsertByPhone({
         name, phone: normalisedPhone, email, createdBy: ctx.userId ?? null,
       });
       if (patient.is_blocked) throw new BookingError('PATIENT_BLOCKED', 'Please call the clinic to book an appointment.', { status: 403 });
 
-      const settings = settingsRepo.get();
+      const settings = await settingsRepo.get();
       const status = settings.auto_confirm ? APPOINTMENT_STATUS.CONFIRMED : APPOINTMENT_STATUS.PENDING;
 
-      const id = apptRepo.insertWithSlots({
+      const id = await apptRepo.insertWithSlots({
         patient_id: patient.id,
         doctor_id: slot.doctor_id,
         service_id: service?.id ?? null,
@@ -97,22 +97,26 @@ export function createAppointment(input, ctx = {}) {
         created_by: ctx.userId ?? null,
       }, slot.interval_min);
 
-      apptRepo.setStatus(id, status, { note: 'Created', userId: ctx.userId ?? null });
+      await apptRepo.setStatus(id, status, { note: 'Created', userId: ctx.userId ?? null });
       return { id, patient, patientCreated: created };
     });
   } catch (err) {
     if (err instanceof BookingError) throw err;
-    if (isUniqueViolation(err)) {
-      // Lost the race. The other booking committed first.
+    if (isSlotConflict(err)) {
+      // Lost the race for this slot; the other booking committed first.
       throw new BookingError('SLOT_TAKEN',
         'That time was just booked by someone else. Please pick another slot.', { status: 409 });
+    }
+    if (isUniqueViolation(err)) {
+      // A different unique index fired — surface it rather than blaming the slot.
+      console.error('[appointment] unexpected unique violation:', err.constraint, err.detail);
     }
     throw err;
   }
 
-  const appointment = apptRepo.findById(result.id);
+  const appointment = await apptRepo.findById(result.id);
 
-  audit(ctx, {
+  await audit(ctx, {
     action: 'appointment.create',
     entity: 'appointment',
     entity_id: appointment.id,
@@ -123,7 +127,7 @@ export function createAppointment(input, ctx = {}) {
   // Notifications are fire-and-forget queue writes; failure here must not
   // surface to the patient as a failed booking.
   try {
-    events.appointmentCreated(appointment, { doctor });
+    await events.appointmentCreated(appointment, { doctor });
   } catch (err) {
     console.error('[appointment] notification enqueue failed (appointment is saved):', err.message);
   }
@@ -132,39 +136,39 @@ export function createAppointment(input, ctx = {}) {
 }
 
 /** Confirm a pending appointment. */
-export function confirm(id, ctx = {}) {
-  const appt = apptRepo.findById(id);
+export async function confirm(id, ctx = {}) {
+  const appt = await apptRepo.findById(id);
   if (!appt) throw new BookingError('NOT_FOUND', 'Appointment not found.', { status: 404 });
   if (appt.status === APPOINTMENT_STATUS.CONFIRMED) return appt;
 
-  apptRepo.setStatus(id, APPOINTMENT_STATUS.CONFIRMED, { note: 'Confirmed by clinic', userId: ctx.userId });
-  const updated = apptRepo.findById(id);
-  audit(ctx, {
+  await apptRepo.setStatus(id, APPOINTMENT_STATUS.CONFIRMED, { note: 'Confirmed by clinic', userId: ctx.userId });
+  const updated = await apptRepo.findById(id);
+  await audit(ctx, {
     action: 'appointment.confirm', entity: 'appointment', entity_id: id,
     summary: `Confirmed ${updated.ref}`, before: { status: appt.status }, after: { status: updated.status },
   });
-  events.appointmentConfirmed(updated);
+  await events.appointmentConfirmed(updated);
   return updated;
 }
 
 /** Cancel. Slots are released by setStatus so the time becomes bookable again. */
-export function cancel(id, { reason = null, notifyPatient = true } = {}, ctx = {}) {
-  const appt = apptRepo.findById(id);
+export async function cancel(id, { reason = null, notifyPatient = true } = {}, ctx = {}) {
+  const appt = await apptRepo.findById(id);
   if (!appt) throw new BookingError('NOT_FOUND', 'Appointment not found.', { status: 404 });
   if (appt.status === APPOINTMENT_STATUS.CANCELLED) return appt;
 
-  tx(() => {
-    apptRepo.setStatus(id, APPOINTMENT_STATUS.CANCELLED, { note: reason || 'Cancelled', userId: ctx.userId });
-    if (reason) apptRepo.setCancelReason(id, reason);
+  await tx(async () => {
+    await apptRepo.setStatus(id, APPOINTMENT_STATUS.CANCELLED, { note: reason || 'Cancelled', userId: ctx.userId });
+    if (reason) await apptRepo.setCancelReason(id, reason);
   });
 
-  const updated = apptRepo.findById(id);
-  audit(ctx, {
+  const updated = await apptRepo.findById(id);
+  await audit(ctx, {
     action: 'appointment.cancel', entity: 'appointment', entity_id: id,
     summary: `Cancelled ${updated.ref}${reason ? ` — ${reason}` : ''}`,
     before: { status: appt.status }, after: { status: 'cancelled' },
   });
-  events.appointmentCancelled(updated, { notifyPatient, reason });
+  await events.appointmentCancelled(updated, { notifyPatient, reason });
   return updated;
 }
 
@@ -172,13 +176,13 @@ export function cancel(id, { reason = null, notifyPatient = true } = {}, ctx = {
  * Reschedule: move the appointment to a new slot atomically. If the new slot is
  * taken, the transaction rolls back and the original booking is untouched.
  */
-export function reschedule(id, { date, time, serviceId, doctorId }, ctx = {}) {
-  const appt = apptRepo.findById(id);
+export async function reschedule(id, { date, time, serviceId, doctorId }, ctx = {}) {
+  const appt = await apptRepo.findById(id);
   if (!appt) throw new BookingError('NOT_FOUND', 'Appointment not found.', { status: 404 });
 
   const targetService = serviceId ?? appt.service_id;
   const targetDoctor = doctorId ?? appt.doctor_id;
-  const tz = settingsRepo.get().timezone || 'Asia/Kolkata';
+  const tz = (await settingsRepo.get()).timezone || 'Asia/Kolkata';
 
   /*
    * One IMMEDIATE transaction. The appointment's own slots are released first
@@ -187,22 +191,22 @@ export function reschedule(id, { date, time, serviceId, doctorId }, ctx = {}) {
    * rolls everything back and the original booking survives untouched.
    */
   try {
-    tx(() => {
-      apptRepo.releaseSlots(id);
+    await tx(async () => {
+      await apptRepo.releaseSlots(id);
 
-      const check = availability.validateSlot({
+      const check = await availability.validateSlot({
         date, time, serviceId: targetService, doctorId: targetDoctor,
       });
       if (!check.ok) throw new BookingError(check.code, 'That new time is not available.', { status: 409 });
 
       const slot = check.slot;
-      apptRepo.moveSlots(id, {
+      await apptRepo.moveSlots(id, {
         doctor_id: slot.doctor_id, date: slot.date,
         start_min: slot.start_min, end_min: slot.end_min,
       }, slot.interval_min);
 
-      const svc = targetService ? servicesRepo.findById(targetService) : null;
-      apptRepo.updateTiming(id, {
+      const svc = targetService ? await servicesRepo.findById(targetService) : null;
+      await apptRepo.updateTiming(id, {
         doctor_id: slot.doctor_id,
         service_id: targetService ?? null,
         service_name: svc?.name ?? appt.service_name,
@@ -214,33 +218,33 @@ export function reschedule(id, { date, time, serviceId, doctorId }, ctx = {}) {
       });
 
       // 'rescheduled' is a blocking status, so the moved slots stay held.
-      apptRepo.setStatus(id, APPOINTMENT_STATUS.RESCHEDULED, {
+      await apptRepo.setStatus(id, APPOINTMENT_STATUS.RESCHEDULED, {
         note: `Moved from ${appt.date} ${minTo12h(appt.start_min)} to ${slot.date} ${minTo12h(slot.start_min)}`,
         userId: ctx.userId,
       });
     });
   } catch (err) {
     if (err instanceof BookingError) throw err;
-    if (isUniqueViolation(err)) {
+    if (isSlotConflict(err)) {
       throw new BookingError('SLOT_TAKEN', 'That time was just booked. Please pick another slot.', { status: 409 });
     }
     throw err;
   }
 
-  const updated = apptRepo.findById(id);
-  audit(ctx, {
+  const updated = await apptRepo.findById(id);
+  await audit(ctx, {
     action: 'appointment.reschedule', entity: 'appointment', entity_id: id,
     summary: `Rescheduled ${updated.ref} from ${appt.date} ${minTo12h(appt.start_min)} to ${updated.date} ${minTo12h(updated.start_min)}`,
     before: { date: appt.date, start_min: appt.start_min },
     after: { date: updated.date, start_min: updated.start_min },
   });
-  events.appointmentRescheduled(updated, { previous: appt });
+  await events.appointmentRescheduled(updated, { previous: appt });
   return updated;
 }
 
 /** Generic status transition used by the admin status buttons. */
-export function changeStatus(id, status, { note = null } = {}, ctx = {}) {
-  const appt = apptRepo.findById(id);
+export async function changeStatus(id, status, { note = null } = {}, ctx = {}) {
+  const appt = await apptRepo.findById(id);
   if (!appt) throw new BookingError('NOT_FOUND', 'Appointment not found.', { status: 404 });
   if (!Object.values(APPOINTMENT_STATUS).includes(status)) {
     throw new BookingError('INVALID_STATUS', 'Unknown status.', { status: 400 });
@@ -248,19 +252,19 @@ export function changeStatus(id, status, { note = null } = {}, ctx = {}) {
   if (status === APPOINTMENT_STATUS.CONFIRMED) return confirm(id, ctx);
   if (status === APPOINTMENT_STATUS.CANCELLED) return cancel(id, { reason: note }, ctx);
 
-  apptRepo.setStatus(id, status, { note, userId: ctx.userId });
-  const updated = apptRepo.findById(id);
-  audit(ctx, {
+  await apptRepo.setStatus(id, status, { note, userId: ctx.userId });
+  const updated = await apptRepo.findById(id);
+  await audit(ctx, {
     action: `appointment.status.${status}`, entity: 'appointment', entity_id: id,
     summary: `${updated.ref} marked ${status.replace('_', ' ')}`,
     before: { status: appt.status }, after: { status },
   });
-  if (status === APPOINTMENT_STATUS.COMPLETED) events.appointmentCompleted(updated);
+  if (status === APPOINTMENT_STATUS.COMPLETED) await events.appointmentCompleted(updated);
   return updated;
 }
 
 /** Patient-facing view: safe subset, no internal ids or staff notes. */
-export function publicView(appt) {
+export async function publicView(appt) {
   if (!appt) return null;
   return {
     ref: appt.ref,

@@ -25,6 +25,16 @@ if (!APP_SECRET) {
   console.warn('[config] APP_SECRET not set — using an ephemeral development key. Stored integration secrets will not survive a restart.');
 }
 
+const DATABASE_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
+if (!DATABASE_URL) {
+  console.error(
+    'FATAL: DATABASE_URL is not set.\n' +
+    '  Local:  postgres://postgres:devpass@localhost:55432/clinic\n' +
+    '  Vercel: add a Neon/Postgres integration, which sets DATABASE_URL for you.'
+  );
+  process.exit(1);
+}
+
 const root = path.resolve(process.cwd());
 const dataDir = path.resolve(root, process.env.DATA_DIR || './data');
 const uploadDir = path.resolve(root, process.env.UPLOAD_DIR || './uploads');
@@ -38,10 +48,24 @@ export const config = Object.freeze({
   trustProxy: bool(process.env.TRUST_PROXY),
   appSecret: APP_SECRET,
 
-  paths: Object.freeze({ root, dataDir, uploadDir, db: path.join(dataDir, 'clinic.sqlite') }),
+  paths: Object.freeze({ root, dataDir, uploadDir }),
+
+  database: Object.freeze({
+    url: DATABASE_URL,
+    // Neon and most managed Postgres require TLS; a local docker instance does not.
+    ssl: /sslmode=require|neon\.tech|supabase|amazonaws/.test(DATABASE_URL),
+    // Serverless invocations each hold their own pool, so keep it small and
+    // let the provider's pooler do the multiplexing.
+    poolMax: int(process.env.PG_POOL_MAX, process.env.VERCEL ? 1 : 10),
+  }),
+
+  isServerless: Boolean(process.env.VERCEL),
 
   storage: Object.freeze({
-    driver: process.env.STORAGE_DRIVER || 'local',
+    // Vercel's filesystem is ephemeral, so default to Blob there.
+    driver: process.env.STORAGE_DRIVER || (process.env.VERCEL ? 'blob' : 'local'),
+    blobToken: process.env.BLOB_READ_WRITE_TOKEN || '',
+    blobBaseUrl: process.env.BLOB_BASE_URL || '',
     maxUploadBytes: int(process.env.MAX_UPLOAD_MB, 10) * 1024 * 1024,
   }),
 

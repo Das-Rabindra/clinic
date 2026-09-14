@@ -7,16 +7,17 @@ import * as mediaRepo from '../repositories/media.repo.js';
 import { WEEKDAYS } from '../config/constants.js';
 import { minToHHMM, minTo12h, todayIn, weekdayOf } from '../utils/time.js';
 
-const mediaUrl = (id, fallback = null) => (id ? (mediaRepo.findById(id)?.url ?? fallback) : fallback);
+const mediaUrl = async (id, fallback = null) =>
+  (id ? ((await mediaRepo.findById(id))?.url ?? fallback) : fallback);
 
-export function publicClinic() {
-  const s = settingsRepo.get();
-  const address = settingsRepo.fullAddress(s);
-  const hours = settingsRepo.getHours();
+export async function publicClinic() {
+  const s = await settingsRepo.get();
+  const address = await settingsRepo.fullAddress(s);
+  const hours = await settingsRepo.getHours();
   const tz = s.timezone || 'Asia/Kolkata';
   const today = todayIn(tz);
   const todayHours = hours.find(h => h.weekday === weekdayOf(today));
-  const holidayToday = settingsRepo.holidaysOn(today, null).find(h => h.is_full_day);
+  const holidayToday = (await settingsRepo.holidaysOn(today, null)).find(h => h.is_full_day);
 
   return {
     name: s.name,
@@ -46,7 +47,7 @@ export function publicClinic() {
     facebook_url: s.facebook_url,
     site_url: s.site_url,
     timezone: tz,
-    logo_url: mediaUrl(s.logo_media_id, '/img/logo-96.png'),
+    logo_url: await mediaUrl(s.logo_media_id, '/img/logo-96.png'),
     booking: {
       slot_interval_min: s.slot_interval_min,
       lead_hours: s.booking_lead_hours,
@@ -71,7 +72,10 @@ export function publicClinic() {
 }
 
 /** Prefer the admin's verified place link; fall back to an address query. */
-export function directionsUrl(s = settingsRepo.get(), address = settingsRepo.fullAddress(s)) {
+/** Prefer the admin's verified place link; fall back to an address query.
+ *  Settings must be passed in — an async default parameter would resolve to a
+ *  Promise rather than the row. */
+export function directionsUrl(s, address) {
   if (s.latitude && s.longitude) {
     const dest = `${s.latitude},${s.longitude}`;
     const placeId = s.place_id ? `&destination_place_id=${encodeURIComponent(s.place_id)}` : '';
@@ -81,7 +85,7 @@ export function directionsUrl(s = settingsRepo.get(), address = settingsRepo.ful
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
 }
 
-export function mapEmbedUrl(s = settingsRepo.get(), address = settingsRepo.fullAddress(s)) {
+export function mapEmbedUrl(s, address) {
   if (s.latitude && s.longitude) {
     const d = 0.004;
     const bbox = `${s.longitude - d}%2C${s.latitude - d}%2C${s.longitude + d}%2C${s.latitude + d}`;
@@ -91,8 +95,8 @@ export function mapEmbedUrl(s = settingsRepo.get(), address = settingsRepo.fullA
   return `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
 }
 
-export function whatsappLink(text) {
-  const s = settingsRepo.get();
+export async function whatsappLink(text) {
+  const s = await settingsRepo.get();
   if (!s.whatsapp) return null;
   const msg = text || `Hello ${s.name}, I would like to enquire about booking a dental appointment.`;
   return `https://wa.me/${s.whatsapp}?text=${encodeURIComponent(msg)}`;

@@ -12,26 +12,26 @@ import { todayIn, addDays, minTo12h } from '../../utils/time.js';
 
 const router = Router();
 
-router.get('/dashboard', (_req, res) => {
-  const tz = settingsRepo.get().timezone || 'Asia/Kolkata';
+router.get('/dashboard', async (_req, res) => {
+  const tz = (await settingsRepo.get()).timezone || 'Asia/Kolkata';
   const today = todayIn(tz);
 
-  const todays = apptRepo.onDate(today).map(a => ({
+  const todays = (await apptRepo.onDate(today)).map(a => ({
     id: a.id, ref: a.ref, time: minTo12h(a.start_min), start_min: a.start_min,
     patient: a.patient_name, phone: a.patient_phone,
     service: a.service_name, status: a.status, doctor: a.doctor_name,
   }));
 
-  const counts = Object.fromEntries(apptRepo.statusCounts().map(r => [r.status, r.c]));
-  const todayCounts = Object.fromEntries(apptRepo.statusCounts(today, today).map(r => [r.status, r.c]));
+  const counts = Object.fromEntries((await apptRepo.statusCounts()).map(r => [r.status, r.c]));
+  const todayCounts = Object.fromEntries((await apptRepo.statusCounts(today, today)).map(r => [r.status, r.c]));
 
   res.json({
     today,
     today_appointments: todays,
-    today_patient_count: new Set(apptRepo.onDate(today)
+    today_patient_count: new Set((await apptRepo.onDate(today))
       .filter(a => !['cancelled', 'no_show'].includes(a.status))
       .map(a => a.patient_id)).size,
-    upcoming: apptRepo.upcoming(addDays(today, 1), 8).map(a => ({
+    upcoming: (await apptRepo.upcoming(addDays(today, 1), 8)).map(a => ({
       id: a.id, ref: a.ref, date: a.date, time: minTo12h(a.start_min),
       patient: a.patient_name, service: a.service_name, status: a.status,
     })),
@@ -43,37 +43,37 @@ router.get('/dashboard', (_req, res) => {
       no_show: counts.no_show || 0,
       today_total: Object.values(todayCounts).reduce((a, b) => a + b, 0),
     },
-    new_enquiries: contentRepo.newEnquiryCount(),
-    recent_enquiries: contentRepo.listEnquiries({ status: 'new', limit: 5 }),
-    recent_reviews: reviewsRepo.recent(5),
-    recent_uploads: mediaRepo.recentCount(7),
-    recent_gallery: galleryRepo.listAdmin({}).slice(0, 6).map(g => ({
+    new_enquiries: await contentRepo.newEnquiryCount(),
+    recent_enquiries: await contentRepo.listEnquiries({ status: 'new', limit: 5 }),
+    recent_reviews: await reviewsRepo.recent(5),
+    recent_uploads: await mediaRepo.recentCount(7),
+    recent_gallery: (await galleryRepo.listAdmin({})).slice(0, 6).map(g => ({
       id: g.id, title: g.title, thumb_url: g.thumb_url || g.image_url,
       is_published: g.is_published === 1, category: g.category,
     })),
-    patients_total: patientsRepo.count(),
+    patients_total: await patientsRepo.count(),
     notifications: {
-      unread: notifRepo.unreadAdminCount(),
-      failed: notifRepo.failedCount(),
-      providers: notifications.status(),
+      unread: await notifRepo.unreadAdminCount(),
+      failed: await notifRepo.failedCount(),
+      providers: await notifications.status(),
     },
   });
 });
 
-router.get('/alerts', (_req, res) => {
+router.get('/alerts', async (_req, res) => {
   res.json({
-    unread: notifRepo.unreadAdminCount(),
-    items: notifRepo.listAdmin(30),
+    unread: await notifRepo.unreadAdminCount(),
+    items: await notifRepo.listAdmin(30),
   });
 });
 
-router.post('/alerts/:id/read', (req, res) => {
-  notifRepo.markAdminRead(Number(req.params.id));
+router.post('/alerts/:id/read', async (req, res) => {
+  await notifRepo.markAdminRead(Number(req.params.id));
   res.json({ ok: true });
 });
 
-router.post('/alerts/read-all', (_req, res) => {
-  const n = notifRepo.markAllAdminRead();
+router.post('/alerts/read-all', async (_req, res) => {
+  const n = await notifRepo.markAllAdminRead();
   res.json({ ok: true, marked: n });
 });
 

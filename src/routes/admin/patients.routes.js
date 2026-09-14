@@ -13,15 +13,15 @@ router.get('/', validate(z.object({
   q: z.string().trim().max(80).default(''),
   limit: z.coerce.number().int().min(1).max(200).default(50),
   offset: z.coerce.number().int().min(0).default(0),
-}), 'query'), (req, res) => {
+}), 'query'), async (req, res) => {
   const { q, limit, offset } = req.validatedQuery;
-  res.json(patientsRepo.search({ q, limit, offset }));
+  res.json(await patientsRepo.search({ q, limit, offset }));
 });
 
-router.get('/:id', (req, res) => {
-  const patient = patientsRepo.findById(Number(req.params.id));
+router.get('/:id', async (req, res) => {
+  const patient = await patientsRepo.findById(Number(req.params.id));
   if (!patient) return res.status(404).json({ error: 'Patient not found.', code: 'NOT_FOUND' });
-  const appointments = apptRepo.forPatient(patient.id);
+  const appointments = await apptRepo.forPatient(patient.id);
   res.json({
     patient,
     appointments: appointments.map(a => ({ ...a, time_label: minTo12h(a.start_min) })),
@@ -40,7 +40,7 @@ router.post('/', validate(z.object({
   dob: z.string().trim().max(20).optional().or(z.literal('')),
   gender: z.string().trim().max(20).optional().or(z.literal('')),
   notes: z.string().trim().max(2000).optional().or(z.literal('')),
-})), (req, res) => {
+})), async (req, res) => {
   const phone = normalisePhone(req.body.phone);
   if (!phone) {
     return res.status(400).json({
@@ -48,15 +48,15 @@ router.post('/', validate(z.object({
       fields: { phone: 'Enter a valid 10-digit mobile number.' },
     });
   }
-  const existing = patientsRepo.findByPhone(phone);
+  const existing = await patientsRepo.findByPhone(phone);
   if (existing) {
     return res.status(409).json({
       error: `That number already belongs to ${existing.name} (${existing.code}).`,
       code: 'DUPLICATE_PHONE', patient_id: existing.id,
     });
   }
-  const created = patientsRepo.create({ ...req.body, phone, created_by: req.user.id });
-  audit(ctxFrom(req), {
+  const created = await patientsRepo.create({ ...req.body, phone, created_by: req.user.id });
+  await audit(ctxFrom(req), {
     action: 'patient.create', entity: 'patient', entity_id: created.id,
     summary: `Added patient ${created.name} (${maskPhone(created.phone)})`,
   });
@@ -70,13 +70,13 @@ router.put('/:id', validate(z.object({
   gender: z.string().trim().max(20).nullish().or(z.literal('')),
   notes: z.string().trim().max(2000).nullish().or(z.literal('')),
   is_blocked: z.boolean().optional(),
-})), (req, res) => {
+})), async (req, res) => {
   const id = Number(req.params.id);
-  const before = patientsRepo.findById(id);
+  const before = await patientsRepo.findById(id);
   if (!before) return res.status(404).json({ error: 'Patient not found.', code: 'NOT_FOUND' });
-  patientsRepo.update(id, { ...req.body, is_blocked: req.body.is_blocked === undefined ? undefined : (req.body.is_blocked ? 1 : 0) });
-  const after = patientsRepo.findById(id);
-  audit(ctxFrom(req), {
+  await patientsRepo.update(id, { ...req.body, is_blocked: req.body.is_blocked === undefined ? undefined : (req.body.is_blocked ? 1 : 0) });
+  const after = await patientsRepo.findById(id);
+  await audit(ctxFrom(req), {
     action: 'patient.update', entity: 'patient', entity_id: id,
     summary: `Updated patient ${after.name}`,
     before: { name: before.name, notes: before.notes, is_blocked: before.is_blocked },

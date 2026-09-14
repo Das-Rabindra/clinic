@@ -22,9 +22,9 @@ import {
 } from '../utils/time.js';
 
 /** Effective working window for a doctor on a weekday. */
-export function windowFor(doctorId, weekday, settings = settingsRepo.get()) {
-  const own = doctorId ? doctorsRepo.scheduleFor(doctorId, weekday) : null;
-  const src = own || settingsRepo.getHoursFor(weekday);
+export async function windowFor(doctorId, weekday) {
+  const own = doctorId ? await doctorsRepo.scheduleFor(doctorId, weekday) : null;
+  const src = own || await settingsRepo.getHoursFor(weekday);
   if (!src || !src.is_open) return null;
   return {
     open: src.open_min,
@@ -36,7 +36,7 @@ export function windowFor(doctorId, weekday, settings = settingsRepo.get()) {
 }
 
 /** Interval of the booking grid: doctor override, else clinic default. */
-export function intervalFor(doctor, settings = settingsRepo.get()) {
+export function intervalFor(doctor, settings) {
   return doctor?.slot_interval_min || settings.slot_interval_min || 30;
 }
 
@@ -46,16 +46,16 @@ const overlaps = (aStart, aEnd, bStart, bEnd) => aStart < bEnd && bStart < aEnd;
  * Compute availability for one date.
  * Returns { date, open, reason?, slots: [{ time, label, minutes, available }] }
  */
-export function getDayAvailability({ date, serviceId = null, doctorId = null, includeTaken = false }) {
-  const settings = settingsRepo.get();
+export async function getDayAvailability({ date, serviceId = null, doctorId = null, includeTaken = false }) {
+  const settings = await settingsRepo.get();
   const tz = settings.timezone || 'Asia/Kolkata';
 
   if (!isDateStr(date)) return { date, open: false, reason: 'INVALID_DATE', slots: [] };
 
-  const doctor = doctorId ? doctorsRepo.findById(doctorId) : doctorsRepo.primary();
+  const doctor = doctorId ? await doctorsRepo.findById(doctorId) : await doctorsRepo.primary();
   if (!doctor) return { date, open: false, reason: 'NO_DOCTOR', slots: [] };
 
-  const service = serviceId ? servicesRepo.findBookable(serviceId) : null;
+  const service = serviceId ? await servicesRepo.findBookable(serviceId) : null;
   if (serviceId && !service) return { date, open: false, reason: 'INVALID_SERVICE', slots: [] };
 
   const interval = intervalFor(doctor, settings);
@@ -68,11 +68,11 @@ export function getDayAvailability({ date, serviceId = null, doctorId = null, in
     return { date, open: false, reason: 'BEYOND_HORIZON', slots: [], doctor_id: doctor.id };
   }
 
-  const win = windowFor(doctor.id, weekdayOf(date), settings);
+  const win = await windowFor(doctor.id, weekdayOf(date));
   if (!win) return { date, open: false, reason: 'CLOSED', slots: [], doctor_id: doctor.id };
 
   // Full-day holiday closes the date outright; partial holidays become busy ranges.
-  const holidays = settingsRepo.holidaysOn(date, doctor.id);
+  const holidays = await settingsRepo.holidaysOn(date, doctor.id);
   const fullDay = holidays.find(h => h.is_full_day);
   if (fullDay) {
     return {
@@ -87,9 +87,9 @@ export function getDayAvailability({ date, serviceId = null, doctorId = null, in
   for (const h of holidays) {
     if (h.start_min != null && h.end_min != null) busy.push([h.start_min, h.end_min]);
   }
-  for (const b of settingsRepo.blockedOn(date, doctor.id)) busy.push([b.start_min, b.end_min]);
+  for (const b of await settingsRepo.blockedOn(date, doctor.id)) busy.push([b.start_min, b.end_min]);
 
-  const occupied = new Set(apptRepo.occupiedSlots(doctor.id, date));
+  const occupied = new Set(await apptRepo.occupiedSlots(doctor.id, date));
 
   // Earliest bookable instant, honouring the lead time.
   const leadMs = (settings.booking_lead_hours ?? 0) * 3600000;
@@ -146,14 +146,14 @@ export function getDayAvailability({ date, serviceId = null, doctorId = null, in
  * Which of the next N days have at least one free slot - powers the calendar
  * step, so patients never click into an empty day.
  */
-export function getMonthOverview({ from, days = 30, serviceId = null, doctorId = null }) {
-  const settings = settingsRepo.get();
+export async function getMonthOverview({ from, days = 30, serviceId = null, doctorId = null }) {
+  const settings = await settingsRepo.get();
   const tz = settings.timezone || 'Asia/Kolkata';
   const start = isDateStr(from) ? from : todayIn(tz);
   const out = [];
   for (let i = 0; i < days; i++) {
     const date = addDays(start, i);
-    const day = getDayAvailability({ date, serviceId, doctorId });
+    const day = await getDayAvailability({ date, serviceId, doctorId });
     out.push({
       date,
       open: day.open,
@@ -170,13 +170,13 @@ export function getMonthOverview({ from, days = 30, serviceId = null, doctorId =
  * relies on the database constraint - this produces good error messages, the
  * constraint produces the guarantee.
  */
-export function validateSlot({ date, time, serviceId, doctorId }) {
-  const day = getDayAvailability({ date, serviceId, doctorId });
+export async function validateSlot({ date, time, serviceId, doctorId }) {
+  const day = await getDayAvailability({ date, serviceId, doctorId });
   if (!day.open) return { ok: false, code: day.reason || 'CLOSED', day };
   const slot = day.slots.find(s => s.time === time && s.available);
   if (!slot) return { ok: false, code: 'SLOT_UNAVAILABLE', day };
 
-  const settings = settingsRepo.get();
+  const settings = await settingsRepo.get();
   const tz = settings.timezone || 'Asia/Kolkata';
   return {
     ok: true,
@@ -193,13 +193,13 @@ export function validateSlot({ date, time, serviceId, doctorId }) {
 }
 
 /** Next date with any availability, for the "soonest appointment" hint. */
-export function nextAvailableDate({ serviceId = null, doctorId = null, within = 60 } = {}) {
-  const settings = settingsRepo.get();
+export async function nextAvailableDate({ serviceId = null, doctorId = null, within = 60 } = {}) {
+  const settings = await settingsRepo.get();
   const tz = settings.timezone || 'Asia/Kolkata';
   const start = todayIn(tz);
   for (let i = 0; i < within; i++) {
     const date = addDays(start, i);
-    const day = getDayAvailability({ date, serviceId, doctorId });
+    const day = await getDayAvailability({ date, serviceId, doctorId });
     const free = day.slots.filter(s => s.available);
     if (free.length) return { date, first: free[0].time, label: free[0].label, count: free.length };
   }

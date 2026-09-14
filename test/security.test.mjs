@@ -2,20 +2,22 @@ import { test, before, after, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { setupEnv, bootDb, startServer, cleanup, withServer } from './helpers.mjs';
 
-const dir = setupEnv('security');
+let ctx;
+const SUITE = 'security';
 let srv, usersRepo, authService, limiter;
 const PASSWORD = 'CorrectHorseBattery1';
 
 before(async () => {
+  ctx = await setupEnv(SUITE);
   await bootDb();
   usersRepo = await import('../src/repositories/users.repo.js');
   authService = await import('../src/services/auth.service.js');
   limiter = await import('../src/middleware/ratelimit.js');
-  usersRepo.create({ email: 'owner@clinic.test', name: 'Owner', password: PASSWORD, role: 'owner' });
-  usersRepo.create({ email: 'staff@clinic.test', name: 'Staff', password: PASSWORD, role: 'staff' });
+  await usersRepo.create({ email: 'owner@clinic.test', name: 'Owner', password: PASSWORD, role: 'owner' });
+  await usersRepo.create({ email: 'staff@clinic.test', name: 'Staff', password: PASSWORD, role: 'staff' });
   srv = await startServer();
 });
-after(async () => { await srv.close(); cleanup(dir); });
+after(async () => { await srv.close(); await cleanup(ctx); });
 
 describe('authentication', () => {
   test('rejects wrong credentials with a generic message', async () => {
@@ -30,8 +32,8 @@ describe('authentication', () => {
     assert.equal(r.body.error, 'Incorrect email or password.');
   });
 
-  test('never stores the password in plain text', () => {
-    const user = usersRepo.findByEmail('owner@clinic.test');
+  test('never stores the password in plain text', async () => {
+    const user = await usersRepo.findByEmail('owner@clinic.test');
     assert.ok(!JSON.stringify(user).includes(PASSWORD));
     assert.ok(user.password_hash.length >= 128);
     assert.ok(user.password_salt.length >= 32);
@@ -81,25 +83,25 @@ describe('authentication', () => {
     const token = srv.jar.get('sdc_session');
     const { one } = await import('../src/repositories/base.js');
     assert.ok(token);
-    assert.equal(one('SELECT id FROM sessions WHERE id = ?', token), undefined,
+    assert.equal(await one('SELECT id FROM sessions WHERE id = ?', token), undefined,
       'the raw token must never be a key in the sessions table');
   });
 
-  test('locks the account after repeated failures', () => {
+  test('locks the account after repeated failures', async () => {
     // Tested at the service layer: over HTTP the rate limiter (8 per 15 min)
     // trips before the 8-failure lockout, so it would mask this behaviour.
-    usersRepo.create({ email: 'lockme@clinic.test', name: 'Lock', password: PASSWORD, role: 'staff' });
+    await usersRepo.create({ email: 'lockme@clinic.test', name: 'Lock', password: PASSWORD, role: 'staff' });
     let locked = false;
     for (let i = 0; i < 10; i++) {
       try {
-        authService.login({ email: 'lockme@clinic.test', password: 'nope' }, {});
+        await authService.login({ email: 'lockme@clinic.test', password: 'nope' }, {});
       } catch (err) {
         if (err.code === 'LOCKED') { locked = true; break; }
       }
     }
     assert.ok(locked, 'the account must lock after repeated failed attempts');
     // A locked account rejects even the correct password.
-    assert.throws(() => authService.login({ email: 'lockme@clinic.test', password: PASSWORD }, {}),
+    await assert.rejects(async () => authService.login({ email: 'lockme@clinic.test', password: PASSWORD }, {}),
       (err) => err.code === 'LOCKED');
   });
 });
@@ -127,7 +129,7 @@ describe('authorisation', () => {
   });
 
   test('staff cannot reach owner-only endpoints', async () => {
-    limiter._reset();   // earlier login tests share the per-IP bucket
+    await limiter._reset();   // earlier login tests share the per-IP bucket
     await withServer(async (staff) => {
       const login = await staff.call('/api/auth/login', { json: { email: 'staff@clinic.test', password: PASSWORD } });
       assert.equal(login.status, 200, 'staff should be able to sign in');
@@ -190,7 +192,8 @@ describe('input validation', () => {
     const r = await srv.call('/api/admin/patients?q=' + encodeURIComponent("'; DROP TABLE patients; --"));
     assert.equal(r.status, 200);
     const { one } = await import('../src/repositories/base.js');
-    assert.ok(one("SELECT name FROM sqlite_master WHERE type='table' AND name='patients'"),
+    assert.ok(await one(
+      "SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = 'patients'"),
       'patients table must still exist');
   });
 
@@ -247,7 +250,7 @@ describe('secrets handling', () => {
 
   test('secrets are encrypted at rest', async () => {
     const { one } = await import('../src/repositories/base.js');
-    const row = one("SELECT secret_json FROM integrations WHERE provider = 'whatsapp'");
+    const row = await one("SELECT secret_json FROM integrations WHERE provider = 'whatsapp'");
     assert.ok(row.secret_json);
     assert.ok(!row.secret_json.includes('SUPER-SECRET-TOKEN'), 'ciphertext must not contain the plaintext');
     const { decryptSecret } = await import('../src/utils/crypto.js');

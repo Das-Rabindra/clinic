@@ -50,15 +50,15 @@ function resolveFaq(text, clinic) {
     .replaceAll('{{clinic}}', clinic.name || '');
 }
 
-router.get('/', (req, res) => {
-  const settings = settingsRepo.get();
-  const clinic = publicClinic();
-  const services = servicesRepo.list({ activeOnly: true });
-  const doctor = doctorsRepo.primary();
-  const gallery = galleryRepo.listPublic();
-  const faqs = contentRepo.listFaqs({ publishedOnly: true })
+router.get('/', async (req, res) => {
+  const settings = await settingsRepo.get();
+  const clinic = await publicClinic();
+  const services = await servicesRepo.list({ activeOnly: true });
+  const doctor = await doctorsRepo.primary();
+  const gallery = await galleryRepo.listPublic();
+  const faqs = (await contentRepo.listFaqs({ publishedOnly: true }))
     .map(f => ({ question: resolveFaq(f.question, clinic), answer: resolveFaq(f.answer, clinic) }));
-  const reviews = reviewsService.publicReviews();
+  const reviews = await reviewsService.publicReviews();
 
   // Ensure a CSRF token exists before the booking form needs one.
   issuePublicToken(req, res);
@@ -71,10 +71,10 @@ router.get('/', (req, res) => {
     .map(w => clinic.hours.find(h => h.weekday === w))
     .filter(Boolean);
 
-  const heroMedia = settings.hero_media_id ? mediaRepo.findById(settings.hero_media_id) : null;
-  const doctorMedia = doctor?.photo_media_id ? mediaRepo.findById(doctor.photo_media_id) : null;
-  const logo = settings.logo_media_id ? mediaRepo.findById(settings.logo_media_id) : null;
-  const favicon = settings.favicon_media_id ? mediaRepo.findById(settings.favicon_media_id) : null;
+  const heroMedia = settings.hero_media_id ? await mediaRepo.findById(settings.hero_media_id) : null;
+  const doctorMedia = doctor?.photo_media_id ? await mediaRepo.findById(doctor.photo_media_id) : null;
+  const logo = settings.logo_media_id ? await mediaRepo.findById(settings.logo_media_id) : null;
+  const favicon = settings.favicon_media_id ? await mediaRepo.findById(settings.favicon_media_id) : null;
 
   const metaTags = seo.meta(settings);
   if (heroMedia && !metaTags.ogImage) metaTags.ogImage = new URL(heroMedia.url, metaTags.canonical).toString();
@@ -86,9 +86,9 @@ router.get('/', (req, res) => {
     orderedHours,
     galleryCategories: categoryKeys.map(k => ({ key: k, label: CATEGORY_LABELS[k] || k })),
     meta: metaTags,
-    structuredData: seo.structuredData(),
+    structuredData: await seo.structuredData(),
     faqSchema: seo.faqStructuredData(faqs),
-    whatsappUrl: whatsappLink(),
+    whatsappUrl: await whatsappLink(),
     logoUrl: logo?.url || '/img/logo-96.png',
     faviconUrl: favicon?.url || '/img/logo-64.png',
     heroImage: heroMedia,
@@ -109,13 +109,13 @@ router.get('/', (req, res) => {
 });
 
 /* SEO endpoints, generated from live settings. */
-router.get('/robots.txt', (_req, res) => {
-  res.type('text/plain').send(seo.robotsTxt());
+router.get('/robots.txt', async (_req, res) => {
+  res.type('text/plain').send(seo.robotsTxt(seo.canonicalUrl(await settingsRepo.get())));
 });
-router.get('/sitemap.xml', (_req, res) => {
-  res.type('application/xml').send(seo.sitemapXml());
+router.get('/sitemap.xml', async (_req, res) => {
+  res.type('application/xml').send(seo.sitemapXml(seo.canonicalUrl(await settingsRepo.get())));
 });
 
-router.get('/healthz', (_req, res) => res.json({ ok: true, uptime: Math.round(process.uptime()) }));
+router.get('/healthz', async (_req, res) => res.json({ ok: true, uptime: Math.round(process.uptime()) }));
 
 export default router;

@@ -12,11 +12,11 @@ import { minToHHMM } from '../utils/time.js';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-export function canonicalUrl(s = settingsRepo.get()) {
+export function canonicalUrl(s) {
   return (s.seo_canonical || s.site_url || config.publicUrl || '').replace(/\/+$/, '') || config.publicUrl;
 }
 
-export function meta(s = settingsRepo.get()) {
+export function meta(s) {
   const url = canonicalUrl(s);
   return {
     title: s.seo_title || `${s.name} — ${s.doctor_name || ''}`.trim(),
@@ -30,8 +30,8 @@ export function meta(s = settingsRepo.get()) {
 }
 
 /** Opening hours in schema.org form, from the admin-managed weekly grid. */
-function openingHours() {
-  return settingsRepo.getHours()
+async function openingHours() {
+  return (await settingsRepo.getHours())
     .filter(h => h.is_open)
     .map(h => ({
       '@type': 'OpeningHoursSpecification',
@@ -41,11 +41,11 @@ function openingHours() {
     }));
 }
 
-export function structuredData() {
-  const s = settingsRepo.get();
+export async function structuredData() {
+  const s = await settingsRepo.get();
   const url = canonicalUrl(s);
-  const doctor = doctorsRepo.primary();
-  const agg = reviewsRepo.aggregate();
+  const doctor = await doctorsRepo.primary();
+  const agg = await reviewsRepo.aggregate();
 
   const address = {
     '@type': 'PostalAddress',
@@ -76,7 +76,7 @@ export function structuredData() {
   }
   if (s.maps_url) node.hasMap = s.maps_url;
 
-  const hours = openingHours();
+  const hours = await openingHours();
   if (hours.length) node.openingHoursSpecification = hours;
 
   if (doctor) {
@@ -99,7 +99,7 @@ export function structuredData() {
     };
   }
 
-  const services = servicesRepo.list({ activeOnly: true });
+  const services = await servicesRepo.list({ activeOnly: true });
   if (services.length) {
     node.hasOfferCatalog = {
       '@type': 'OfferCatalog',
@@ -129,11 +129,11 @@ export function faqStructuredData(faqs) {
 }
 
 /** robots.txt / sitemap.xml content. */
-export const robotsTxt = () =>
-  `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\n\nSitemap: ${canonicalUrl()}/sitemap.xml\n`;
+export const robotsTxt = (canonical) =>
+  `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\n\nSitemap: ${canonical}/sitemap.xml\n`;
 
-export function sitemapXml() {
-  const url = canonicalUrl();
+export function sitemapXml(canonical) {
+  const url = canonical;
   const today = new Date().toISOString().slice(0, 10);
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

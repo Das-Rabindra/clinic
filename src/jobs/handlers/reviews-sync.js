@@ -6,7 +6,7 @@ export async function syncReviews() {
   const result = await reviews.sync();
   if (result.ok) {
     if (result.synced > 0) {
-      notifRepo.pushAdmin({
+      await notifRepo.pushAdmin({
         type: 'reviews.sync',
         title: 'Google reviews synced',
         body: `${result.synced} review(s) updated${result.average ? ` · average ${result.average}` : ''}`,
@@ -14,7 +14,7 @@ export async function syncReviews() {
       });
     }
   } else {
-    notifRepo.pushAdmin({
+    await notifRepo.pushAdmin({
       type: 'reviews.sync_failed',
       title: 'Google review sync failed',
       body: result.error,

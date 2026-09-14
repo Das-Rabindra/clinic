@@ -32,10 +32,10 @@ router.use(apiLimiter);
 router.get('/csrf', (req, res) => res.json({ token: issuePublicToken(req, res) }));
 
 /* ── Clinic ── */
-router.get('/clinic', (_req, res) => res.json(publicClinic()));
+router.get('/clinic', async (_req, res) => res.json(await publicClinic()));
 
-router.get('/hours', (_req, res) => {
-  res.json(settingsRepo.getHours().map(h => ({
+router.get('/hours', async (_req, res) => {
+  res.json((await settingsRepo.getHours()).map(h => ({
     weekday: h.weekday,
     day: WEEKDAYS[h.weekday],
     is_open: h.is_open === 1,
@@ -47,8 +47,8 @@ router.get('/hours', (_req, res) => {
 });
 
 /* ── Catalogue ── */
-router.get('/services', (_req, res) => {
-  res.json(servicesRepo.list({ activeOnly: true }).map(s => ({
+router.get('/services', async (_req, res) => {
+  res.json((await servicesRepo.list({ activeOnly: true })).map(s => ({
     id: s.id, name: s.name, slug: s.slug, category: s.category_name,
     short_desc: s.short_desc, long_desc: s.long_desc,
     duration_min: s.duration_min, bookable: s.bookable === 1,
@@ -58,8 +58,8 @@ router.get('/services', (_req, res) => {
   })));
 });
 
-router.get('/doctors', (_req, res) => {
-  res.json(doctorsRepo.list({ activeOnly: true }).map(d => ({
+router.get('/doctors', async (_req, res) => {
+  res.json((await doctorsRepo.list({ activeOnly: true })).map(d => ({
     id: d.id, name: d.name, slug: d.slug, qualification: d.qualification,
     registration: d.registration, specialization: d.specialization, bio: d.bio,
     experience_years: d.experience_years, languages: d.languages,
@@ -67,15 +67,15 @@ router.get('/doctors', (_req, res) => {
   })));
 });
 
-router.get('/faqs', (_req, res) => {
-  res.json(contentRepo.listFaqs({ publishedOnly: true })
+router.get('/faqs', async (_req, res) => {
+  res.json((await contentRepo.listFaqs({ publishedOnly: true }))
     .map(f => ({ id: f.id, question: f.question, answer: f.answer })));
 });
 
-router.get('/gallery', (req, res) => {
+router.get('/gallery', async (req, res) => {
   const category = typeof req.query.category === 'string' ? req.query.category : null;
   // Consent fields are deliberately not exposed publicly.
-  res.json(galleryRepo.listPublic(category).map(g => ({
+  res.json((await galleryRepo.listPublic(category)).map(g => ({
     id: g.id, title: g.title, description: g.description, category: g.category,
     image_url: g.image_url, thumb_url: g.thumb_url || g.image_url,
     after_url: g.after_url, after_thumb_url: g.after_thumb_url,
@@ -83,7 +83,7 @@ router.get('/gallery', (req, res) => {
   })));
 });
 
-router.get('/reviews', (_req, res) => res.json(reviewsService.publicReviews()));
+router.get('/reviews', async (_req, res) => res.json(await reviewsService.publicReviews()));
 
 /* ── Availability ── */
 const availabilityQuery = z.object({
@@ -92,9 +92,9 @@ const availabilityQuery = z.object({
   doctor_id: zId.optional(),
 });
 
-router.get('/appointments/availability', validate(availabilityQuery, 'query'), (req, res) => {
+router.get('/appointments/availability', validate(availabilityQuery, 'query'), async (req, res) => {
   const { date, service_id: serviceId, doctor_id: doctorId } = req.validatedQuery;
-  res.json(availability.getDayAvailability({ date, serviceId, doctorId }));
+  res.json(await availability.getDayAvailability({ date, serviceId, doctorId }));
 });
 
 const overviewQuery = z.object({
@@ -104,11 +104,11 @@ const overviewQuery = z.object({
   doctor_id: zId.optional(),
 });
 
-router.get('/appointments/calendar', validate(overviewQuery, 'query'), (req, res) => {
+router.get('/appointments/calendar', validate(overviewQuery, 'query'), async (req, res) => {
   const { from, days, service_id: serviceId, doctor_id: doctorId } = req.validatedQuery;
   res.json({
-    days: availability.getMonthOverview({ from, days, serviceId, doctorId }),
-    next_available: availability.nextAvailableDate({ serviceId, doctorId }),
+    days: await availability.getMonthOverview({ from, days, serviceId, doctorId }),
+    next_available: await availability.nextAvailableDate({ serviceId, doctorId }),
   });
 });
 
@@ -130,7 +130,7 @@ router.post('/appointments', bookingLimiter, requirePublicCsrf, validate(booking
   asyncHandler(async (req, res) => {
     const b = req.body;
     try {
-      const appt = appointmentService.createAppointment({
+      const appt = await appointmentService.createAppointment({
         name: b.name, phone: b.phone, email: b.email || null,
         date: b.date, time: b.time,
         serviceId: b.service_id, doctorId: b.doctor_id,
@@ -138,7 +138,7 @@ router.post('/appointments', bookingLimiter, requirePublicCsrf, validate(booking
         isNewPatient: b.is_new_patient, source: 'website',
       }, { ip: req.ip, userAgent: String(req.get('user-agent') || '').slice(0, 300) });
 
-      res.status(201).json({ ok: true, appointment: appointmentService.publicView(appt) });
+      res.status(201).json({ ok: true, appointment: await appointmentService.publicView(appt) });
     } catch (err) {
       if (err instanceof appointmentService.BookingError) {
         return res.status(err.status).json({ error: err.message, code: err.code });
@@ -150,31 +150,31 @@ router.post('/appointments', bookingLimiter, requirePublicCsrf, validate(booking
 /* ── Patient self-service: lookup requires the booking ref AND the phone ── */
 const lookupQuery = z.object({ phone: zPhone });
 
-router.get('/appointments/:ref', lookupLimiter, validate(lookupQuery, 'query'), (req, res) => {
-  const appt = apptRepo.findByRef(req.params.ref);
+router.get('/appointments/:ref', lookupLimiter, validate(lookupQuery, 'query'), async (req, res) => {
+  const appt = await apptRepo.findByRef(req.params.ref);
   const phone = normalisePhone(req.validatedQuery.phone);
   if (!appt || !phone || appt.patient_phone !== phone) {
     return res.status(404).json({ error: 'No appointment found for those details.', code: 'NOT_FOUND' });
   }
-  res.json(appointmentService.publicView(appt));
+  res.json(await appointmentService.publicView(appt));
 });
 
-router.get('/appointments/:ref/calendar.ics', lookupLimiter, validate(lookupQuery, 'query'), (req, res) => {
-  const appt = apptRepo.findByRef(req.params.ref);
+router.get('/appointments/:ref/calendar.ics', lookupLimiter, validate(lookupQuery, 'query'), async (req, res) => {
+  const appt = await apptRepo.findByRef(req.params.ref);
   const phone = normalisePhone(req.validatedQuery.phone);
   if (!appt || !phone || appt.patient_phone !== phone) {
     return res.status(404).json({ error: 'Not found.', code: 'NOT_FOUND' });
   }
   res.set('Content-Type', 'text/calendar; charset=utf-8');
   res.set('Content-Disposition', `attachment; filename="${appt.ref}.ics"`);
-  res.send(appointmentIcs(appt));
+  res.send(await appointmentIcs(appt));
 });
 
 const cancelSchema = z.object({ phone: zPhone, reason: z.string().trim().max(300).optional() });
 
 router.post('/appointments/:ref/cancel', lookupLimiter, requirePublicCsrf, validate(cancelSchema),
   asyncHandler(async (req, res) => {
-    const appt = apptRepo.findByRef(req.params.ref);
+    const appt = await apptRepo.findByRef(req.params.ref);
     const phone = normalisePhone(req.body.phone);
     if (!appt || !phone || appt.patient_phone !== phone) {
       return res.status(404).json({ error: 'No appointment found for those details.', code: 'NOT_FOUND' });
@@ -182,10 +182,10 @@ router.post('/appointments/:ref/cancel', lookupLimiter, requirePublicCsrf, valid
     if (!['pending', 'confirmed', 'rescheduled'].includes(appt.status)) {
       return res.status(409).json({ error: 'This appointment can no longer be cancelled online. Please call the clinic.', code: 'NOT_CANCELLABLE' });
     }
-    const updated = appointmentService.cancel(appt.id,
+    const updated = await appointmentService.cancel(appt.id,
       { reason: req.body.reason || 'Cancelled by patient' },
       { ip: req.ip, userEmail: 'patient' });
-    res.json({ ok: true, appointment: appointmentService.publicView(updated) });
+    res.json({ ok: true, appointment: await appointmentService.publicView(updated) });
   }));
 
 /* ── Enquiries ── */
@@ -197,7 +197,7 @@ const enquirySchema = z.object({
   preferred_contact: z.enum(['phone', 'whatsapp', 'email']).default('phone'),
 });
 
-router.post('/enquiries', enquiryLimiter, requirePublicCsrf, validate(enquirySchema), (req, res) => {
+router.post('/enquiries', enquiryLimiter, requirePublicCsrf, validate(enquirySchema), async (req, res) => {
   const phone = normalisePhone(req.body.phone);
   if (!phone) {
     return res.status(400).json({
@@ -205,8 +205,8 @@ router.post('/enquiries', enquiryLimiter, requirePublicCsrf, validate(enquirySch
       fields: { phone: 'Enter a valid 10-digit mobile number.' },
     });
   }
-  const enquiry = contentRepo.createEnquiry({ ...req.body, phone });
-  try { events.enquiryCreated(enquiry); }
+  const enquiry = await contentRepo.createEnquiry({ ...req.body, phone });
+  try { await events.enquiryCreated(enquiry); }
   catch (err) { console.error('[enquiry] notification enqueue failed (enquiry saved):', err.message); }
   res.status(201).json({ ok: true, id: enquiry.id });
 });

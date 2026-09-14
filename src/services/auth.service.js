@@ -16,8 +16,8 @@ export class AuthError extends Error {
 /** Generic message for every credential failure — no user enumeration. */
 const BAD_CREDENTIALS = 'Incorrect email or password.';
 
-export function login({ email, password }, ctx = {}) {
-  const user = usersRepo.findByEmail(email);
+export async function login({ email, password }, ctx = {}) {
+  const user = await usersRepo.findByEmail(email);
 
   if (!user) {
     // Spend comparable time so a missing account is not detectable by timing.
@@ -30,7 +30,7 @@ export function login({ email, password }, ctx = {}) {
   if (!user.is_active) throw new AuthError('INACTIVE', 'This account has been deactivated.', 403);
 
   if (!verifyPassword(password, user.password_hash, user.password_salt)) {
-    usersRepo.recordLoginFailure(user.id);
+    await usersRepo.recordLoginFailure(user.id);
     audit({ ...ctx }, {
       action: 'auth.login.failed', entity: 'user', entity_id: user.id,
       summary: `Failed login for ${user.email}`,
@@ -40,11 +40,11 @@ export function login({ email, password }, ctx = {}) {
 
   const token = randomToken(32);
   const csrfToken = randomToken(24);
-  sessionsRepo.create({
+  await sessionsRepo.create({
     id: sha256(token), userId: user.id, csrfToken,
     ip: ctx.ip, userAgent: ctx.userAgent,
   });
-  usersRepo.recordLoginSuccess(user.id);
+  await usersRepo.recordLoginSuccess(user.id);
   audit({ ...ctx, userId: user.id, userEmail: user.email }, {
     action: 'auth.login', entity: 'user', entity_id: user.id,
     summary: `${user.email} signed in`,
@@ -59,20 +59,20 @@ export function login({ email, password }, ctx = {}) {
   };
 }
 
-export function logout(token, ctx = {}) {
+export async function logout(token, ctx = {}) {
   if (!token) return false;
-  const revoked = sessionsRepo.revoke(sha256(token)) > 0;
+  const revoked = (await sessionsRepo.revoke(sha256(token))) > 0;
   if (revoked) audit(ctx, { action: 'auth.logout', entity: 'user', entity_id: ctx.userId, summary: 'Signed out' });
   return revoked;
 }
 
 /** Resolve a raw cookie token to a live session, sliding its expiry. */
-export function resolveSession(token) {
+export async function resolveSession(token) {
   if (!token) return null;
-  const session = sessionsRepo.find(sha256(token));
+  const session = await sessionsRepo.find(sha256(token));
   if (!session) return null;
   if (!session.is_active) return null;
-  sessionsRepo.touch(session.id);
+  await sessionsRepo.touch(session.id);
   return {
     sessionId: session.id,
     csrfToken: session.csrf_token,
@@ -83,15 +83,15 @@ export function resolveSession(token) {
   };
 }
 
-export function changePassword(userId, { currentPassword, newPassword }, ctx = {}) {
-  const user = usersRepo.findById(userId);
+export async function changePassword(userId, { currentPassword, newPassword }, ctx = {}) {
+  const user = await usersRepo.findById(userId);
   if (!user) throw new AuthError('NOT_FOUND', 'User not found.', 404);
   if (!verifyPassword(currentPassword, user.password_hash, user.password_salt)) {
     throw new AuthError('INVALID_CREDENTIALS', 'Your current password is incorrect.', 400);
   }
-  usersRepo.setPassword(userId, newPassword);
+  await usersRepo.setPassword(userId, newPassword);
   // Force other devices to sign in again with the new password.
-  sessionsRepo.revokeAllForUser(userId);
+  await sessionsRepo.revokeAllForUser(userId);
   audit(ctx, { action: 'auth.password.change', entity: 'user', entity_id: userId, summary: 'Password changed' });
   return true;
 }
@@ -100,14 +100,14 @@ export function changePassword(userId, { currentPassword, newPassword }, ctx = {
  * Create a reset token. Always returns the same shape whether or not the email
  * exists, so the endpoint cannot be used to enumerate accounts.
  */
-export function requestPasswordReset(email, ctx = {}) {
-  const user = usersRepo.findByEmail(email);
+export async function requestPasswordReset(email, ctx = {}) {
+  const user = await usersRepo.findByEmail(email);
   if (!user || !user.is_active) return { issued: false };
 
   const token = randomToken(32);
   run(
     `INSERT INTO password_resets (user_id, token_hash, expires_at)
-     VALUES (?, ?, datetime('now', '+1 hour'))`,
+     VALUES (?, ?, NOW() + INTERVAL '+1 hour')`,
     user.id, sha256(token)
   );
   audit(ctx, {
@@ -117,16 +117,16 @@ export function requestPasswordReset(email, ctx = {}) {
   return { issued: true, token, user };
 }
 
-export function resetPassword({ token, newPassword }, ctx = {}) {
+export async function resetPassword({ token, newPassword }, ctx = {}) {
   const row = one(
     `SELECT * FROM password_resets WHERE token_hash = ? AND used_at IS NULL
-       AND expires_at > datetime('now')`, sha256(token)
+       AND expires_at > NOW()`, sha256(token)
   );
   if (!row) throw new AuthError('INVALID_TOKEN', 'This reset link is invalid or has expired.', 400);
 
-  usersRepo.setPassword(row.user_id, newPassword);
-  run(`UPDATE password_resets SET used_at = datetime('now') WHERE id = ?`, row.id);
-  sessionsRepo.revokeAllForUser(row.user_id);
+  await usersRepo.setPassword(row.user_id, newPassword);
+  run(`UPDATE password_resets SET used_at = NOW() WHERE id = ?`, row.id);
+  await sessionsRepo.revokeAllForUser(row.user_id);
   audit(ctx, {
     action: 'auth.password.reset', entity: 'user', entity_id: row.user_id,
     summary: 'Password reset completed',
@@ -134,7 +134,7 @@ export function resetPassword({ token, newPassword }, ctx = {}) {
   return true;
 }
 
-export function sessionCookieOptions() {
+export async function sessionCookieOptions() {
   return {
     httpOnly: true,
     sameSite: 'lax',

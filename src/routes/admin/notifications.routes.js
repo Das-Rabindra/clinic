@@ -15,46 +15,46 @@ router.get('/', validate(z.object({
   channel: z.enum(NOTIFICATION_CHANNELS).optional(),
   limit: z.coerce.number().int().min(1).max(200).default(100),
   offset: z.coerce.number().int().min(0).default(0),
-}), 'query'), (req, res) => {
+}), 'query'), async (req, res) => {
   const q = req.validatedQuery;
-  const { rows, total } = notifRepo.list(q);
+  const { rows, total } = await notifRepo.list(q);
   res.json({
     rows, total,
-    providers: notifications.status(),
-    failed_count: notifRepo.failedCount(),
-    jobs: jobsRepo.stats(),
+    providers: await notifications.status(),
+    failed_count: await notifRepo.failedCount(),
+    jobs: await jobsRepo.stats(),
   });
 });
 
-router.get('/:id', (req, res) => {
-  const n = notifRepo.findById(Number(req.params.id));
+router.get('/:id', async (req, res) => {
+  const n = await notifRepo.findById(Number(req.params.id));
   if (!n) return res.status(404).json({ error: 'Notification not found.', code: 'NOT_FOUND' });
-  res.json({ notification: n, logs: notifRepo.logsFor(n.id) });
+  res.json({ notification: n, logs: await notifRepo.logsFor(n.id) });
 });
 
 /** Manual retry after fixing credentials or a transient provider outage. */
 router.post('/:id/retry', asyncHandler(async (req, res) => {
   const id = Number(req.params.id);
-  const n = notifRepo.findById(id);
+  const n = await notifRepo.findById(id);
   if (!n) return res.status(404).json({ error: 'Notification not found.', code: 'NOT_FOUND' });
 
   const result = await notifications.retry(id);
-  audit(ctxFrom(req), {
+  await audit(ctxFrom(req), {
     action: 'notification.retry', entity: 'notification', entity_id: id,
     summary: `Retried ${n.channel} "${n.template}" to ${n.recipient} — ${result.ok ? 'sent' : (result.notConfigured ? 'provider not configured' : 'failed')}`,
   });
-  res.json({ ok: result.ok, result, notification: notifRepo.findById(id) });
+  res.json({ ok: result.ok, result, notification: await notifRepo.findById(id) });
 }));
 
 /** Retry every failed notification at once. */
 router.post('/retry-failed', asyncHandler(async (req, res) => {
-  const { rows } = notifRepo.list({ status: 'failed', limit: 100 });
+  const { rows } = await notifRepo.list({ status: 'failed', limit: 100 });
   let sent = 0, failed = 0;
   for (const n of rows) {
     const r = await notifications.retry(n.id);
     if (r.ok) sent++; else failed++;
   }
-  audit(ctxFrom(req), {
+  await audit(ctxFrom(req), {
     action: 'notification.retry_all', entity: 'notification', entity_id: 'failed',
     summary: `Retried ${rows.length} failed notification(s): ${sent} sent, ${failed} still failing`,
   });

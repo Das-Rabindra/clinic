@@ -54,16 +54,16 @@ export async function listLocations(accountName) {
 }
 
 /** Persist which location this clinic is, so syncs know what to fetch. */
-export function selectLocation({ accountName, locationName, locationTitle }) {
-  reviewsRepo.setSyncState({
+export async function selectLocation({ accountName, locationName, locationTitle }) {
+  await reviewsRepo.setSyncState({
     connected: true, account_name: accountName,
     location_name: locationName, location_title: locationTitle,
   });
-  integrationsRepo.upsert('google_business', {
+  await integrationsRepo.upsert('google_business', {
     config: { account_name: accountName, location_name: locationName },
     status: 'connected',
   });
-  return reviewsRepo.syncState();
+  return await reviewsRepo.syncState();
 }
 
 /**
@@ -71,7 +71,7 @@ export function selectLocation({ accountName, locationName, locationTitle }) {
  * @returns {Promise<{ok:boolean, synced?:number, average?:number, total?:number, error?:string, lastSyncAt?:string}>}
  */
 export async function sync() {
-  const state = reviewsRepo.syncState();
+  const state = await reviewsRepo.syncState();
   if (!state?.location_name || !state?.account_name) {
     return {
       ok: false,
@@ -96,7 +96,7 @@ export async function sync() {
       for (const r of body.reviews || []) {
         const rating = STAR[r.starRating] ?? null;
         if (!rating) continue;                     // UNSPECIFIED rating: skip
-        reviewsRepo.upsertByExternalId({
+        await reviewsRepo.upsertByExternalId({
           source: 'google',
           external_id: r.reviewId || r.name,
           author_name: r.reviewer?.displayName || 'Google user',
@@ -117,32 +117,32 @@ export async function sync() {
     } while (pageToken && synced < 500);
 
     const nowIso = new Date().toISOString();
-    reviewsRepo.setSyncState({
+    await reviewsRepo.setSyncState({
       connected: true, rating_avg: average, rating_count: total,
       last_sync_at: nowIso, last_error: null,
     });
-    integrationsRepo.upsert('google_business', { status: 'connected', last_error: null });
+    await integrationsRepo.upsert('google_business', { status: 'connected', last_error: null });
 
     return { ok: true, synced, average, total, lastSyncAt: nowIso };
   } catch (err) {
     // Keep whatever was synced before; only record the failure.
-    reviewsRepo.setSyncState({ last_error: err.message });
-    integrationsRepo.upsert('google_business', {
+    await reviewsRepo.setSyncState({ last_error: err.message });
+    await integrationsRepo.upsert('google_business', {
       status: err.status === 401 ? 'reconnect_required' : 'error',
       last_error: err.message,
     });
     return {
       ok: false,
       error: err.message,
-      lastSyncAt: reviewsRepo.syncState()?.last_sync_at ?? null,
+      lastSyncAt: await reviewsRepo.syncState()?.last_sync_at ?? null,
     };
   }
 }
 
 /** Everything the admin Reviews screen needs, including honest failure state. */
-export function connectionStatus() {
-  const state = reviewsRepo.syncState();
-  const integration = integrationsRepo.get('google_business');
+export async function connectionStatus() {
+  const state = await reviewsRepo.syncState();
+  const integration = await integrationsRepo.get('google_business');
   return {
     oauth_configured: oauth.isConfigured(),
     connected: Boolean(state?.connected),
@@ -153,16 +153,16 @@ export function connectionStatus() {
     last_sync_at: state?.last_sync_at || null,
     last_error: state?.last_error || null,
     last_error_at: state?.last_error_at || null,
-    review_count: reviewsRepo.count(),
+    review_count: await reviewsRepo.count(),
     redirect_uri: oauth.redirectUri(),
   };
 }
 
 /** Public payload. Aggregate covers only visible reviews, so it is never faked. */
-export function publicReviews(limit = 12) {
-  const rows = reviewsRepo.listPublic(limit);
-  const agg = reviewsRepo.aggregate();
-  const state = reviewsRepo.syncState();
+export async function publicReviews(limit = 12) {
+  const rows = await reviewsRepo.listPublic(limit);
+  const agg = await reviewsRepo.aggregate();
+  const state = await reviewsRepo.syncState();
   return {
     reviews: rows,
     average: agg.count ? agg.average : null,

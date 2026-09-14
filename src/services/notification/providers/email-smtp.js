@@ -5,9 +5,9 @@ import * as integrationsRepo from '../../../repositories/integrations.repo.js';
 
 export const name = 'smtp';
 
-function settings() {
-  const stored = integrationsRepo.getSecrets('smtp');
-  const row = integrationsRepo.get('smtp');
+async function settings() {
+  const stored = await integrationsRepo.getSecrets('smtp');
+  const row = await integrationsRepo.get('smtp');
   const cfg = row?.config || {};
   return {
     host: cfg.host || config.smtp.host,
@@ -20,13 +20,13 @@ function settings() {
   };
 }
 
-export const isConfigured = () => {
-  const s = settings();
+export const isConfigured = async () => {
+  const s = await settings();
   return Boolean(s.enabled && s.host);
 };
 
 let cached = null, cachedKey = '';
-function transport(s) {
+async function transport(s) {
   const key = `${s.host}:${s.port}:${s.user}`;
   if (cached && cachedKey === key) return cached;
   cached = nodemailer.createTransport({
@@ -38,10 +38,10 @@ function transport(s) {
 }
 
 export async function send({ to, subject, text }) {
-  const s = settings();
-  if (!isConfigured()) return { ok: false, notConfigured: true, error: 'SMTP is not configured.' };
+  const s = await settings();
+  if (!(await isConfigured())) return { ok: false, notConfigured: true, error: 'SMTP is not configured.' };
   try {
-    const info = await transport(s).sendMail({ from: s.from, to, subject, text });
+    const info = (await transport(s)).sendMail({ from: s.from, to, subject, text });
     return { ok: true, messageId: info.messageId, body: info.response };
   } catch (err) {
     return { ok: false, error: err.message };
@@ -49,8 +49,8 @@ export async function send({ to, subject, text }) {
 }
 
 export async function verify() {
-  const s = settings();
+  const s = await settings();
   if (!s.host) return { ok: false, error: 'No SMTP host configured.' };
-  try { await transport(s).verify(); return { ok: true }; }
+  try { (await transport(s)).verify(); return { ok: true }; }
   catch (err) { return { ok: false, error: err.message }; }
 }

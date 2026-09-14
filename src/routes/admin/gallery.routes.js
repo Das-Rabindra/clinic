@@ -24,25 +24,26 @@ const upload = multer({
 router.get('/', validate(z.object({
   category: z.enum(GALLERY_CATEGORIES).optional(),
   published: z.enum(['0', '1']).optional(),
-}), 'query'), (req, res) => {
+}), 'query'), async (req, res) => {
   const { category, published } = req.validatedQuery;
   res.json({
-    items: galleryRepo.listAdmin({
+    items: await galleryRepo.listAdmin({
       category,
       published: published === undefined ? undefined : Number(published),
     }),
     categories: GALLERY_CATEGORIES,
     consent_required_for: CONSENT_REQUIRED_CATEGORIES,
-    max_upload_mb: mediaService.maxUploadMb(),
+    max_upload_mb: await mediaService.maxUploadMb(),
   });
 });
 
 /* ── Media library ── */
-router.get('/media', (req, res) => {
+router.get('/media', async (req, res) => {
   const folder = typeof req.query.folder === 'string' ? req.query.folder : null;
-  res.json(mediaRepo.list({ folder, limit: 200 }).map(m => ({
-    ...m, thumb_url: mediaRepo.thumbFor(m.id)?.url || m.url,
-  })));
+  const rows = await mediaRepo.list({ folder, limit: 200 });
+  res.json(await Promise.all(rows.map(async (m) => ({
+    ...m, thumb_url: (await mediaRepo.thumbFor(m.id))?.url || m.url,
+  }))));
 });
 
 router.post('/media', upload.single('file'), asyncHandler(async (req, res) => {
@@ -51,7 +52,7 @@ router.post('/media', upload.single('file'), asyncHandler(async (req, res) => {
     const media = await mediaService.ingestImage(req.file, {
       folder, alt: req.body.alt || null, userId: req.user.id,
     });
-    audit(ctxFrom(req), {
+    await audit(ctxFrom(req), {
       action: 'media.upload', entity: 'media', entity_id: media.id,
       summary: `Uploaded image to ${folder} (${Math.round(media.bytes / 1024)} KB)`,
     });
@@ -66,10 +67,10 @@ router.post('/media', upload.single('file'), asyncHandler(async (req, res) => {
 
 router.delete('/media/:id', asyncHandler(async (req, res) => {
   const id = Number(req.params.id);
-  const media = mediaRepo.findById(id);
+  const media = await mediaRepo.findById(id);
   if (!media) return res.status(404).json({ error: 'Image not found.', code: 'NOT_FOUND' });
   await mediaService.deleteMedia(id);
-  audit(ctxFrom(req), {
+  await audit(ctxFrom(req), {
     action: 'media.delete', entity: 'media', entity_id: id,
     summary: `Deleted image ${media.key}`,
   });
@@ -101,17 +102,17 @@ function consentProblem(category, consentConfirmed, isPublished) {
   return null;
 }
 
-router.post('/', validate(itemSchema), (req, res) => {
+router.post('/', validate(itemSchema), async (req, res) => {
   const b = req.body;
   const problem = consentProblem(b.category, b.consent_confirmed, b.is_published);
   if (problem) return res.status(422).json({ error: problem, code: 'CONSENT_REQUIRED' });
 
-  if (!mediaRepo.findById(b.media_id)) {
+  if (!await mediaRepo.findById(b.media_id)) {
     return res.status(400).json({ error: 'That image no longer exists.', code: 'BAD_MEDIA' });
   }
 
-  const created = galleryRepo.create({ ...b, consent_by: req.user.id });
-  audit(ctxFrom(req), {
+  const created = await galleryRepo.create({ ...b, consent_by: req.user.id });
+  await audit(ctxFrom(req), {
     action: 'gallery.create', entity: 'gallery_item', entity_id: created.id,
     summary: `Added gallery item "${created.title}" (${created.category})${created.consent_confirmed ? ' — consent confirmed' : ''}`,
     after: { title: created.title, category: created.category, is_published: created.is_published },
@@ -119,9 +120,9 @@ router.post('/', validate(itemSchema), (req, res) => {
   res.status(201).json({ ok: true, item: created });
 });
 
-router.put('/:id', validate(partialUpdate(itemSchema).omit({ media_id: true })), (req, res) => {
+router.put('/:id', validate(partialUpdate(itemSchema).omit({ media_id: true })), async (req, res) => {
   const id = Number(req.params.id);
-  const before = galleryRepo.findById(id);
+  const before = await galleryRepo.findById(id);
   if (!before) return res.status(404).json({ error: 'Gallery item not found.', code: 'NOT_FOUND' });
 
   const category = req.body.category ?? before.category;
@@ -132,13 +133,13 @@ router.put('/:id', validate(partialUpdate(itemSchema).omit({ media_id: true })),
 
   if (req.body.consent_confirmed !== undefined
       && Boolean(before.consent_confirmed) !== req.body.consent_confirmed) {
-    galleryRepo.setConsent(id, req.body.consent_confirmed, req.user.id, req.body.consent_note);
+    await galleryRepo.setConsent(id, req.body.consent_confirmed, req.user.id, req.body.consent_note);
   }
   const { consent_confirmed: _c, ...fields } = req.body;
-  galleryRepo.update(id, fields);
+  await galleryRepo.update(id, fields);
 
-  const after = galleryRepo.findById(id);
-  audit(ctxFrom(req), {
+  const after = await galleryRepo.findById(id);
+  await audit(ctxFrom(req), {
     action: 'gallery.update', entity: 'gallery_item', entity_id: id,
     summary: `Updated gallery item "${after.title}"`,
     before: { title: before.title, is_published: before.is_published, consent_confirmed: before.consent_confirmed },
@@ -147,9 +148,9 @@ router.put('/:id', validate(partialUpdate(itemSchema).omit({ media_id: true })),
   res.json({ ok: true, item: after });
 });
 
-router.post('/:id/publish', validate(z.object({ published: zBool })), (req, res) => {
+router.post('/:id/publish', validate(z.object({ published: zBool })), async (req, res) => {
   const id = Number(req.params.id);
-  const result = galleryRepo.setPublished(id, req.body.published);
+  const result = await galleryRepo.setPublished(id, req.body.published);
   if (!result.ok) {
     if (result.error === 'NOT_FOUND') return res.status(404).json({ error: 'Gallery item not found.', code: 'NOT_FOUND' });
     return res.status(422).json({
@@ -157,8 +158,8 @@ router.post('/:id/publish', validate(z.object({ published: zBool })), (req, res)
       code: 'CONSENT_REQUIRED',
     });
   }
-  const item = galleryRepo.findById(id);
-  audit(ctxFrom(req), {
+  const item = await galleryRepo.findById(id);
+  await audit(ctxFrom(req), {
     action: req.body.published ? 'gallery.publish' : 'gallery.unpublish',
     entity: 'gallery_item', entity_id: id,
     summary: `${req.body.published ? 'Published' : 'Unpublished'} "${item.title}"`,
@@ -170,38 +171,38 @@ router.post('/:id/publish', validate(z.object({ published: zBool })), (req, res)
 router.post('/:id/consent', validate(z.object({
   confirmed: zBool,
   note: z.string().trim().max(500).nullish(),
-})), (req, res) => {
+})), async (req, res) => {
   const id = Number(req.params.id);
-  const item = galleryRepo.findById(id);
+  const item = await galleryRepo.findById(id);
   if (!item) return res.status(404).json({ error: 'Gallery item not found.', code: 'NOT_FOUND' });
 
-  galleryRepo.setConsent(id, req.body.confirmed, req.user.id, req.body.note);
+  await galleryRepo.setConsent(id, req.body.confirmed, req.user.id, req.body.note);
   if (!req.body.confirmed && item.is_published && CONSENT_REQUIRED_CATEGORIES.includes(item.category)) {
-    galleryRepo.setPublished(id, false);   // withdrawing consent unpublishes
+    await galleryRepo.setPublished(id, false);   // withdrawing consent unpublishes
   }
-  audit(ctxFrom(req), {
+  await audit(ctxFrom(req), {
     action: req.body.confirmed ? 'gallery.consent.confirm' : 'gallery.consent.withdraw',
     entity: 'gallery_item', entity_id: id,
     summary: `${req.body.confirmed ? 'Confirmed' : 'Withdrew'} patient consent for "${item.title}"${req.body.note ? ` — ${req.body.note}` : ''}`,
   });
-  res.json({ ok: true, item: galleryRepo.findById(id) });
+  res.json({ ok: true, item: await galleryRepo.findById(id) });
 });
 
-router.post('/reorder', validate(z.object({ ids: z.array(zId).min(1).max(300) })), (req, res) => {
-  galleryRepo.reorder(req.body.ids);
-  audit(ctxFrom(req), {
+router.post('/reorder', validate(z.object({ ids: z.array(zId).min(1).max(300) })), async (req, res) => {
+  await galleryRepo.reorder(req.body.ids);
+  await audit(ctxFrom(req), {
     action: 'gallery.reorder', entity: 'gallery_item', entity_id: 'all',
     summary: 'Reordered gallery',
   });
   res.json({ ok: true });
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   const id = Number(req.params.id);
-  const item = galleryRepo.findById(id);
+  const item = await galleryRepo.findById(id);
   if (!item) return res.status(404).json({ error: 'Gallery item not found.', code: 'NOT_FOUND' });
-  galleryRepo.softDelete(id);
-  audit(ctxFrom(req), {
+  await galleryRepo.softDelete(id);
+  await audit(ctxFrom(req), {
     action: 'gallery.delete', entity: 'gallery_item', entity_id: id,
     summary: `Deleted gallery item "${item.title}"`,
   });

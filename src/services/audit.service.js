@@ -2,9 +2,9 @@
 import * as auditRepo from '../repositories/audit.repo.js';
 import { snap } from '../utils/format.js';
 
-export function audit(ctx = {}, { action, entity, entity_id, summary, before, after }) {
+export async function audit(ctx = {}, { action, entity, entity_id, summary, before, after }) {
   try {
-    auditRepo.write({
+    await auditRepo.write({
       user_id: ctx.userId ?? null,
       user_email: ctx.userEmail ?? null,
       action, entity, entity_id, summary,
@@ -18,7 +18,7 @@ export function audit(ctx = {}, { action, entity, entity_id, summary, before, af
 }
 
 /** Build an audit context from an Express request. */
-export const ctxFrom = (req) => ({
+export const ctxFrom = async (req) => ({
   userId: req.user?.id ?? null,
   userEmail: req.user?.email ?? null,
   ip: req.ip,

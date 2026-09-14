@@ -15,22 +15,22 @@ export const SCOPE = 'https://www.googleapis.com/auth/business.manage';
 
 export const redirectUri = () => `${config.publicUrl}/oauth/google/callback`;
 
-function clientCreds() {
-  const stored = integrationsRepo.getSecrets('google_business');
-  const cfg = integrationsRepo.get('google_business')?.config || {};
+async function clientCreds() {
+  const stored = await integrationsRepo.getSecrets('google_business');
+  const cfg = await integrationsRepo.get('google_business')?.config || {};
   return {
     clientId: stored.client_id || cfg.client_id || config.google.clientId,
     clientSecret: stored.client_secret || config.google.clientSecret,
   };
 }
 
-export const isConfigured = () => {
+export const isConfigured = async () => {
   const c = clientCreds();
   return Boolean(c.clientId && c.clientSecret);
 };
 
 /** Build the consent URL. `state` is signed so the callback can trust it. */
-export function authUrl() {
+export async function authUrl() {
   const { clientId } = clientCreds();
   if (!clientId) throw new Error('Google OAuth client ID is not configured.');
   const nonce = randomToken(16);
@@ -48,7 +48,7 @@ export function authUrl() {
   return `${AUTH_URL}?${params}`;
 }
 
-export function verifyState(state) {
+export async function verifyState(state) {
   const [nonce, sig] = String(state || '').split('.');
   return Boolean(nonce && sig && verifySigned(nonce, sig));
 }
@@ -64,13 +64,13 @@ export async function exchangeCode(code) {
       redirect_uri: redirectUri(), grant_type: 'authorization_code',
     }),
   });
-  const body = await res.json().catch(() => ({}));
+  const body = (await res.json()).catch(() => ({}));
   if (!res.ok) throw new Error(body.error_description || body.error || `Token exchange failed (HTTP ${res.status})`);
   if (!body.refresh_token) {
     throw new Error('Google did not return a refresh token. Remove the app from your Google account permissions and connect again.');
   }
 
-  integrationsRepo.upsert('google_business', {
+  await integrationsRepo.upsert('google_business', {
     secrets: { refresh_token: body.refresh_token },
     config: { connected_at: new Date().toISOString() },
     is_enabled: true,
@@ -83,7 +83,7 @@ export async function exchangeCode(code) {
 /** Exchange the stored refresh token for a short-lived access token. */
 export async function accessToken() {
   const { clientId, clientSecret } = clientCreds();
-  const { refresh_token: refreshToken } = integrationsRepo.getSecrets('google_business');
+  const { refresh_token: refreshToken } = await integrationsRepo.getSecrets('google_business');
   if (!refreshToken) throw new Error('Google Business Profile is not connected.');
 
   const res = await fetch(TOKEN_URL, {
@@ -94,11 +94,11 @@ export async function accessToken() {
       refresh_token: refreshToken, grant_type: 'refresh_token',
     }),
   });
-  const body = await res.json().catch(() => ({}));
+  const body = (await res.json()).catch(() => ({}));
   if (!res.ok) {
     // invalid_grant means the user revoked access or the token expired.
     if (body.error === 'invalid_grant') {
-      integrationsRepo.upsert('google_business', {
+      await integrationsRepo.upsert('google_business', {
         is_enabled: false, status: 'reconnect_required',
         last_error: 'Google access was revoked or expired. Please reconnect.',
       });
@@ -109,7 +109,7 @@ export async function accessToken() {
   return body.access_token;
 }
 
-export function disconnect() {
-  integrationsRepo.clearSecrets('google_business');
+export async function disconnect() {
+  await integrationsRepo.clearSecrets('google_business');
   return true;
 }

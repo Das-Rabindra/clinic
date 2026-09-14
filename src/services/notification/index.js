@@ -15,11 +15,11 @@ import { truncate } from '../../utils/format.js';
 const providers = { whatsapp, email };
 
 /** Queue a notification. Returns the row id (or an existing one if deduped). */
-export function queue({ channel, template, recipient, payload = {}, appointmentId = null,
+export async function queue({ channel, template, recipient, payload = {}, appointmentId = null,
   enquiryId = null, scheduledFor = null, dedupeKey = null, recipientRole = 'patient',
   bodyPreview = null }) {
   if (!recipient) return null;
-  return notifRepo.enqueue({
+  return await notifRepo.enqueue({
     channel, template, recipient, recipient_role: recipientRole,
     payload, appointment_id: appointmentId, enquiry_id: enquiryId,
     scheduled_for: scheduledFor, dedupe_key: dedupeKey,
@@ -33,37 +33,37 @@ export function queue({ channel, template, recipient, payload = {}, appointmentI
  * so the admin can see exactly what happened and retry.
  */
 export async function deliver(notification) {
-  const n = typeof notification === 'number' ? notifRepo.findById(notification) : notification;
+  const n = typeof notification === 'number' ? await notifRepo.findById(notification) : notification;
   if (!n) return { ok: false, error: 'not found' };
 
   const provider = providers[n.channel];
   if (!provider) {
-    notifRepo.markFailed(n.id, `No provider for channel "${n.channel}"`, null);
+    await notifRepo.markFailed(n.id, `No provider for channel "${n.channel}"`, null);
     return { ok: false, error: 'no provider' };
   }
 
-  notifRepo.markSending(n.id);
+  await notifRepo.markSending(n.id);
   const attempt = (n.attempts ?? 0) + 1;
 
   let payload = {};
   try { payload = JSON.parse(n.payload_json || '{}'); } catch { /* keep {} */ }
 
-  const clinic = settingsRepo.get();
+  const clinic = await settingsRepo.get();
   let content;
   try {
     content = render(n.template, payload.entity || {}, clinic, payload.extra || {});
   } catch (err) {
-    notifRepo.markFailed(n.id, err.message, provider.name);
-    notifRepo.log(n.id, { attempt, status: 'failed', error: err.message });
+    await notifRepo.markFailed(n.id, err.message, provider.name);
+    await notifRepo.log(n.id, { attempt, status: 'failed', error: err.message });
     return { ok: false, error: err.message };
   }
 
-  if (!provider.isConfigured()) {
+  if (!(await provider.isConfigured())) {
     const note = n.channel === 'whatsapp'
       ? 'WhatsApp Cloud API is not configured. Add credentials in Settings → Integrations.'
       : 'Email provider is not configured. Add SMTP details in Settings → Integrations.';
-    notifRepo.markNotConfigured(n.id, note);
-    notifRepo.log(n.id, { attempt, status: 'not_configured', error: note });
+    await notifRepo.markNotConfigured(n.id, note);
+    await notifRepo.log(n.id, { attempt, status: 'not_configured', error: note });
     return { ok: false, notConfigured: true };
   }
 
@@ -76,21 +76,21 @@ export async function deliver(notification) {
   });
 
   if (res.ok) {
-    notifRepo.markSent(n.id, provider.name, res.messageId);
-    notifRepo.log(n.id, {
+    await notifRepo.markSent(n.id, provider.name, res.messageId);
+    await notifRepo.log(n.id, {
       attempt, status: 'sent', http_status: res.httpStatus, response_body: res.body,
     });
     return { ok: true };
   }
 
   if (res.notConfigured) {
-    notifRepo.markNotConfigured(n.id, res.error);
-    notifRepo.log(n.id, { attempt, status: 'not_configured', error: res.error });
+    await notifRepo.markNotConfigured(n.id, res.error);
+    await notifRepo.log(n.id, { attempt, status: 'not_configured', error: res.error });
     return { ok: false, notConfigured: true };
   }
 
-  notifRepo.markFailed(n.id, res.error, provider.name);
-  notifRepo.log(n.id, {
+  await notifRepo.markFailed(n.id, res.error, provider.name);
+  await notifRepo.log(n.id, {
     attempt, status: 'failed', http_status: res.httpStatus,
     response_body: res.body, error: res.error,
   });
@@ -99,7 +99,7 @@ export async function deliver(notification) {
 
 /** Drain due notifications. Called by the job runner. */
 export async function processQueue(limit = 20) {
-  const due = notifRepo.dueNow(limit);
+  const due = await notifRepo.dueNow(limit);
   const results = { sent: 0, failed: 0, skipped: 0 };
   for (const n of due) {
     const r = await deliver(n);
@@ -112,20 +112,20 @@ export async function processQueue(limit = 20) {
 
 /** Admin "Retry" button. */
 export async function retry(id) {
-  notifRepo.resetForRetry(id);
+  await notifRepo.resetForRetry(id);
   return deliver(id);
 }
 
 /** Preview text without sending — used by the admin notification detail view. */
-export function preview(template, entity, extra = {}) {
-  const clinic = settingsRepo.get();
+export async function preview(template, entity, extra = {}) {
+  const clinic = await settingsRepo.get();
   try {
     const c = render(template, entity, clinic, extra);
     return truncate(c.text, 400);
   } catch { return null; }
 }
 
-export const status = () => ({
-  whatsapp: { configured: whatsapp.isConfigured(), provider: whatsapp.name },
-  email: { configured: email.isConfigured(), provider: email.name },
+export const status = async () => ({
+  whatsapp: { configured: await whatsapp.isConfigured(), provider: whatsapp.name },
+  email: { configured: await email.isConfigured(), provider: email.name },
 });

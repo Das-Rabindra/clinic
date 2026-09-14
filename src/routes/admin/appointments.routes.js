@@ -27,9 +27,9 @@ const listQuery = z.object({
   offset: z.coerce.number().int().min(0).default(0),
 });
 
-router.get('/', validate(listQuery, 'query'), (req, res) => {
+router.get('/', validate(listQuery, 'query'), async (req, res) => {
   const q = req.validatedQuery;
-  const { rows, total } = apptRepo.search({
+  const { rows, total } = await apptRepo.search({
     from: q.from, to: q.to, status: q.status,
     doctorId: q.doctor_id, serviceId: q.service_id, q: q.q,
     limit: q.limit, offset: q.offset,
@@ -45,9 +45,9 @@ const calendarQuery = z.object({
   from: zDate, to: zDate, doctor_id: zId.optional(),
 });
 
-router.get('/calendar', validate(calendarQuery, 'query'), (req, res) => {
+router.get('/calendar', validate(calendarQuery, 'query'), async (req, res) => {
   const { from, to, doctor_id: doctorId } = req.validatedQuery;
-  const rows = apptRepo.between(from, to, doctorId);
+  const rows = await apptRepo.between(from, to, doctorId);
   res.json(rows.map(a => ({
     id: a.id, ref: a.ref, date: a.date,
     start_min: a.start_min, end_min: a.end_min,
@@ -57,13 +57,13 @@ router.get('/calendar', validate(calendarQuery, 'query'), (req, res) => {
   })));
 });
 
-router.get('/:id', (req, res) => {
-  const appt = apptRepo.findById(Number(req.params.id));
+router.get('/:id', async (req, res) => {
+  const appt = await apptRepo.findById(Number(req.params.id));
   if (!appt) return res.status(404).json({ error: 'Appointment not found.', code: 'NOT_FOUND' });
   res.json({
     ...appt,
     time_label: minTo12h(appt.start_min),
-    history: apptRepo.history(appt.id),
+    history: await apptRepo.history(appt.id),
   });
 });
 
@@ -78,10 +78,10 @@ const createSchema = z.object({
   source: z.enum(['admin', 'phone', 'walkin']).default('admin'),
 });
 
-router.post('/', validate(createSchema), (req, res) => {
+router.post('/', validate(createSchema), async (req, res) => {
   const b = req.body;
   try {
-    const appt = appointmentService.createAppointment({
+    const appt = await appointmentService.createAppointment({
       name: b.name, phone: b.phone, email: b.email || null,
       date: b.date, time: b.time, serviceId: b.service_id, doctorId: b.doctor_id,
       reason: b.reason || null, message: b.message || null, source: b.source,
@@ -90,17 +90,17 @@ router.post('/', validate(createSchema), (req, res) => {
   } catch (err) { handleBookingError(res, err); }
 });
 
-router.post('/:id/confirm', (req, res) => {
-  try { res.json({ ok: true, appointment: appointmentService.confirm(Number(req.params.id), ctxFrom(req)) }); }
+router.post('/:id/confirm', async (req, res) => {
+  try { res.json({ ok: true, appointment: await appointmentService.confirm(Number(req.params.id), ctxFrom(req)) }); }
   catch (err) { handleBookingError(res, err); }
 });
 
 router.post('/:id/cancel', validate(z.object({
   reason: z.string().trim().max(300).optional(),
   notify_patient: z.boolean().default(true),
-})), (req, res) => {
+})), async (req, res) => {
   try {
-    const appt = appointmentService.cancel(Number(req.params.id),
+    const appt = await appointmentService.cancel(Number(req.params.id),
       { reason: req.body.reason, notifyPatient: req.body.notify_patient }, ctxFrom(req));
     res.json({ ok: true, appointment: appt });
   } catch (err) { handleBookingError(res, err); }
@@ -108,9 +108,9 @@ router.post('/:id/cancel', validate(z.object({
 
 router.post('/:id/reschedule', validate(z.object({
   date: zDate, time: zTime, service_id: zId.optional(), doctor_id: zId.optional(),
-})), (req, res) => {
+})), async (req, res) => {
   try {
-    const appt = appointmentService.reschedule(Number(req.params.id), {
+    const appt = await appointmentService.reschedule(Number(req.params.id), {
       date: req.body.date, time: req.body.time,
       serviceId: req.body.service_id, doctorId: req.body.doctor_id,
     }, ctxFrom(req));
@@ -121,9 +121,9 @@ router.post('/:id/reschedule', validate(z.object({
 router.post('/:id/status', validate(z.object({
   status: z.enum(APPOINTMENT_STATUSES),
   note: z.string().trim().max(300).optional(),
-})), (req, res) => {
+})), async (req, res) => {
   try {
-    const appt = appointmentService.changeStatus(Number(req.params.id),
+    const appt = await appointmentService.changeStatus(Number(req.params.id),
       req.body.status, { note: req.body.note }, ctxFrom(req));
     res.json({ ok: true, appointment: appt });
   } catch (err) { handleBookingError(res, err); }
@@ -132,20 +132,20 @@ router.post('/:id/status', validate(z.object({
 /** Availability including taken slots, so staff can see the full day grid. */
 router.get('/availability/grid', validate(z.object({
   date: zDate, service_id: zId.optional(), doctor_id: zId.optional(),
-}), 'query'), (req, res) => {
+}), 'query'), async (req, res) => {
   const q = req.validatedQuery;
-  res.json(availability.getDayAvailability({
+  res.json(await availability.getDayAvailability({
     date: q.date, serviceId: q.service_id, doctorId: q.doctor_id, includeTaken: true,
   }));
 });
 
 /** Day summary for the dashboard header. */
-router.get('/summary/today', (_req, res) => {
-  const tz = settingsRepo.get().timezone || 'Asia/Kolkata';
+router.get('/summary/today', async (_req, res) => {
+  const tz = (await settingsRepo.get()).timezone || 'Asia/Kolkata';
   const today = todayIn(tz);
   res.json({
     today, tomorrow: addDays(today, 1),
-    counts: Object.fromEntries(apptRepo.statusCounts(today, today).map(r => [r.status, r.c])),
+    counts: Object.fromEntries((await apptRepo.statusCounts(today, today)).map(r => [r.status, r.c])),
   });
 });
 

@@ -12,6 +12,7 @@ import * as whatsapp from '../../services/notification/providers/whatsapp-cloud.
 import * as email from '../../services/notification/providers/email-smtp.js';
 import * as oauth from '../../services/google/oauth.js';
 import * as seo from '../../services/seo.service.js';
+import * as settingsRepo from '../../repositories/settings.repo.js';
 import { audit, ctxFrom } from '../../services/audit.service.js';
 import { ROLES } from '../../config/constants.js';
 import { randomToken } from '../../utils/crypto.js';
@@ -19,25 +20,25 @@ import { randomToken } from '../../utils/crypto.js';
 const router = Router();
 
 /* ── Admin users ── */
-router.get('/users', requireRole(ROLES.ADMIN), (_req, res) => res.json(usersRepo.list()));
+router.get('/users', requireRole(ROLES.ADMIN), async (_req, res) => res.json(await usersRepo.list()));
 
 router.post('/users', requireRole(ROLES.OWNER), validate(z.object({
   email: zEmail,
   name: z.string().trim().min(2).max(120),
   role: z.enum([ROLES.ADMIN, ROLES.STAFF, ROLES.OWNER]).default(ROLES.STAFF),
   password: z.string().min(12, 'Use at least 12 characters.').max(200).optional(),
-})), (req, res) => {
-  if (usersRepo.findByEmail(req.body.email)) {
+})), async (req, res) => {
+  if (await usersRepo.findByEmail(req.body.email)) {
     return res.status(409).json({ error: 'An account with that email already exists.', code: 'DUPLICATE' });
   }
   // Without an explicit password, issue a temporary one the owner passes on.
   const temporary = req.body.password ? null : randomToken(9);
-  const created = usersRepo.create({
+  const created = await usersRepo.create({
     email: req.body.email, name: req.body.name, role: req.body.role,
     password: req.body.password || temporary,
     mustChange: temporary ? 1 : 0,
   });
-  audit(ctxFrom(req), {
+  await audit(ctxFrom(req), {
     action: 'user.create', entity: 'user', entity_id: created.id,
     summary: `Created ${created.role} account for ${created.email}`,
   });
@@ -48,27 +49,27 @@ router.put('/users/:id', requireRole(ROLES.OWNER), validate(z.object({
   name: z.string().trim().min(2).max(120).optional(),
   role: z.enum([ROLES.ADMIN, ROLES.STAFF, ROLES.OWNER]).optional(),
   is_active: zBool.optional(),
-})), (req, res) => {
+})), async (req, res) => {
   const id = Number(req.params.id);
-  const before = usersRepo.findById(id);
+  const before = await usersRepo.findById(id);
   if (!before) return res.status(404).json({ error: 'User not found.', code: 'NOT_FOUND' });
 
   // Never allow the last active owner to be demoted or disabled.
-  const owners = usersRepo.list().filter(u => u.role === ROLES.OWNER && u.is_active);
+  const owners = (await usersRepo.list()).filter(u => u.role === ROLES.OWNER && u.is_active);
   const losingOwner = before.role === ROLES.OWNER
     && ((req.body.role && req.body.role !== ROLES.OWNER) || req.body.is_active === false);
   if (losingOwner && owners.length <= 1) {
     return res.status(409).json({ error: 'This is the only owner account. Promote another owner first.', code: 'LAST_OWNER' });
   }
 
-  usersRepo.update(id, {
+  await usersRepo.update(id, {
     ...req.body,
     is_active: req.body.is_active === undefined ? undefined : (req.body.is_active ? 1 : 0),
   });
-  if (req.body.is_active === false) sessionsRepo.revokeAllForUser(id);
+  if (req.body.is_active === false) await sessionsRepo.revokeAllForUser(id);
 
-  const after = usersRepo.findPublicById(id);
-  audit(ctxFrom(req), {
+  const after = await usersRepo.findPublicById(id);
+  await audit(ctxFrom(req), {
     action: 'user.update', entity: 'user', entity_id: id,
     summary: `Updated account ${after.email}`,
     before: { role: before.role, is_active: before.is_active },
@@ -77,31 +78,31 @@ router.put('/users/:id', requireRole(ROLES.OWNER), validate(z.object({
   res.json({ ok: true, user: after });
 });
 
-router.post('/users/:id/reset-password', requireRole(ROLES.OWNER), (req, res) => {
+router.post('/users/:id/reset-password', requireRole(ROLES.OWNER), async (req, res) => {
   const id = Number(req.params.id);
-  const user = usersRepo.findById(id);
+  const user = await usersRepo.findById(id);
   if (!user) return res.status(404).json({ error: 'User not found.', code: 'NOT_FOUND' });
   const temporary = randomToken(9);
-  usersRepo.setPassword(id, temporary);
-  usersRepo.update(id, {});
-  sessionsRepo.revokeAllForUser(id);
-  audit(ctxFrom(req), {
+  await usersRepo.setPassword(id, temporary);
+  await usersRepo.update(id, {});
+  await sessionsRepo.revokeAllForUser(id);
+  await audit(ctxFrom(req), {
     action: 'user.password.reset', entity: 'user', entity_id: id,
     summary: `Reset password for ${user.email}`,
   });
   res.json({ ok: true, temporary_password: temporary });
 });
 
-router.delete('/users/:id', requireRole(ROLES.OWNER), (req, res) => {
+router.delete('/users/:id', requireRole(ROLES.OWNER), async (req, res) => {
   const id = Number(req.params.id);
   if (id === req.user.id) {
     return res.status(409).json({ error: 'You cannot remove your own account.', code: 'SELF_DELETE' });
   }
-  const user = usersRepo.findById(id);
+  const user = await usersRepo.findById(id);
   if (!user) return res.status(404).json({ error: 'User not found.', code: 'NOT_FOUND' });
-  usersRepo.softDelete(id);
-  sessionsRepo.revokeAllForUser(id);
-  audit(ctxFrom(req), {
+  await usersRepo.softDelete(id);
+  await sessionsRepo.revokeAllForUser(id);
+  await audit(ctxFrom(req), {
     action: 'user.delete', entity: 'user', entity_id: id,
     summary: `Removed account ${user.email}`,
   });
@@ -109,13 +110,13 @@ router.delete('/users/:id', requireRole(ROLES.OWNER), (req, res) => {
 });
 
 /* ── Integrations ── */
-router.get('/integrations', requireRole(ROLES.ADMIN), (_req, res) => {
+router.get('/integrations', requireRole(ROLES.ADMIN), async (_req, res) => {
   res.json({
-    integrations: integrationsRepo.listPublic(),
+    integrations: await integrationsRepo.listPublic(),
     runtime: {
-      whatsapp: { configured: whatsapp.isConfigured() },
-      email: { configured: email.isConfigured() },
-      google: { oauth_configured: oauth.isConfigured(), redirect_uri: oauth.redirectUri() },
+      whatsapp: { configured: await whatsapp.isConfigured() },
+      email: { configured: await email.isConfigured() },
+      google: { oauth_configured: await oauth.isConfigured(), redirect_uri: oauth.redirectUri() },
     },
   });
 });
@@ -128,7 +129,7 @@ router.put('/integrations/:provider', requireRole(ROLES.ADMIN), validate(z.objec
   is_enabled: zBool.optional(),
   config: z.record(z.string(), z.any()).optional(),
   secrets: z.record(z.string(), z.string().max(4000)).optional(),
-})), (req, res) => {
+})), async (req, res) => {
   const provider = String(req.params.provider);
   if (!['whatsapp', 'google_business', 'smtp'].includes(provider)) {
     return res.status(404).json({ error: 'Unknown integration.', code: 'NOT_FOUND' });
@@ -138,18 +139,18 @@ router.put('/integrations/:provider', requireRole(ROLES.ADMIN), validate(z.objec
     ? Object.fromEntries(Object.entries(req.body.secrets).filter(([, v]) => v && v.trim()))
     : undefined;
 
-  integrationsRepo.upsert(provider, {
+  await integrationsRepo.upsert(provider, {
     config: req.body.config,
     secrets: secrets && Object.keys(secrets).length ? secrets : undefined,
     is_enabled: req.body.is_enabled,
     status: req.body.is_enabled === false ? 'disabled' : 'configured',
     last_error: null,
   });
-  audit(ctxFrom(req), {
+  await audit(ctxFrom(req), {
     action: 'integration.update', entity: 'integration', entity_id: provider,
     summary: `Updated ${provider} integration${secrets && Object.keys(secrets).length ? ' (credentials changed)' : ''}`,
   });
-  res.json({ ok: true, integration: integrationsRepo.listPublic().find(i => i.provider === provider) });
+  res.json({ ok: true, integration: (await integrationsRepo.listPublic()).find(i => i.provider === provider) });
 });
 
 router.post('/integrations/:provider/test', requireRole(ROLES.ADMIN), asyncHandler(async (req, res) => {
@@ -158,22 +159,22 @@ router.post('/integrations/:provider/test', requireRole(ROLES.ADMIN), asyncHandl
   if (provider === 'whatsapp') result = await whatsapp.verify();
   else if (provider === 'smtp') result = await email.verify();
   else if (provider === 'google_business') {
-    result = oauth.isConfigured()
+    result = await oauth.isConfigured()
       ? { ok: true, details: { redirect_uri: oauth.redirectUri() } }
       : { ok: false, error: 'Client ID and secret are not set.' };
   } else return res.status(404).json({ error: 'Unknown integration.', code: 'NOT_FOUND' });
 
-  integrationsRepo.upsert(provider, {
+  await integrationsRepo.upsert(provider, {
     status: result.ok ? 'connected' : 'error',
     last_error: result.ok ? null : result.error,
   });
   res.json(result);
 }));
 
-router.delete('/integrations/:provider/secrets', requireRole(ROLES.OWNER), (req, res) => {
+router.delete('/integrations/:provider/secrets', requireRole(ROLES.OWNER), async (req, res) => {
   const provider = String(req.params.provider);
-  integrationsRepo.clearSecrets(provider);
-  audit(ctxFrom(req), {
+  await integrationsRepo.clearSecrets(provider);
+  await audit(ctxFrom(req), {
     action: 'integration.clear_secrets', entity: 'integration', entity_id: provider,
     summary: `Cleared ${provider} credentials`,
   });
@@ -181,11 +182,12 @@ router.delete('/integrations/:provider/secrets', requireRole(ROLES.OWNER), (req,
 });
 
 /* ── SEO preview ── */
-router.get('/seo', requireRole(ROLES.ADMIN), (_req, res) => {
+router.get('/seo', requireRole(ROLES.ADMIN), async (_req, res) => {
+  const settings = await settingsRepo.get();
   res.json({
-    meta: seo.meta(),
-    structured_data: seo.structuredData(),
-    robots_txt: seo.robotsTxt(),
+    meta: seo.meta(settings),
+    structured_data: await seo.structuredData(),
+    robots_txt: seo.robotsTxt(seo.canonicalUrl(settings)),
   });
 });
 
@@ -196,9 +198,9 @@ router.get('/audit-logs', requireRole(ROLES.ADMIN), validate(z.object({
   user_id: zId.optional(),
   limit: z.coerce.number().int().min(1).max(200).default(100),
   offset: z.coerce.number().int().min(0).default(0),
-}), 'query'), (req, res) => {
+}), 'query'), async (req, res) => {
   const q = req.validatedQuery;
-  res.json(auditRepo.list({
+  res.json(await auditRepo.list({
     q: q.q, entity: q.entity, userId: q.user_id, limit: q.limit, offset: q.offset,
   }));
 });

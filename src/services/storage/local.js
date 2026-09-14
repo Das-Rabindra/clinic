@@ -30,7 +30,7 @@ export async function remove(key) {
   catch (err) { if (err.code === 'ENOENT') return false; throw err; }
 }
 
-export function url(key) { return `/media/${key}`; }
+export async function url(key) { return `/media/${key}`; }
 
 export async function exists(key) {
   try { await fs.access(resolve(key)); return true; } catch { return false; }

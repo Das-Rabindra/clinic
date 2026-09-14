@@ -3,18 +3,20 @@ import assert from 'node:assert/strict';
 import sharp from 'sharp';
 import { setupEnv, bootDb, cleanup } from './helpers.mjs';
 
-const dir = setupEnv('media');
+let ctx;
+const SUITE = 'media';
 let mediaService, galleryRepo, storage, usersRepo, userId;
 
 before(async () => {
+  ctx = await setupEnv(SUITE);
   await bootDb();
   mediaService = await import('../src/services/media.service.js');
   galleryRepo = await import('../src/repositories/gallery.repo.js');
   storage = await import('../src/services/storage/index.js');
   usersRepo = await import('../src/repositories/users.repo.js');
-  userId = usersRepo.create({ email: 'm@clinic.test', name: 'M', password: 'MediaTestPass123', role: 'owner' }).id;
+  userId = (await usersRepo.create({ email: 'm@clinic.test', name: 'M', password: 'MediaTestPass123', role: 'owner' })).id;
 });
-after(() => cleanup(dir));
+after(async () => { await cleanup(ctx); });
 
 const jpeg = (opts = {}) => sharp({
   create: { width: opts.w || 800, height: opts.h || 600, channels: 3, background: '#7C9885' },
@@ -79,51 +81,51 @@ describe('patient photo consent (spec §14)', () => {
     mediaId = m.id;
   });
 
-  test('a treatment photo cannot be published without consent', () => {
-    const item = galleryRepo.create({
+  test('a treatment photo cannot be published without consent', async () => {
+    const item = await galleryRepo.create({
       media_id: mediaId, title: 'Before & After — Smile Restoration',
       category: 'treatment', is_published: false, consent_confirmed: false,
     });
-    const result = galleryRepo.setPublished(item.id, true);
+    const result = await galleryRepo.setPublished(item.id, true);
     assert.equal(result.ok, false);
     assert.equal(result.error, 'CONSENT_REQUIRED');
-    assert.equal(galleryRepo.findById(item.id).is_published, 0);
+    assert.equal((await galleryRepo.findById(item.id)).is_published, 0);
   });
 
-  test('the database itself refuses the unconsented publish', () => {
-    const item = galleryRepo.create({
+  test('the database itself refuses the unconsented publish', async () => {
+    const item = await galleryRepo.create({
       media_id: mediaId, title: 'Direct write attempt', category: 'treatment',
       is_published: false, consent_confirmed: false,
     });
     // Bypassing the service layer must still fail: the CHECK constraint is the
     // real guarantee, not the application code above it.
-    assert.throws(() => galleryRepo.update(item.id, { is_published: 1 }),
-      (err) => /CHECK constraint failed/i.test(err.message));
+    await assert.rejects(async () => galleryRepo.update(item.id, { is_published: 1 }),
+      (err) => /check constraint/i.test(err.message) && err.code === '23514');
   });
 
-  test('publishing succeeds once consent is recorded, and the recorder is stored', () => {
-    const item = galleryRepo.create({
+  test('publishing succeeds once consent is recorded, and the recorder is stored', async () => {
+    const item = await galleryRepo.create({
       media_id: mediaId, title: 'Before & After — Crown Work', category: 'treatment', is_published: false,
     });
-    galleryRepo.setConsent(item.id, true, userId, 'Signed consent form on file');
-    const consented = galleryRepo.findById(item.id);
+    await galleryRepo.setConsent(item.id, true, userId, 'Signed consent form on file');
+    const consented = await galleryRepo.findById(item.id);
     assert.equal(consented.consent_confirmed, 1);
     assert.equal(consented.consent_by, userId, 'who confirmed it is recorded');
     assert.ok(consented.consent_at, 'when it was confirmed is recorded');
 
-    assert.equal(galleryRepo.setPublished(item.id, true).ok, true);
-    assert.equal(galleryRepo.findById(item.id).is_published, 1);
+    assert.equal((await galleryRepo.setPublished(item.id, true)).ok, true);
+    assert.equal((await galleryRepo.findById(item.id)).is_published, 1);
   });
 
-  test('non-treatment photos need no consent', () => {
-    const item = galleryRepo.create({
+  test('non-treatment photos need no consent', async () => {
+    const item = await galleryRepo.create({
       media_id: mediaId, title: 'Reception', category: 'reception', is_published: false,
     });
-    assert.equal(galleryRepo.setPublished(item.id, true).ok, true);
+    assert.equal((await galleryRepo.setPublished(item.id, true)).ok, true);
   });
 
-  test('the public listing never exposes consent metadata', () => {
-    const rows = galleryRepo.listPublic();
+  test('the public listing never exposes consent metadata', async () => {
+    const rows = await galleryRepo.listPublic();
     assert.ok(rows.length > 0);
     // listPublic returns full rows internally; the API layer projects them.
     // Verify the projection used by the public route drops consent fields.

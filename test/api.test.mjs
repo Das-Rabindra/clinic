@@ -3,10 +3,12 @@ import { test, before, after, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { setupEnv, bootDb, startServer, cleanup } from './helpers.mjs';
 
-const dir = setupEnv('api');
+let ctx;
+const SUITE = 'api';
 let srv, settingsRepo, time, limiter;
 
 before(async () => {
+  ctx = await setupEnv(SUITE);
   await bootDb();
   settingsRepo = await import('../src/repositories/settings.repo.js');
   time = await import('../src/utils/time.js');
@@ -14,10 +16,10 @@ before(async () => {
   srv = await startServer();
   await srv.call('/api/csrf');
 });
-after(async () => { await srv.close(); cleanup(dir); });
+after(async () => { await srv.close(); await cleanup(ctx); });
 
-const nextMonday = (w = 0) => {
-  const tz = settingsRepo.get().timezone;
+const nextMonday = async (w = 0) => {
+  const tz = (await settingsRepo.get()).timezone;
   let d = time.addDays(time.todayIn(tz), 3);
   while (time.weekdayOf(d) !== 1) d = time.addDays(d, 1);
   return time.addDays(d, w * 7);
@@ -78,7 +80,7 @@ describe('public API', () => {
 
 describe('availability API', () => {
   test('returns slots for an open day', async () => {
-    const r = await srv.call(`/api/appointments/availability?date=${nextMonday()}&service_id=1`);
+    const r = await srv.call(`/api/appointments/availability?date=${await nextMonday()}&service_id=1`);
     assert.equal(r.status, 200);
     assert.equal(r.body.open, true);
     assert.ok(r.body.slots.length > 0);
@@ -102,8 +104,8 @@ describe('availability API', () => {
 
   test('a declared holiday shows as closed in the overview', async () => {
     const settings = await import('../src/repositories/settings.repo.js');
-    const target = nextMonday(1);
-    const id = settings.addHoliday({ date: target, reason: 'Festival' });
+    const target = await nextMonday(1);
+    const id = await settings.addHoliday({ date: target, reason: 'Festival' });
     try {
       const r = await srv.call('/api/appointments/calendar?days=21&service_id=1');
       const day = r.body.days.find((d) => d.date === target);
@@ -112,7 +114,7 @@ describe('availability API', () => {
       assert.equal(day.reason, 'HOLIDAY');
       assert.equal(day.available_count, 0);
     } finally {
-      settings.deleteHoliday(id);
+      await settings.deleteHoliday(id);
     }
   });
 });
@@ -124,7 +126,7 @@ describe('patient self-service', () => {
   test('books an appointment', async () => {
     const r = await post('/api/appointments', {
       name: 'Self Service', phone, email: 'ss@example.com',
-      date: nextMonday(1), time: '10:00', service_id: 1,
+      date: await nextMonday(1), time: '10:00', service_id: 1,
     });
     assert.equal(r.status, 201);
     ref = r.body.appointment.ref;
@@ -156,13 +158,13 @@ describe('patient self-service', () => {
     assert.equal(r.status, 200);
     assert.equal(r.body.appointment.status, 'cancelled');
 
-    const avail = await srv.call(`/api/appointments/availability?date=${nextMonday(1)}&service_id=1`);
+    const avail = await srv.call(`/api/appointments/availability?date=${await nextMonday(1)}&service_id=1`);
     assert.ok(avail.body.slots.some((s) => s.time === '10:00'), 'the slot is bookable again');
   });
 
   test('refuses to cancel with the wrong phone number', async () => {
     const r2 = await post('/api/appointments', {
-      name: 'Protected', phone: '9812345671', date: nextMonday(2), time: '10:00', service_id: 1,
+      name: 'Protected', phone: '9812345671', date: await nextMonday(2), time: '10:00', service_id: 1,
     });
     const r = await post(`/api/appointments/${r2.body.appointment.ref}/cancel`, { phone: '9000000000' });
     assert.equal(r.status, 404);
@@ -187,15 +189,15 @@ describe('enquiries', () => {
 
 describe('rate limiting', () => {
   test('throttles repeated booking attempts from one client', async () => {
-    limiter._reset();
+    await limiter._reset();
     const results = [];
     for (let i = 0; i < 9; i++) {
       results.push(await post('/api/appointments', {
         name: `Spam ${i}`, phone: `98120000${String(i).padStart(2, '0')}`,
-        date: nextMonday(3), time: '09:00', service_id: 1,
+        date: await nextMonday(3), time: '09:00', service_id: 1,
       }));
     }
     assert.ok(results.some((r) => r.status === 429), 'the limiter must eventually reject');
-    limiter._reset();
+    await limiter._reset();
   });
 });

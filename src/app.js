@@ -37,7 +37,9 @@ export function createApp() {
     maxAge: config.isProd ? '7d' : 0,
     etag: true,
   }));
-  app.use('/media', express.static(config.paths.uploadDir, {
+  // With the Blob driver, media rows carry absolute URLs and nothing is served
+  // from local disk.
+  if (config.storage.driver === 'local') app.use('/media', express.static(config.paths.uploadDir, {
     maxAge: '30d',
     immutable: true,
     index: false,

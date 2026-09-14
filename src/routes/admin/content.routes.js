@@ -7,7 +7,7 @@ import { audit, ctxFrom } from '../../services/audit.service.js';
 
 const router = Router();
 
-router.get('/faqs', (_req, res) => res.json(contentRepo.listFaqs()));
+router.get('/faqs', async (_req, res) => res.json(await contentRepo.listFaqs()));
 
 const faqSchema = z.object({
   question: z.string().trim().min(4).max(300),
@@ -15,43 +15,43 @@ const faqSchema = z.object({
   is_published: zBool.default(true),
 });
 
-router.post('/faqs', validate(faqSchema), (req, res) => {
-  const created = contentRepo.createFaq(req.body);
-  audit(ctxFrom(req), {
+router.post('/faqs', validate(faqSchema), async (req, res) => {
+  const created = await contentRepo.createFaq(req.body);
+  await audit(ctxFrom(req), {
     action: 'faq.create', entity: 'faq', entity_id: created.id,
     summary: `Added FAQ "${created.question}"`,
   });
   res.status(201).json({ ok: true, faq: created });
 });
 
-router.put('/faqs/:id', validate(partialUpdate(faqSchema)), (req, res) => {
+router.put('/faqs/:id', validate(partialUpdate(faqSchema)), async (req, res) => {
   const id = Number(req.params.id);
-  const before = contentRepo.findFaq(id);
+  const before = await contentRepo.findFaq(id);
   if (!before) return res.status(404).json({ error: 'FAQ not found.', code: 'NOT_FOUND' });
-  contentRepo.updateFaq(id, req.body);
-  const after = contentRepo.findFaq(id);
-  audit(ctxFrom(req), {
+  await contentRepo.updateFaq(id, req.body);
+  const after = await contentRepo.findFaq(id);
+  await audit(ctxFrom(req), {
     action: 'faq.update', entity: 'faq', entity_id: id,
     summary: `Updated FAQ "${after.question}"`, before, after,
   });
   res.json({ ok: true, faq: after });
 });
 
-router.delete('/faqs/:id', (req, res) => {
+router.delete('/faqs/:id', async (req, res) => {
   const id = Number(req.params.id);
-  const before = contentRepo.findFaq(id);
+  const before = await contentRepo.findFaq(id);
   if (!before) return res.status(404).json({ error: 'FAQ not found.', code: 'NOT_FOUND' });
-  contentRepo.deleteFaq(id);
-  audit(ctxFrom(req), {
+  await contentRepo.deleteFaq(id);
+  await audit(ctxFrom(req), {
     action: 'faq.delete', entity: 'faq', entity_id: id,
     summary: `Deleted FAQ "${before.question}"`,
   });
   res.json({ ok: true });
 });
 
-router.post('/faqs/reorder', validate(z.object({ ids: z.array(zId).min(1).max(100) })), (req, res) => {
-  contentRepo.reorderFaqs(req.body.ids);
-  audit(ctxFrom(req), { action: 'faq.reorder', entity: 'faq', entity_id: 'all', summary: 'Reordered FAQs' });
+router.post('/faqs/reorder', validate(z.object({ ids: z.array(zId).min(1).max(100) })), async (req, res) => {
+  await contentRepo.reorderFaqs(req.body.ids);
+  await audit(ctxFrom(req), { action: 'faq.reorder', entity: 'faq', entity_id: 'all', summary: 'Reordered FAQs' });
   res.json({ ok: true });
 });
 

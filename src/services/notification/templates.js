@@ -111,7 +111,7 @@ Message: ${e.message || '(none)'}`,
   }),
 };
 
-export function render(template, entity, clinic, extra = {}) {
+export async function render(template, entity, clinic, extra = {}) {
   const fn = templates[template];
   if (!fn) throw new Error(`Unknown notification template: ${template}`);
   return fn(entity, clinic, extra);

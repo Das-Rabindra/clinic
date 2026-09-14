@@ -12,26 +12,26 @@ const BASE = `SELECT g.*, m.url AS image_url, m.alt AS image_alt, m.width, m.hei
   LEFT JOIN media am ON am.id = g.after_media_id
   LEFT JOIN media at ON at.variant_of = am.id AND at.variant_kind = 'thumb'`;
 
-export const findById = (id) => one(`${BASE} WHERE g.id = ? AND g.deleted_at IS NULL`, id);
+export const findById = async (id) => await one(`${BASE} WHERE g.id = ? AND g.deleted_at IS NULL`, id);
 
 /** Public listing: published only, never exposes consent metadata. */
-export const listPublic = (category) =>
-  all(`${BASE} WHERE g.deleted_at IS NULL AND g.is_published = 1
-       AND (? IS NULL OR g.category = ?)
+export const listPublic = async (category) =>
+  await all(`${BASE} WHERE g.deleted_at IS NULL AND g.is_published = 1
+       AND (?::text IS NULL OR g.category = ?)
        ORDER BY g.display_order, g.id DESC`, category ?? null, category ?? null);
 
-export const listAdmin = ({ category, published } = {}) =>
-  all(`${BASE} WHERE g.deleted_at IS NULL
-       AND (? IS NULL OR g.category = ?)
-       AND (? IS NULL OR g.is_published = ?)
+export const listAdmin = async ({ category, published } = {}) =>
+  await all(`${BASE} WHERE g.deleted_at IS NULL
+       AND (?::text IS NULL OR g.category = ?)
+       AND (?::int IS NULL OR g.is_published = ?)
        ORDER BY g.display_order, g.id DESC`,
     category ?? null, category ?? null,
     published ?? null, published ?? null);
 
-export function create(g) {
+export async function create(g) {
   const order = g.display_order ??
-    one('SELECT COALESCE(MAX(display_order), 0) + 1 AS n FROM gallery_items').n;
-  const info = run(
+    (await one('SELECT COALESCE(MAX(display_order), 0) + 1 AS n FROM gallery_items')).n;
+  const info = await run(
     `INSERT INTO gallery_items (media_id, after_media_id, title, description, category,
        taken_on, display_order, is_published, consent_confirmed, consent_note, consent_by, consent_at)
      VALUES (@media_id, @after_media_id, @title, @description, @category,
@@ -48,41 +48,42 @@ export function create(g) {
       consent_at: g.consent_confirmed ? new Date().toISOString() : null,
     }
   );
-  return findById(info.lastInsertRowid);
+  return await findById(info.lastInsertRowid);
 }
 
-export const update = (id, fields) => buildUpdate('gallery_items', id, fields, FIELDS);
+export const update = async (id, fields) => await buildUpdate('gallery_items', id, fields, FIELDS);
 
 /** Records who confirmed consent and when - the audit trail for patient photos. */
-export const setConsent = (id, confirmed, userId, note) =>
-  run(`UPDATE gallery_items SET consent_confirmed = ?, consent_by = ?, consent_at = ?,
-       consent_note = COALESCE(?, consent_note), updated_at = datetime('now') WHERE id = ?`,
+export const setConsent = async (id, confirmed, userId, note) =>
+  (await run(`UPDATE gallery_items SET consent_confirmed = ?, consent_by = ?, consent_at = ?,
+       consent_note = COALESCE(?, consent_note), updated_at = NOW() WHERE id = ?`,
     confirmed ? 1 : 0, confirmed ? userId : null,
-    confirmed ? new Date().toISOString() : null, note ?? null, id).changes;
+    confirmed ? new Date().toISOString() : null, note ?? null, id)).changes;
 
 /**
  * Publish gate. Mirrors the CHECK constraint in the schema so callers get a
  * clear error rather than a raw SQLite constraint failure.
  */
-export function setPublished(id, published) {
-  const item = findById(id);
+export async function setPublished(id, published) {
+  const item = await findById(id);
   if (!item) return { ok: false, error: 'NOT_FOUND' };
   if (published && CONSENT_REQUIRED_CATEGORIES.includes(item.category) && !item.consent_confirmed) {
     return { ok: false, error: 'CONSENT_REQUIRED' };
   }
-  run(`UPDATE gallery_items SET is_published = ?, updated_at = datetime('now') WHERE id = ?`,
+  await run(`UPDATE gallery_items SET is_published = ?, updated_at = NOW() WHERE id = ?`,
     published ? 1 : 0, id);
   return { ok: true };
 }
 
-export const softDelete = (id) =>
-  run(`UPDATE gallery_items SET deleted_at = datetime('now'), is_published = 0 WHERE id = ?`, id).changes;
+export const softDelete = async (id) =>
+  (await run(`UPDATE gallery_items SET deleted_at = NOW(), is_published = 0 WHERE id = ?`, id)).changes;
 
-export function reorder(ids) {
-  ids.forEach((id, i) =>
-    run(`UPDATE gallery_items SET display_order = ?, updated_at = datetime('now') WHERE id = ?`, i, id));
+export async function reorder(ids) {
+  for (const [i, id] of ids.entries()) {
+    await run(`UPDATE gallery_items SET display_order = ?, updated_at = NOW() WHERE id = ?`, i, id);
+  }
 }
 
-export const categoriesInUse = () =>
-  all(`SELECT category, COUNT(*) AS c FROM gallery_items
+export const categoriesInUse = async () =>
+  await all(`SELECT category, COUNT(*) AS c FROM gallery_items
        WHERE deleted_at IS NULL AND is_published = 1 GROUP BY category`);

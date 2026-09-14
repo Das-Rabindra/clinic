@@ -8,8 +8,8 @@ const escapeIcs = (s) => String(s ?? '').replace(/([,;\\])/g, '\\$1').replace(/\
 /** RFC 5545: fold lines at 75 octets. */
 const fold = (line) => line.match(/.{1,73}/g)?.join('\r\n ') ?? line;
 
-export function appointmentIcs(appt) {
-  const s = settingsRepo.get();
+export async function appointmentIcs(appt) {
+  const s = await settingsRepo.get();
   const tz = s.timezone || 'Asia/Kolkata';
   const start = localToUtc(appt.date, appt.start_min, tz);
   const end = localToUtc(appt.date, appt.end_min, tz);

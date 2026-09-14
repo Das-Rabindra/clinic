@@ -1,9 +1,12 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Samal Dental Care — production image
 #
-# Multi-stage: native modules (better-sqlite3, sharp) are compiled in a builder
-# with a full toolchain, then only the resulting node_modules and application
-# source are copied into a slim runtime. Runs as the unprivileged `node` user.
+# Multi-stage: native modules (sharp) are compiled in a builder with a full
+# toolchain, then only the resulting node_modules and application source are
+# copied into a slim runtime. Runs as the unprivileged `node` user.
+#
+# State lives in PostgreSQL, so the only volume is uploads (and even that is
+# unnecessary when STORAGE_DRIVER=blob).
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── Stage 1: dependencies ────────────────────────────────────────────────────
@@ -30,7 +33,6 @@ RUN apt-get update \
 
 ENV NODE_ENV=production \
     PORT=8090 \
-    DATA_DIR=/data \
     UPLOAD_DIR=/uploads \
     NPM_CONFIG_UPDATE_NOTIFIER=false
 
@@ -44,12 +46,12 @@ COPY scripts ./scripts
 
 # Writable volumes for the database and uploaded media. Owned by `node` so the
 # process never needs root.
-RUN mkdir -p /data /uploads && chown -R node:node /data /uploads /app
+RUN mkdir -p /uploads && chown -R node:node /uploads /app
 
 USER node
 
 EXPOSE 8090
-VOLUME ["/data", "/uploads"]
+VOLUME ["/uploads"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||8090)+'/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"

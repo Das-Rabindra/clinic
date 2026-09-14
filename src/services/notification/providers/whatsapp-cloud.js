@@ -12,9 +12,9 @@ import * as integrationsRepo from '../../../repositories/integrations.repo.js';
 export const name = 'whatsapp_cloud';
 
 /** Merge env defaults with admin-entered credentials (admin wins). */
-export function credentials() {
-  const stored = integrationsRepo.getSecrets('whatsapp');
-  const row = integrationsRepo.get('whatsapp');
+export async function credentials() {
+  const stored = await integrationsRepo.getSecrets('whatsapp');
+  const row = await integrationsRepo.get('whatsapp');
   const cfg = row?.config || {};
   return {
     token: stored.token || config.whatsapp.token || '',
@@ -26,8 +26,8 @@ export function credentials() {
   };
 }
 
-export function isConfigured() {
-  const c = credentials();
+export async function isConfigured() {
+  const c = await credentials();
   return Boolean(c.enabled && c.token && c.phoneNumberId);
 }
 
@@ -36,8 +36,8 @@ export function isConfigured() {
  * @returns {Promise<{ok:boolean, messageId?:string, httpStatus?:number, body?:string, error?:string}>}
  */
 export async function send({ to, text, template, vars = [] }) {
-  const c = credentials();
-  if (!isConfigured()) {
+  const c = await credentials();
+  if (!(await isConfigured())) {
     return { ok: false, notConfigured: true, error: 'WhatsApp Cloud API is not configured.' };
   }
 
@@ -92,14 +92,14 @@ export async function send({ to, text, template, vars = [] }) {
 
 /** Lightweight credential check for the Integrations screen. */
 export async function verify() {
-  const c = credentials();
+  const c = await credentials();
   if (!c.token || !c.phoneNumberId) return { ok: false, error: 'Missing token or phone number ID.' };
   try {
     const res = await fetch(
       `https://graph.facebook.com/${c.apiVersion}/${c.phoneNumberId}?fields=display_phone_number,verified_name`,
       { headers: { Authorization: `Bearer ${c.token}` } }
     );
-    const body = await res.json().catch(() => ({}));
+    const body = (await res.json()).catch(() => ({}));
     if (!res.ok) return { ok: false, error: body?.error?.message || `HTTP ${res.status}` };
     return { ok: true, details: body };
   } catch (err) {

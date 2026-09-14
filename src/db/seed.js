@@ -7,7 +7,7 @@
  * Nothing here invents clinical claims, prices or reviews - it is exactly the
  * content the original file shipped with, now editable from the admin panel.
  */
-import { db, tx } from './index.js';
+import { tx, closeDb } from './index.js';
 import { one, run } from '../repositories/base.js';
 import * as usersRepo from '../repositories/users.repo.js';
 import * as servicesRepo from '../repositories/services.repo.js';
@@ -62,11 +62,11 @@ const DEFAULT_HOURS = [0, 1, 2, 3, 4, 5, 6].map(weekday => ({
   break_start_min: 780, break_end_min: 900,
 }));
 
-export function seed({ log = console.log } = {}) {
-  tx(() => {
+export async function seed({ log = console.log } = {}) {
+  await tx(async () => {
     /* Clinic settings singleton */
-    if (!settingsRepo.get()) {
-      run(
+    if (!await settingsRepo.get()) {
+      await run(
         `INSERT INTO clinic_settings (id, name, doctor_name, qualification, registration, institution,
            phone, phone_intl, whatsapp, address_line1, address_line2, area, postal_code, country,
            timezone, slot_interval_min, booking_lead_hours, booking_horizon_days)
@@ -75,7 +75,7 @@ export function seed({ log = console.log } = {}) {
            @country, 'Asia/Kolkata', 30, 2, 60)`,
         CLINIC
       );
-      settingsRepo.update({
+      await settingsRepo.update({
         tagline: 'Modern dental care. Healthy smiles, confident you.',
         description: 'Samal Dental Care is led by Dr. Sonali S. Samal, BDS, FRCD, offering attentive, modern dental treatment close to home in Vikrampur.',
         hero_eyebrow: 'Vikrampur, Housing Board · FCI',
@@ -103,14 +103,14 @@ export function seed({ log = console.log } = {}) {
     }
 
     /* Weekly hours */
-    if (!settingsRepo.getHours().length) {
-      for (const h of DEFAULT_HOURS) settingsRepo.upsertHours(h.weekday, h);
+    if (!await settingsRepo.getHours().length) {
+      for (const h of DEFAULT_HOURS) await settingsRepo.upsertHours(h.weekday, h);
       log('[seed] clinic hours created (every day 08:00-21:00, break 13:00-15:00)');
     }
 
     /* The clinic's dentist */
-    if (!doctorsRepo.list().length) {
-      const doc = doctorsRepo.create({
+    if (!await doctorsRepo.list().length) {
+      const doc = await doctorsRepo.create({
         name: CLINIC.doctor_name,
         qualification: CLINIC.qualification,
         registration: CLINIC.registration,
@@ -123,44 +123,45 @@ export function seed({ log = console.log } = {}) {
     }
 
     /* Services (previously the SERVICES array) */
-    if (!servicesRepo.list().length) {
-      SERVICES.forEach(([cat, name, desc, duration], i) => {
-        const category = servicesRepo.ensureCategory(cat);
-        servicesRepo.create({
+    if (!await servicesRepo.list().length) {
+      for (const [i, [cat, name, desc, duration]] of SERVICES.entries()) {
+        const category = await servicesRepo.ensureCategory(cat);
+        await servicesRepo.create({
           name, category_id: category.id, short_desc: desc,
           duration_min: duration, display_order: i, bookable: true, is_active: true,
         });
-      });
+      }
       log(`[seed] ${SERVICES.length} services created`);
     }
 
     /* FAQs (previously the FAQS array). Placeholders resolve at render time. */
-    if (!contentRepo.listFaqs().length) {
-      FAQS.forEach(([question, answer], i) =>
-        contentRepo.createFaq({ question, answer, display_order: i, is_published: true }));
+    if (!await contentRepo.listFaqs().length) {
+      for (const [i, [question, answer]] of FAQS.entries()) {
+        await contentRepo.createFaq({ question, answer, display_order: i, is_published: true });
+      }
       log(`[seed] ${FAQS.length} FAQs created`);
     }
 
     /* Integration placeholders so the admin Integrations screen lists them */
     for (const p of ['whatsapp', 'google_business', 'smtp']) {
-      if (!one('SELECT id FROM integrations WHERE provider = ?', p)) {
-        run(`INSERT INTO integrations (provider, status) VALUES (?, 'not_configured')`, p);
+      if (!await one('SELECT id FROM integrations WHERE provider = ?', p)) {
+        await run(`INSERT INTO integrations (provider, status) VALUES (?, 'not_configured')`, p);
       }
     }
 
-    if (!one('SELECT id FROM review_sync_state WHERE id = 1')) {
-      run('INSERT INTO review_sync_state (id, connected) VALUES (1, 0)');
+    if (!await one('SELECT id FROM review_sync_state WHERE id = 1')) {
+      await run('INSERT INTO review_sync_state (id, connected) VALUES (1, 0)');
     }
   });
 
   /* First admin user. Only from env, only when no users exist. */
-  if (usersRepo.count() === 0) {
+  if ((await usersRepo.count()) === 0) {
     const { email, password } = config.seedAdmin;
     if (email && password) {
       if (password.length < 12) {
         log('[seed] SEED_ADMIN_PASSWORD must be at least 12 characters — admin NOT created');
       } else {
-        usersRepo.create({ email, name: 'Clinic Administrator', password, role: 'owner' });
+        await usersRepo.create({ email, name: 'Clinic Administrator', password, role: 'owner' });
         log(`[seed] owner account created: ${email}`);
       }
     } else {
@@ -170,7 +171,9 @@ export function seed({ log = console.log } = {}) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  seed();
-  db.close();
+  const { migrate } = await import('./migrate.js');
+  await migrate({ log: () => {} });
+  await seed();
+  await closeDb();
   process.exit(0);
 }

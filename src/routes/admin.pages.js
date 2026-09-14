@@ -11,26 +11,26 @@ import { jsonForScript } from '../utils/format.js';
 
 const router = Router();
 
-const brand = () => {
-  const s = settingsRepo.get();
-  const favicon = s.favicon_media_id ? mediaRepo.findById(s.favicon_media_id) : null;
+const brand = async () => {
+  const s = await settingsRepo.get();
+  const favicon = s.favicon_media_id ? await mediaRepo.findById(s.favicon_media_id) : null;
   return { clinicName: s.name, faviconUrl: favicon?.url || '/img/logo-64.png' };
 };
 
-router.get('/login', (req, res) => {
+router.get('/login', async (req, res) => {
   if (req.user) return res.redirect('/admin');
   issuePublicToken(req, res);
   res.render('admin/login', {
-    ...brand(),
+    ...(await brand()),
     next: typeof req.query.next === 'string' ? req.query.next : '/admin',
     mode: 'login',
   });
 });
 
-router.get('/reset-password', (req, res) => {
+router.get('/reset-password', async (req, res) => {
   issuePublicToken(req, res);
   res.render('admin/login', {
-    ...brand(),
+    ...(await brand()),
     next: '/admin',
     mode: 'reset',
     token: typeof req.query.token === 'string' ? req.query.token : '',
@@ -38,9 +38,9 @@ router.get('/reset-password', (req, res) => {
 });
 
 /* Every other /admin path renders the console; the client router takes over. */
-router.get(/.*/, requireAuthPage, (req, res) => {
+router.get(/.*/, requireAuthPage, async (req, res) => {
   res.render('admin/app', {
-    ...brand(),
+    ...(await brand()),
     // Serialised for a data-attribute; jsonForScript prevents any tag breakout.
     userJson: jsonForScript({ id: req.user.id, name: req.user.name, email: req.user.email, role: req.user.role }),
   });

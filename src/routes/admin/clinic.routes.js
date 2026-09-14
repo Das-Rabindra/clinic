@@ -9,11 +9,11 @@ import { minToHHMM } from '../../utils/time.js';
 
 const router = Router();
 
-router.get('/', (_req, res) => {
+router.get('/', async (_req, res) => {
   res.json({
-    settings: settingsRepo.get(),
-    hours: settingsRepo.getHours(),
-    full_address: settingsRepo.fullAddress(),
+    settings: await settingsRepo.get(),
+    hours: await settingsRepo.getHours(),
+    full_address: await settingsRepo.fullAddress(),
   });
 });
 
@@ -63,14 +63,14 @@ const settingsSchema = z.object({
   reviews_title: nullableStr(200), cta_title: nullableStr(200), cta_body: nullableStr(600),
 }).strict();
 
-router.put('/', requireRole(ROLES.ADMIN), validate(settingsSchema), (req, res) => {
-  const before = settingsRepo.get();
-  settingsRepo.update(req.body);
-  const after = settingsRepo.get();
+router.put('/', requireRole(ROLES.ADMIN), validate(settingsSchema), async (req, res) => {
+  const before = await settingsRepo.get();
+  await settingsRepo.update(req.body);
+  const after = await settingsRepo.get();
 
   // Note which fields actually changed, so the audit trail is readable.
   const changed = Object.keys(req.body).filter(k => String(before[k] ?? '') !== String(after[k] ?? ''));
-  audit(ctxFrom(req), {
+  await audit(ctxFrom(req), {
     action: 'clinic.update', entity: 'clinic_settings', entity_id: 1,
     summary: changed.length
       ? `Updated clinic information: ${changed.join(', ')}`
@@ -91,8 +91,8 @@ const hoursSchema = z.object({
   })).min(1).max(7),
 });
 
-router.put('/hours', requireRole(ROLES.ADMIN), validate(hoursSchema), (req, res) => {
-  const before = settingsRepo.getHours();
+router.put('/hours', requireRole(ROLES.ADMIN), validate(hoursSchema), async (req, res) => {
+  const before = await settingsRepo.getHours();
   for (const h of req.body.hours) {
     if (h.is_open && h.close_min <= h.open_min) {
       return res.status(400).json({
@@ -104,10 +104,10 @@ router.put('/hours', requireRole(ROLES.ADMIN), validate(hoursSchema), (req, res)
         error: `${WEEKDAYS[h.weekday]}: break end must be after break start.`, code: 'VALIDATION',
       });
     }
-    settingsRepo.upsertHours(h.weekday, h);
+    await settingsRepo.upsertHours(h.weekday, h);
   }
-  const after = settingsRepo.getHours();
-  audit(ctxFrom(req), {
+  const after = await settingsRepo.getHours();
+  await audit(ctxFrom(req), {
     action: 'clinic.hours.update', entity: 'clinic_hours', entity_id: 'all',
     summary: 'Updated clinic working hours',
     before, after,
@@ -116,9 +116,9 @@ router.put('/hours', requireRole(ROLES.ADMIN), validate(hoursSchema), (req, res)
 });
 
 /* ── Holidays ── */
-router.get('/holidays', (req, res) => {
+router.get('/holidays', async (req, res) => {
   const from = typeof req.query.from === 'string' ? req.query.from : null;
-  res.json(settingsRepo.listHolidays(from));
+  res.json(await settingsRepo.listHolidays(from));
 });
 
 const holidaySchema = z.object({
@@ -130,7 +130,7 @@ const holidaySchema = z.object({
   start_min: zMinutes.nullish(), end_min: zMinutes.nullish(),
 });
 
-router.post('/holidays', requireRole(ROLES.ADMIN), validate(holidaySchema), (req, res) => {
+router.post('/holidays', requireRole(ROLES.ADMIN), validate(holidaySchema), async (req, res) => {
   const b = req.body;
   if (b.end_date && b.end_date < b.date) {
     return res.status(400).json({ error: 'End date must be on or after the start date.', code: 'VALIDATION' });
@@ -138,8 +138,8 @@ router.post('/holidays', requireRole(ROLES.ADMIN), validate(holidaySchema), (req
   if (!b.is_full_day && (b.start_min == null || b.end_min == null || b.end_min <= b.start_min)) {
     return res.status(400).json({ error: 'Give a valid start and end time for a partial closure.', code: 'VALIDATION' });
   }
-  const id = settingsRepo.addHoliday({ ...b, created_by: req.user.id });
-  audit(ctxFrom(req), {
+  const id = await settingsRepo.addHoliday({ ...b, created_by: req.user.id });
+  await audit(ctxFrom(req), {
     action: 'clinic.holiday.add', entity: 'holiday', entity_id: id,
     summary: `Added closure on ${b.date}${b.end_date ? ` to ${b.end_date}` : ''}${b.reason ? ` — ${b.reason}` : ''}`,
     after: b,
@@ -147,11 +147,11 @@ router.post('/holidays', requireRole(ROLES.ADMIN), validate(holidaySchema), (req
   res.status(201).json({ ok: true, id });
 });
 
-router.delete('/holidays/:id', requireRole(ROLES.ADMIN), (req, res) => {
+router.delete('/holidays/:id', requireRole(ROLES.ADMIN), async (req, res) => {
   const id = Number(req.params.id);
-  const removed = settingsRepo.deleteHoliday(id);
+  const removed = await settingsRepo.deleteHoliday(id);
   if (removed) {
-    audit(ctxFrom(req), {
+    await audit(ctxFrom(req), {
       action: 'clinic.holiday.delete', entity: 'holiday', entity_id: id,
       summary: `Removed closure #${id}`,
     });
@@ -160,22 +160,22 @@ router.delete('/holidays/:id', requireRole(ROLES.ADMIN), (req, res) => {
 });
 
 /* ── Blocked slots ── */
-router.get('/blocked-slots', (req, res) => {
+router.get('/blocked-slots', async (req, res) => {
   const from = typeof req.query.from === 'string' ? req.query.from : null;
-  res.json(settingsRepo.listBlocked(from));
+  res.json(await settingsRepo.listBlocked(from));
 });
 
 router.post('/blocked-slots', validate(z.object({
   date: zDate, doctor_id: zId.nullish(),
   start_min: zMinutes, end_min: zMinutes,
   reason: z.string().trim().max(200).nullish(),
-})), (req, res) => {
+})), async (req, res) => {
   const b = req.body;
   if (b.end_min <= b.start_min) {
     return res.status(400).json({ error: 'End time must be after start time.', code: 'VALIDATION' });
   }
-  const id = settingsRepo.addBlocked({ ...b, created_by: req.user.id });
-  audit(ctxFrom(req), {
+  const id = await settingsRepo.addBlocked({ ...b, created_by: req.user.id });
+  await audit(ctxFrom(req), {
     action: 'clinic.block.add', entity: 'blocked_slot', entity_id: id,
     summary: `Blocked ${b.date} ${minToHHMM(b.start_min)}–${minToHHMM(b.end_min)}${b.reason ? ` — ${b.reason}` : ''}`,
     after: b,
@@ -183,11 +183,11 @@ router.post('/blocked-slots', validate(z.object({
   res.status(201).json({ ok: true, id });
 });
 
-router.delete('/blocked-slots/:id', (req, res) => {
+router.delete('/blocked-slots/:id', async (req, res) => {
   const id = Number(req.params.id);
-  const removed = settingsRepo.deleteBlocked(id);
+  const removed = await settingsRepo.deleteBlocked(id);
   if (removed) {
-    audit(ctxFrom(req), {
+    await audit(ctxFrom(req), {
       action: 'clinic.block.delete', entity: 'blocked_slot', entity_id: id,
       summary: `Removed block #${id}`,
     });

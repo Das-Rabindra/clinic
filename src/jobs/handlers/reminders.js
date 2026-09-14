@@ -14,13 +14,13 @@ const entityOf = (a) => ({
   patient_name: a.patient_name, patient_phone: a.patient_phone, patient_email: a.patient_email,
 });
 
-function preview(template, entity) {
-  try { return render(template, entity, settingsRepo.get(), {}).text.slice(0, 500); }
+async function preview(template, entity) {
+  try { return render(template, entity, await settingsRepo.get(), {}).text.slice(0, 500); }
   catch { return null; }
 }
 
 export async function reminder({ appointmentId, template }) {
-  const appt = apptRepo.findById(appointmentId);
+  const appt = await apptRepo.findById(appointmentId);
   // Cancelled or already-past appointments must not generate reminders.
   if (!appt || !BLOCKING_STATUSES.includes(appt.status)) return;
   if (new Date(appt.starts_at_utc) < new Date()) return;
@@ -45,7 +45,7 @@ export async function reminder({ appointmentId, template }) {
 }
 
 export async function followUp({ appointmentId }) {
-  const appt = apptRepo.findById(appointmentId);
+  const appt = await apptRepo.findById(appointmentId);
   if (!appt || appt.status !== 'completed') return;
   const entity = entityOf(appt);
   notifications.queue({

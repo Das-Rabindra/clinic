@@ -13,11 +13,11 @@ router.get('/', validate(z.object({
   status: z.enum(ENQUIRY_STATUS).optional(),
   limit: z.coerce.number().int().min(1).max(200).default(100),
   offset: z.coerce.number().int().min(0).default(0),
-}), 'query'), (req, res) => {
+}), 'query'), async (req, res) => {
   const { status, limit, offset } = req.validatedQuery;
   res.json({
-    rows: contentRepo.listEnquiries({ status, limit, offset }),
-    new_count: contentRepo.newEnquiryCount(),
+    rows: await contentRepo.listEnquiries({ status, limit, offset }),
+    new_count: await contentRepo.newEnquiryCount(),
   });
 });
 
@@ -25,18 +25,18 @@ router.put('/:id', validate(z.object({
   status: z.enum(ENQUIRY_STATUS).optional(),
   notes: z.string().trim().max(2000).nullish(),
   assigned_to: zId.nullish(),
-})), (req, res) => {
+})), async (req, res) => {
   const id = Number(req.params.id);
-  const before = contentRepo.findEnquiry(id);
+  const before = await contentRepo.findEnquiry(id);
   if (!before) return res.status(404).json({ error: 'Enquiry not found.', code: 'NOT_FOUND' });
 
   const fields = { ...req.body };
   if (fields.status === 'contacted' && !before.contacted_at) {
     fields.contacted_at = new Date().toISOString();
   }
-  contentRepo.updateEnquiry(id, fields);
-  const after = contentRepo.findEnquiry(id);
-  audit(ctxFrom(req), {
+  await contentRepo.updateEnquiry(id, fields);
+  const after = await contentRepo.findEnquiry(id);
+  await audit(ctxFrom(req), {
     action: 'enquiry.update', entity: 'enquiry', entity_id: id,
     summary: `Enquiry from ${after.name} marked ${after.status}`,
     before: { status: before.status }, after: { status: after.status },
@@ -45,31 +45,31 @@ router.put('/:id', validate(z.object({
 });
 
 /** Turn an enquiry into a patient record. */
-router.post('/:id/convert', (req, res) => {
+router.post('/:id/convert', async (req, res) => {
   const id = Number(req.params.id);
-  const enquiry = contentRepo.findEnquiry(id);
+  const enquiry = await contentRepo.findEnquiry(id);
   if (!enquiry) return res.status(404).json({ error: 'Enquiry not found.', code: 'NOT_FOUND' });
 
   const phone = normalisePhone(enquiry.phone);
   if (!phone) return res.status(400).json({ error: 'This enquiry has no valid mobile number.', code: 'INVALID_PHONE' });
 
-  const { patient } = patientsRepo.upsertByPhone({
+  const { patient } = await patientsRepo.upsertByPhone({
     name: enquiry.name, phone, email: enquiry.email, createdBy: req.user.id,
   });
-  contentRepo.updateEnquiry(id, { status: 'converted', converted_patient_id: patient.id });
-  audit(ctxFrom(req), {
+  await contentRepo.updateEnquiry(id, { status: 'converted', converted_patient_id: patient.id });
+  await audit(ctxFrom(req), {
     action: 'enquiry.convert', entity: 'enquiry', entity_id: id,
     summary: `Converted enquiry from ${enquiry.name} to patient ${patient.code}`,
   });
   res.json({ ok: true, patient });
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   const id = Number(req.params.id);
-  const before = contentRepo.findEnquiry(id);
+  const before = await contentRepo.findEnquiry(id);
   if (!before) return res.status(404).json({ error: 'Enquiry not found.', code: 'NOT_FOUND' });
-  contentRepo.deleteEnquiry(id);
-  audit(ctxFrom(req), {
+  await contentRepo.deleteEnquiry(id);
+  await audit(ctxFrom(req), {
     action: 'enquiry.delete', entity: 'enquiry', entity_id: id,
     summary: `Deleted enquiry from ${before.name}`,
   });

@@ -15,20 +15,22 @@ import { setupEnv, bootDb, cleanup } from './helpers.mjs';
 
 const run = promisify(execFile);
 const here = path.dirname(fileURLToPath(import.meta.url));
-const dir = setupEnv('race');
+let ctx;
+const SUITE = 'race';
 let settingsRepo, apptRepo, time, availability;
 
 before(async () => {
+  ctx = await setupEnv(SUITE);
   await bootDb();
   settingsRepo = await import('../src/repositories/settings.repo.js');
   apptRepo = await import('../src/repositories/appointments.repo.js');
   time = await import('../src/utils/time.js');
   availability = await import('../src/services/availability.service.js');
 });
-after(() => cleanup(dir));
+after(async () => { await cleanup(ctx); });
 
-const nextMonday = (offsetWeeks = 0) => {
-  const tz = settingsRepo.get().timezone;
+const nextMonday = async (offsetWeeks = 0) => {
+  const tz = (await settingsRepo.get()).timezone;
   let d = time.addDays(time.todayIn(tz), 3);
   while (time.weekdayOf(d) !== 1) d = time.addDays(d, 1);
   return time.addDays(d, offsetWeeks * 7);
@@ -39,6 +41,7 @@ async function stampede(n, date, slot, serviceId = 1) {
   const startAt = Date.now() + 1200;
   const env = {
     ...process.env,
+    DATABASE_URL: process.env.DATABASE_URL,   // the suite's isolated database
     DATA_DIR: process.env.DATA_DIR,
     UPLOAD_DIR: process.env.UPLOAD_DIR,
     APP_SECRET: process.env.APP_SECRET,
@@ -57,7 +60,7 @@ async function stampede(n, date, slot, serviceId = 1) {
 
 describe('double-booking prevention', () => {
   test('16 concurrent processes: exactly one booking is created', async () => {
-    const date = nextMonday();
+    const date = await nextMonday();
     const slot = '10:00';
     const results = await stampede(16, date, slot);
 
@@ -70,16 +73,16 @@ describe('double-booking prevention', () => {
     assert.equal(rejected.length, 15, 'every other process must be cleanly rejected');
 
     // And the database agrees: one appointment, holding its slots exactly once.
-    const held = apptRepo.occupiedSlots(1, date);
+    const held = await apptRepo.occupiedSlots(1, date);
     assert.deepEqual(held, [time.hhmmToMin(slot)],
       `exactly one 30-minute slot is held at ${slot}`);
   }, { timeout: 60000 });
 
   test('concurrent bookings for different slots all succeed', async () => {
-    const date = nextMonday(1);
+    const date = await nextMonday(1);
     const slots = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30'];
     const startAt = Date.now() + 1200;
-    const env = { ...process.env, RUN_JOBS: 'false', NODE_ENV: 'test' };
+    const env = { ...process.env, DATABASE_URL: process.env.DATABASE_URL, RUN_JOBS: 'false', NODE_ENV: 'test' };
 
     const results = await Promise.all(slots.map((slot, i) =>
       run(process.execPath, [path.join(here, 'fixtures', 'racer.mjs'),
@@ -93,10 +96,10 @@ describe('double-booking prevention', () => {
   }, { timeout: 60000 });
 
   test('a 60-minute treatment blocks an overlapping 30-minute booking', async () => {
-    const date = nextMonday(2);
+    const date = await nextMonday(2);
     // Pick an hour that is inside opening hours and clear of any break, so the
     // test exercises overlap rather than the break rules.
-    const day = availability.getDayAvailability({ date, serviceId: 4 });
+    const day = await availability.getDayAvailability({ date, serviceId: 4 });
     const anchor = day.slots.find((s) =>
       s.available && day.slots.some((n) => n.minutes === s.minutes + day.interval_min && n.available));
     assert.ok(anchor, 'need two consecutive free slots');

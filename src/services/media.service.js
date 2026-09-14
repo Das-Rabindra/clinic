@@ -78,10 +78,10 @@ export async function ingestImage(file, { folder = 'clinic', alt = null, userId 
   const base = `${folder}/${checksum.slice(0, 20)}`;
   const originalName = slugify(String(file.originalname || 'image').replace(/\.[^.]+$/, '')).slice(0, 60);
 
-  const stored = await storage.put(`${base}.webp`, display);
-  const storedThumb = await storage.put(`${base}-thumb.webp`, thumb);
+  const stored = await storage.put(`${base}.webp`, display, 'image/webp');
+  const storedThumb = await storage.put(`${base}-thumb.webp`, thumb, 'image/webp');
 
-  const row = mediaRepo.create({
+  const row = await mediaRepo.create({
     storage: storage.driverName(),
     key: stored.key, url: stored.url, folder,
     mime: 'image/webp', ext: 'webp', bytes: display.length,
@@ -89,7 +89,7 @@ export async function ingestImage(file, { folder = 'clinic', alt = null, userId 
     checksum, original_name: originalName, alt, uploaded_by: userId,
   });
 
-  const thumbRow = mediaRepo.create({
+  const thumbRow = await mediaRepo.create({
     storage: storage.driverName(),
     key: storedThumb.key, url: storedThumb.url, folder,
     mime: 'image/webp', ext: 'webp', bytes: thumb.length,
@@ -102,14 +102,14 @@ export async function ingestImage(file, { folder = 'clinic', alt = null, userId 
 
 /** Remove the stored bytes of a media row and its variants, then soft-delete. */
 export async function deleteMedia(id) {
-  const row = mediaRepo.findById(id);
+  const row = await mediaRepo.findById(id);
   if (!row) return false;
   for (const m of [row, ...mediaRepo.variants(id)]) {
     try { await storage.remove(m.key); }
     catch (err) { console.error('[media] failed to remove stored file', m.key, err.message); }
   }
-  mediaRepo.softDelete(id);
+  await mediaRepo.softDelete(id);
   return true;
 }
 
-export const maxUploadMb = () => Math.round(config.storage.maxUploadBytes / 1048576);
+export const maxUploadMb = async () => Math.round(config.storage.maxUploadBytes / 1048576);

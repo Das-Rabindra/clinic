@@ -16,27 +16,31 @@ const FIELDS = [
 ];
 export const SETTINGS_FIELDS = FIELDS;
 
-export const get = () => one('SELECT * FROM clinic_settings WHERE id = 1');
-export const update = (fields) => buildUpdate('clinic_settings', 1, fields, FIELDS);
+export const get = async () => await one('SELECT * FROM clinic_settings WHERE id = 1');
+export const update = async (fields) => await buildUpdate('clinic_settings', 1, fields, FIELDS);
 
 /** Composed one-line address, skipping blank parts. */
-export function fullAddress(s = get()) {
+/** Composed one-line address, skipping blank parts. */
+export async function fullAddress(settings = null) {
+  // The default cannot be `await get()`: as an async call it would resolve to a
+  // Promise inside the parameter list rather than the settings row.
+  const s = settings ?? await get();
   return [s.address_line1, s.address_line2, s.area, s.city, s.state, s.postal_code]
     .map(v => (v || '').trim()).filter(Boolean).join(', ');
 }
 
 /* ── Weekly hours ── */
-export const getHours = () => all('SELECT * FROM clinic_hours ORDER BY weekday');
-export const getHoursFor = (weekday) => one('SELECT * FROM clinic_hours WHERE weekday = ?', weekday);
+export const getHours = async () => await all('SELECT * FROM clinic_hours ORDER BY weekday');
+export const getHoursFor = async (weekday) => await one('SELECT * FROM clinic_hours WHERE weekday = ?', weekday);
 
-export function upsertHours(weekday, h) {
-  run(
+export async function upsertHours(weekday, h) {
+  await run(
     `INSERT INTO clinic_hours (weekday, is_open, open_min, close_min, break_start_min, break_end_min)
      VALUES (@weekday, @is_open, @open_min, @close_min, @break_start_min, @break_end_min)
      ON CONFLICT(weekday) DO UPDATE SET
        is_open = excluded.is_open, open_min = excluded.open_min, close_min = excluded.close_min,
        break_start_min = excluded.break_start_min, break_end_min = excluded.break_end_min,
-       updated_at = datetime('now')`,
+       updated_at = NOW()`,
     {
       weekday,
       is_open: h.is_open ? 1 : 0,
@@ -47,41 +51,41 @@ export function upsertHours(weekday, h) {
 }
 
 /* ── Holidays / temporary closures ── */
-export const listHolidays = (from) =>
-  all(`SELECT h.*, d.name AS doctor_name FROM holidays h
+export const listHolidays = async (from) =>
+  await all(`SELECT h.*, d.name AS doctor_name FROM holidays h
        LEFT JOIN doctors d ON d.id = h.doctor_id
-       WHERE (? IS NULL OR COALESCE(h.end_date, h.date) >= ?)
+       WHERE (?::text IS NULL OR COALESCE(h.end_date, h.date) >= ?)
        ORDER BY h.date`, from ?? null, from ?? null);
 
 /** Holidays covering a date, for the clinic or a specific doctor. */
-export const holidaysOn = (date, doctorId) =>
-  all(`SELECT * FROM holidays
+export const holidaysOn = async (date, doctorId) =>
+  await all(`SELECT * FROM holidays
        WHERE date <= ? AND COALESCE(end_date, date) >= ?
          AND (doctor_id IS NULL OR doctor_id = ?)`, date, date, doctorId ?? -1);
 
-export const addHoliday = (h) => run(
+export const addHoliday = async (h) => (await run(
   `INSERT INTO holidays (doctor_id, date, end_date, reason, is_full_day, start_min, end_min, created_by)
    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
   h.doctor_id ?? null, h.date, h.end_date ?? null, h.reason ?? null,
   h.is_full_day === false ? 0 : 1, h.start_min ?? null, h.end_min ?? null, h.created_by ?? null
-).lastInsertRowid;
+)).lastInsertRowid;
 
-export const deleteHoliday = (id) => run('DELETE FROM holidays WHERE id = ?', id).changes;
+export const deleteHoliday = async (id) => (await run('DELETE FROM holidays WHERE id = ?', id)).changes;
 
 /* ── Ad-hoc blocked slots ── */
-export const listBlocked = (from) =>
-  all(`SELECT b.*, d.name AS doctor_name FROM blocked_slots b
+export const listBlocked = async (from) =>
+  await all(`SELECT b.*, d.name AS doctor_name FROM blocked_slots b
        LEFT JOIN doctors d ON d.id = b.doctor_id
-       WHERE (? IS NULL OR b.date >= ?) ORDER BY b.date, b.start_min`, from ?? null, from ?? null);
+       WHERE (?::text IS NULL OR b.date >= ?) ORDER BY b.date, b.start_min`, from ?? null, from ?? null);
 
-export const blockedOn = (date, doctorId) =>
-  all(`SELECT * FROM blocked_slots WHERE date = ? AND (doctor_id IS NULL OR doctor_id = ?)`,
+export const blockedOn = async (date, doctorId) =>
+  await all(`SELECT * FROM blocked_slots WHERE date = ? AND (doctor_id IS NULL OR doctor_id = ?)`,
     date, doctorId ?? -1);
 
-export const addBlocked = (b) => run(
+export const addBlocked = async (b) => (await run(
   `INSERT INTO blocked_slots (doctor_id, date, start_min, end_min, reason, created_by)
    VALUES (?, ?, ?, ?, ?, ?)`,
   b.doctor_id ?? null, b.date, b.start_min, b.end_min, b.reason ?? null, b.created_by ?? null
-).lastInsertRowid;
+)).lastInsertRowid;
 
-export const deleteBlocked = (id) => run('DELETE FROM blocked_slots WHERE id = ?', id).changes;
+export const deleteBlocked = async (id) => (await run('DELETE FROM blocked_slots WHERE id = ?', id)).changes;

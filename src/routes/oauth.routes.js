@@ -20,16 +20,16 @@ router.get('/google/callback', requireAuthPage, asyncHandler(async (req, res) =>
 
   if (error) return fail(String(error));
   if (!code || !state) return fail('Google did not return an authorisation code.');
-  if (!oauth.verifyState(state)) return fail('The connection request could not be verified. Please start again.');
+  if (!await oauth.verifyState(state)) return fail('The connection request could not be verified. Please start again.');
 
   try {
     await oauth.exchangeCode(String(code));
-    audit(ctxFrom(req), {
+    await audit(ctxFrom(req), {
       action: 'google.connect.complete', entity: 'integration', entity_id: 'google_business',
       summary: 'Connected Google Business Profile',
     });
     // Next step is choosing which location this clinic is.
-    const accounts = await reviewsService.listAccounts().catch(() => []);
+    const accounts = (await reviewsService.listAccounts()).catch(() => []);
     return res.redirect('/admin/reviews?google_connected=1&accounts=' + accounts.length);
   } catch (err) {
     return fail(err.message);

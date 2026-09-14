@@ -1,15 +1,15 @@
-import { one, all, run } from './base.js';
+import { one, all, run, isUniqueViolation } from './base.js';
 
-export const findById = (id) => one('SELECT * FROM notifications WHERE id = ?', id);
+export const findById = async (id) => await one('SELECT * FROM notifications WHERE id = ?', id);
 
 /**
  * Enqueue. `dedupe_key` makes reminders idempotent: re-running the scheduler
  * cannot produce a second "24h reminder" for the same appointment.
  * Returns the existing row's id when the key is already present.
  */
-export function enqueue(n) {
+export async function enqueue(n) {
   try {
-    const info = run(
+    const info = await run(
       `INSERT INTO notifications (channel, template, recipient, recipient_role, payload_json,
          body_preview, appointment_id, enquiry_id, scheduled_for, dedupe_key, max_attempts)
        VALUES (@channel, @template, @recipient, @recipient_role, @payload_json,
@@ -27,8 +27,8 @@ export function enqueue(n) {
     );
     return Number(info.lastInsertRowid);
   } catch (err) {
-    if (String(err.code).includes('CONSTRAINT_UNIQUE') && n.dedupe_key) {
-      const existing = one('SELECT id FROM notifications WHERE dedupe_key = ?', n.dedupe_key);
+    if (isUniqueViolation(err) && n.dedupe_key) {
+      const existing = await one('SELECT id FROM notifications WHERE dedupe_key = ?', n.dedupe_key);
       return existing ? existing.id : null;
     }
     throw err;
@@ -36,41 +36,41 @@ export function enqueue(n) {
 }
 
 /** Queued notifications whose scheduled time has arrived. */
-export const dueNow = (limit = 25) =>
-  all(`SELECT * FROM notifications
+export const dueNow = async (limit = 25) =>
+  await all(`SELECT * FROM notifications
        WHERE status IN ('queued')
-         AND (scheduled_for IS NULL OR scheduled_for <= datetime('now'))
+         AND (scheduled_for IS NULL OR scheduled_for <= NOW())
          AND attempts < max_attempts
        ORDER BY id LIMIT ?`, limit);
 
-export const markSending = (id) =>
-  run(`UPDATE notifications SET status = 'sending', attempts = attempts + 1,
-       updated_at = datetime('now') WHERE id = ?`, id).changes;
+export const markSending = async (id) =>
+  (await run(`UPDATE notifications SET status = 'sending', attempts = attempts + 1,
+       updated_at = NOW() WHERE id = ?`, id)).changes;
 
-export const markSent = (id, provider, msgId) =>
-  run(`UPDATE notifications SET status = 'sent', provider = ?, provider_msg_id = ?,
-       sent_at = datetime('now'), last_error = NULL, updated_at = datetime('now') WHERE id = ?`,
-    provider, msgId ?? null, id).changes;
+export const markSent = async (id, provider, msgId) =>
+  (await run(`UPDATE notifications SET status = 'sent', provider = ?, provider_msg_id = ?,
+       sent_at = NOW(), last_error = NULL, updated_at = NOW() WHERE id = ?`,
+    provider, msgId ?? null, id)).changes;
 
 /** Failed but retryable stays 'queued'; exhausted attempts become 'failed'. */
-export const markFailed = (id, error, provider) =>
-  run(`UPDATE notifications SET
+export const markFailed = async (id, error, provider) =>
+  (await run(`UPDATE notifications SET
        status = CASE WHEN attempts >= max_attempts THEN 'failed' ELSE 'queued' END,
-       provider = COALESCE(?, provider), last_error = ?, updated_at = datetime('now')
-       WHERE id = ?`, provider ?? null, String(error).slice(0, 1000), id).changes;
+       provider = COALESCE(?, provider), last_error = ?, updated_at = NOW()
+       WHERE id = ?`, provider ?? null, String(error).slice(0, 1000), id)).changes;
 
 /** Provider deliberately not configured - recorded honestly, never as "sent". */
-export const markNotConfigured = (id, note) =>
-  run(`UPDATE notifications SET status = 'not_configured', last_error = ?,
-       updated_at = datetime('now') WHERE id = ?`, note, id).changes;
+export const markNotConfigured = async (id, note) =>
+  (await run(`UPDATE notifications SET status = 'not_configured', last_error = ?,
+       updated_at = NOW() WHERE id = ?`, note, id)).changes;
 
-export const resetForRetry = (id) =>
-  run(`UPDATE notifications SET status = 'queued', attempts = 0, last_error = NULL,
+export const resetForRetry = async (id) =>
+  (await run(`UPDATE notifications SET status = 'queued', attempts = 0, last_error = NULL,
        max_attempts = MAX(max_attempts, 3), scheduled_for = NULL,
-       updated_at = datetime('now') WHERE id = ?`, id).changes;
+       updated_at = NOW() WHERE id = ?`, id)).changes;
 
-export function log(notificationId, entry) {
-  run(
+export async function log(notificationId, entry) {
+  await run(
     `INSERT INTO notification_logs (notification_id, attempt, status, http_status, response_body, error)
      VALUES (?, ?, ?, ?, ?, ?)`,
     notificationId, entry.attempt ?? 0, entry.status,
@@ -80,36 +80,36 @@ export function log(notificationId, entry) {
   );
 }
 
-export const logsFor = (id) =>
-  all('SELECT * FROM notification_logs WHERE notification_id = ? ORDER BY id DESC', id);
+export const logsFor = async (id) =>
+  await all('SELECT * FROM notification_logs WHERE notification_id = ? ORDER BY id DESC', id);
 
-export function list({ status, channel, limit = 100, offset = 0 } = {}) {
-  const rows = all(
+export async function list({ status, channel, limit = 100, offset = 0 } = {}) {
+  const rows = await all(
     `SELECT n.*, a.ref AS appointment_ref FROM notifications n
      LEFT JOIN appointments a ON a.id = n.appointment_id
-     WHERE (? IS NULL OR n.status = ?) AND (? IS NULL OR n.channel = ?)
+     WHERE (?::text IS NULL OR n.status = ?) AND (?::text IS NULL OR n.channel = ?)
      ORDER BY n.id DESC LIMIT ? OFFSET ?`,
     status ?? null, status ?? null, channel ?? null, channel ?? null, limit, offset);
-  const total = one(
+  const total = (await one(
     `SELECT COUNT(*) AS c FROM notifications
-     WHERE (? IS NULL OR status = ?) AND (? IS NULL OR channel = ?)`,
-    status ?? null, status ?? null, channel ?? null, channel ?? null).c;
+     WHERE (?::text IS NULL OR status = ?) AND (?::text IS NULL OR channel = ?)`,
+    status ?? null, status ?? null, channel ?? null, channel ?? null)).c;
   return { rows, total };
 }
 
-export const failedCount = () =>
-  one(`SELECT COUNT(*) AS c FROM notifications WHERE status = 'failed'`).c;
+export const failedCount = async () =>
+  (await one(`SELECT COUNT(*) AS c FROM notifications WHERE status = 'failed'`)).c;
 
 /* In-dashboard admin alerts */
-export function pushAdmin(a) {
-  run('INSERT INTO admin_notifications (type, title, body, link, severity) VALUES (?, ?, ?, ?, ?)',
+export async function pushAdmin(a) {
+  await run('INSERT INTO admin_notifications (type, title, body, link, severity) VALUES (?, ?, ?, ?, ?)',
     a.type, a.title, a.body ?? null, a.link ?? null, a.severity || 'info');
 }
-export const listAdmin = (limit = 30) =>
-  all('SELECT * FROM admin_notifications ORDER BY id DESC LIMIT ?', limit);
-export const unreadAdminCount = () =>
-  one('SELECT COUNT(*) AS c FROM admin_notifications WHERE is_read = 0').c;
-export const markAdminRead = (id) =>
-  run(`UPDATE admin_notifications SET is_read = 1, read_at = datetime('now') WHERE id = ?`, id).changes;
-export const markAllAdminRead = () =>
-  run(`UPDATE admin_notifications SET is_read = 1, read_at = datetime('now') WHERE is_read = 0`).changes;
+export const listAdmin = async (limit = 30) =>
+  await all('SELECT * FROM admin_notifications ORDER BY id DESC LIMIT ?', limit);
+export const unreadAdminCount = async () =>
+  (await one('SELECT COUNT(*) AS c FROM admin_notifications WHERE is_read = 0')).c;
+export const markAdminRead = async (id) =>
+  (await run(`UPDATE admin_notifications SET is_read = 1, read_at = NOW() WHERE id = ?`, id)).changes;
+export const markAllAdminRead = async () =>
+  (await run(`UPDATE admin_notifications SET is_read = 1, read_at = NOW() WHERE is_read = 0`)).changes;

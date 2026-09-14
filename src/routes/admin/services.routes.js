@@ -6,9 +6,9 @@ import { audit, ctxFrom } from '../../services/audit.service.js';
 
 const router = Router();
 
-router.get('/', (_req, res) => res.json({
-  services: servicesRepo.list(),
-  categories: servicesRepo.categories(),
+router.get('/', async (_req, res) => res.json({
+  services: await servicesRepo.list(),
+  categories: await servicesRepo.categories(),
 }));
 
 const serviceSchema = z.object({
@@ -27,51 +27,51 @@ const serviceSchema = z.object({
   is_active: zBool.default(true),
 });
 
-router.post('/', validate(serviceSchema), (req, res) => {
+router.post('/', validate(serviceSchema), async (req, res) => {
   const b = { ...req.body };
-  if (b.category && !b.category_id) b.category_id = servicesRepo.ensureCategory(b.category).id;
-  const created = servicesRepo.create(b);
-  audit(ctxFrom(req), {
+  if (b.category && !b.category_id) b.category_id = (await servicesRepo.ensureCategory(b.category)).id;
+  const created = await servicesRepo.create(b);
+  await audit(ctxFrom(req), {
     action: 'service.create', entity: 'service', entity_id: created.id,
     summary: `Added service "${created.name}" (${created.duration_min} min)`, after: created,
   });
   res.status(201).json({ ok: true, service: created });
 });
 
-router.put('/:id', validate(partialUpdate(serviceSchema)), (req, res) => {
+router.put('/:id', validate(partialUpdate(serviceSchema)), async (req, res) => {
   const id = Number(req.params.id);
-  const before = servicesRepo.findById(id);
+  const before = await servicesRepo.findById(id);
   if (!before) return res.status(404).json({ error: 'Service not found.', code: 'NOT_FOUND' });
 
   const fields = { ...req.body };
   if (fields.category && !fields.category_id) {
-    fields.category_id = servicesRepo.ensureCategory(fields.category).id;
+    fields.category_id = (await servicesRepo.ensureCategory(fields.category)).id;
   }
   delete fields.category;
-  servicesRepo.update(id, fields);
-  const after = servicesRepo.findById(id);
-  audit(ctxFrom(req), {
+  await servicesRepo.update(id, fields);
+  const after = await servicesRepo.findById(id);
+  await audit(ctxFrom(req), {
     action: 'service.update', entity: 'service', entity_id: id,
     summary: `Updated service "${after.name}"`, before, after,
   });
   res.json({ ok: true, service: after });
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   const id = Number(req.params.id);
-  const before = servicesRepo.findById(id);
+  const before = await servicesRepo.findById(id);
   if (!before) return res.status(404).json({ error: 'Service not found.', code: 'NOT_FOUND' });
-  servicesRepo.softDelete(id);
-  audit(ctxFrom(req), {
+  await servicesRepo.softDelete(id);
+  await audit(ctxFrom(req), {
     action: 'service.delete', entity: 'service', entity_id: id,
     summary: `Removed service "${before.name}"`, before,
   });
   res.json({ ok: true });
 });
 
-router.post('/reorder', validate(z.object({ ids: z.array(zId).min(1).max(200) })), (req, res) => {
-  servicesRepo.reorder(req.body.ids);
-  audit(ctxFrom(req), {
+router.post('/reorder', validate(z.object({ ids: z.array(zId).min(1).max(200) })), async (req, res) => {
+  await servicesRepo.reorder(req.body.ids);
+  await audit(ctxFrom(req), {
     action: 'service.reorder', entity: 'service', entity_id: 'all',
     summary: 'Reordered services',
   });
