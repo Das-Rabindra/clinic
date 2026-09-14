@@ -17,7 +17,17 @@ router.get('/', (_req, res) => {
   });
 });
 
-const nullableStr = (max = 500) => z.string().trim().max(max).nullish().transform(v => (v === '' ? null : v ?? null));
+/**
+ * Optional text field for a partial update.
+ *
+ * An absent key must stay `undefined` so buildUpdate skips the column
+ * entirely; only an explicitly sent empty string means "clear this field".
+ * Collapsing undefined to null here would make a one-field PUT wipe every
+ * column the caller did not mention.
+ */
+const nullableStr = (max = 500) =>
+  z.string().trim().max(max).nullish()
+    .transform(v => (v === undefined ? undefined : (v === '' ? null : v)));
 
 const settingsSchema = z.object({
   name: z.string().trim().min(2).max(120).optional(),
@@ -26,7 +36,7 @@ const settingsSchema = z.object({
   tagline: nullableStr(300), description: nullableStr(2000),
   phone: nullableStr(20), phone_intl: nullableStr(20), whatsapp: nullableStr(20),
   email: z.union([z.string().trim().email().max(200), z.literal(''), z.null()]).optional()
-    .transform(v => (v === '' ? null : v ?? null)),
+    .transform(v => (v === undefined ? undefined : (v === '' ? null : v))),
   site_url: nullableStr(300),
   address_line1: nullableStr(200), address_line2: nullableStr(200),
   area: nullableStr(120), city: nullableStr(120), state: nullableStr(120),

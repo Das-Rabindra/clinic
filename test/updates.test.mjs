@@ -61,6 +61,45 @@ describe('doctor partial update', () => {
   });
 });
 
+describe('clinic settings partial update', () => {
+  test('changing one setting does not null every other field', async () => {
+    const before = (await srv.call('/api/admin/clinic')).body.settings;
+    assert.ok(before.doctor_name, 'fixture has a doctor name');
+    assert.ok(before.phone, 'fixture has a phone number');
+
+    const r = await put('/api/admin/clinic', { tagline: 'A new tagline' });
+    assert.equal(r.status, 200);
+
+    const after = r.body.settings;
+    assert.equal(after.tagline, 'A new tagline');
+    for (const key of ['name', 'doctor_name', 'qualification', 'registration',
+      'institution', 'phone', 'phone_intl', 'whatsapp', 'address_line1', 'area',
+      'postal_code', 'hero_title', 'seo_title']) {
+      assert.equal(after[key], before[key], `${key} must be untouched by an unrelated update`);
+    }
+    assert.deepEqual(r.body.changed, ['tagline'], 'only the field actually sent is reported as changed');
+  });
+
+  test('an explicit empty string still clears a field', async () => {
+    await put('/api/admin/clinic', { tagline: 'temporary' });
+    const r = await put('/api/admin/clinic', { tagline: '' });
+    assert.equal(r.status, 200);
+    assert.equal(r.body.settings.tagline, null, 'sending "" means clear');
+    assert.ok(r.body.settings.doctor_name, 'and still leaves other fields alone');
+  });
+
+  test('setting the hero image leaves clinic details intact', async () => {
+    const media = await image('hero.jpg');
+    const before = (await srv.call('/api/admin/clinic')).body.settings;
+    const r = await put('/api/admin/clinic', { hero_media_id: media.id });
+    assert.equal(r.status, 200);
+    assert.equal(r.body.settings.hero_media_id, media.id);
+    assert.equal(r.body.settings.doctor_name, before.doctor_name);
+    assert.equal(r.body.settings.phone, before.phone);
+    assert.equal(r.body.settings.address_line1, before.address_line1);
+  });
+});
+
 describe('service partial update', () => {
   test('renaming a service does not reset its other settings', async () => {
     const created = (await post('/api/admin/services', {
@@ -78,6 +117,20 @@ describe('service partial update', () => {
     assert.equal(after.bookable, 0, 'bookable must not flip to the default true');
     assert.equal(after.is_active, 0, 'is_active must not flip to the default true');
     assert.equal(after.price_from, 500);
+  });
+});
+
+describe('FAQ partial update', () => {
+  test('editing a question does not re-publish a hidden FAQ', async () => {
+    const created = (await post('/api/admin/faqs', {
+      question: 'Draft question?', answer: 'Draft answer.', is_published: false,
+    })).body.faq;
+    assert.equal(created.is_published, 0);
+
+    const r = await put(`/api/admin/faqs/${created.id}`, { question: 'Edited question?' });
+    assert.equal(r.status, 200);
+    assert.equal(r.body.faq.question, 'Edited question?');
+    assert.equal(r.body.faq.is_published, 0, 'must not flip to the default true');
   });
 });
 

@@ -1,7 +1,7 @@
 /** FAQ management. */
 import { Router } from 'express';
 import { z } from 'zod';
-import { validate, zId, zBool } from '../../middleware/validate.js';
+import { validate, partialUpdate, zId, zBool } from '../../middleware/validate.js';
 import * as contentRepo from '../../repositories/content.repo.js';
 import { audit, ctxFrom } from '../../services/audit.service.js';
 
@@ -24,7 +24,7 @@ router.post('/faqs', validate(faqSchema), (req, res) => {
   res.status(201).json({ ok: true, faq: created });
 });
 
-router.put('/faqs/:id', validate(faqSchema.partial()), (req, res) => {
+router.put('/faqs/:id', validate(partialUpdate(faqSchema)), (req, res) => {
   const id = Number(req.params.id);
   const before = contentRepo.findFaq(id);
   if (!before) return res.status(404).json({ error: 'FAQ not found.', code: 'NOT_FOUND' });
