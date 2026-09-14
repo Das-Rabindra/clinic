@@ -1,0 +1,20 @@
+# dependencies
+node_modules/
+
+# secrets — never commit
+.env
+.env.local
+*.pem
+*.key
+
+# runtime data (database holds credentials and patient records)
+data/
+uploads/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# scratch
+*.tmp.mjs
+*.log
+.DS_Store

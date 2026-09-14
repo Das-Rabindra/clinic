@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><%= mode === 'reset' ? 'Reset password' : 'Sign in' %> — <%= clinicName %></title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="<%= faviconUrl %>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-brand">
+      <img src="<%= faviconUrl %>" alt="">
+      <div>
+        <strong><%= clinicName %></strong>
+        <span>Clinic Management</span>
+      </div>
+    </div>
+
+    <% if (mode === 'reset') { %>
+      <h1>Set a new password</h1>
+      <p class="sub">Choose a password with at least 12 characters.</p>
+      <form id="resetForm" novalidate>
+        <input type="hidden" id="token" value="<%= token %>">
+        <div class="field" id="f-pw">
+          <label for="password">New password</label>
+          <input type="password" id="password" autocomplete="new-password" required minlength="12">
+          <span class="err">Use at least 12 characters.</span>
+        </div>
+        <div class="field" id="f-pw2">
+          <label for="password2">Confirm new password</label>
+          <input type="password" id="password2" autocomplete="new-password" required>
+          <span class="err">Passwords do not match.</span>
+        </div>
+        <div id="msg"></div>
+        <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Update password</button>
+      </form>
+      <p style="text-align:center; margin-top:18px; font-size:12.5px;"><a href="/admin/login">Back to sign in</a></p>
+
+    <% } else { %>
+      <h1>Sign in</h1>
+      <p class="sub">Access the clinic dashboard, appointments and website content.</p>
+      <form id="loginForm" novalidate>
+        <input type="hidden" id="next" value="<%= next %>">
+        <div class="field" id="f-email">
+          <label for="email">Email</label>
+          <input type="email" id="email" autocomplete="username" required autofocus>
+          <span class="err">Enter a valid email address.</span>
+        </div>
+        <div class="field" id="f-password">
+          <label for="password">Password</label>
+          <input type="password" id="password" autocomplete="current-password" required>
+          <span class="err">Enter your password.</span>
+        </div>
+        <div id="msg"></div>
+        <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Sign in</button>
+      </form>
+      <p style="text-align:center; margin-top:18px; font-size:12.5px;">
+        <a href="#" id="forgotLink">Forgotten your password?</a>
+      </p>
+    <% } %>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var msg = document.getElementById('msg');
+
+  function cookie(name) {
+    return document.cookie.split('; ').reduce(function (a, p) {
+      var kv = p.split('=');
+      return kv[0] === name ? decodeURIComponent(kv.slice(1).join('=')) : a;
+    }, '');
+  }
+  function banner(text, kind) {
+    msg.innerHTML = '<div class="banner banner-' + kind + '"><span>' +
+      String(text).replace(/[&<>"]/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+      }) + '</span></div>';
+  }
+  async function post(url, body) {
+    var res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': cookie('sdc_csrf') },
+      credentials: 'same-origin',
+      body: JSON.stringify(body)
+    });
+    var data = {};
+    try { data = await res.json(); } catch (e) {}
+    if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+    return data;
+  }
+
+  var loginForm = document.getElementById('loginForm');
+  if (loginForm) {
+    loginForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('submitBtn');
+      var email = document.getElementById('email');
+      var password = document.getElementById('password');
+      var ok = true;
+      document.getElementById('f-email').classList.toggle('invalid', !(ok = /\S+@\S+\.\S+/.test(email.value)) && true);
+      if (!password.value) { document.getElementById('f-password').classList.add('invalid'); ok = false; }
+      if (!ok) return;
+
+      btn.disabled = true; btn.textContent = 'Signing in…'; msg.innerHTML = '';
+      try {
+        await post('/api/auth/login', { email: email.value.trim(), password: password.value });
+        var next = document.getElementById('next').value || '/admin';
+        window.location.href = next.indexOf('/') === 0 ? next : '/admin';
+      } catch (err) {
+        banner(err.message, 'err');
+        btn.disabled = false; btn.textContent = 'Sign in';
+      }
+    });
+
+    document.getElementById('forgotLink').addEventListener('click', async function (e) {
+      e.preventDefault();
+      var email = document.getElementById('email').value.trim();
+      if (!/\S+@\S+\.\S+/.test(email)) {
+        banner('Enter your email address above first, then click this link again.', 'warn');
+        return;
+      }
+      try {
+        var r = await post('/api/auth/forgot-password', { email: email });
+        banner(r.message, 'ok');
+      } catch (err) { banner(err.message, 'err'); }
+    });
+  }
+
+  var resetForm = document.getElementById('resetForm');
+  if (resetForm) {
+    resetForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var pw = document.getElementById('password');
+      var pw2 = document.getElementById('password2');
+      var btn = document.getElementById('submitBtn');
+      var ok = true;
+      document.getElementById('f-pw').classList.toggle('invalid', pw.value.length < 12);
+      if (pw.value.length < 12) ok = false;
+      document.getElementById('f-pw2').classList.toggle('invalid', pw.value !== pw2.value);
+      if (pw.value !== pw2.value) ok = false;
+      if (!ok) return;
+
+      btn.disabled = true; msg.innerHTML = '';
+      try {
+        var r = await post('/api/auth/reset-password', {
+          token: document.getElementById('token').value,
+          new_password: pw.value
+        });
+        banner(r.message + ' Redirecting…', 'ok');
+        setTimeout(function () { window.location.href = '/admin/login'; }, 1600);
+      } catch (err) {
+        banner(err.message, 'err');
+        btn.disabled = false;
+      }
+    });
+  }
+})();
+</script>
+</body>
+</html>

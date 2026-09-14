@@ -1,0 +1,52 @@
+services:
+  app:
+    build: .
+    image: samal-dental-care:latest
+    container_name: samal-dental-care
+    restart: unless-stopped
+    ports:
+      - "${PORT_PUBLISH:-8090}:8090"
+    environment:
+      NODE_ENV: production
+      PORT: 8090
+      # REQUIRED. Generate once with: openssl rand -hex 32
+      # The ":?" makes compose refuse to start without a secret rather than
+      # silently booting with an insecure default.
+      APP_SECRET: "${APP_SECRET:?set APP_SECRET in .env - generate one with openssl rand -hex 32}"
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8090}
+      TRUST_PROXY: ${TRUST_PROXY:-false}
+
+      # First admin, created only on the very first boot.
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+
+      # WhatsApp Cloud API — can also be set from the admin Integrations screen.
+      WHATSAPP_ENABLED: ${WHATSAPP_ENABLED:-false}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
+      WHATSAPP_TOKEN: ${WHATSAPP_TOKEN:-}
+
+      # Google Business Profile OAuth (for real Google reviews).
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+
+      # SMTP (optional).
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+
+      RUN_JOBS: "true"
+    volumes:
+      - clinic-data:/data
+      - clinic-uploads:/uploads
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8090/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  clinic-data:
+  clinic-uploads:

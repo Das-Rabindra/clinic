@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head') %>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<%- include('partials/header') %>
+
+<main id="main">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="top">
+    <div class="wrap hero-grid">
+      <div class="reveal in">
+        <% if (settings.hero_eyebrow) { %><span class="eyebrow"><%= settings.hero_eyebrow %></span><% } %>
+        <h1><%- heroTitleHtml %></h1>
+        <% if (settings.hero_lede) { %><p class="hero-lede"><%= settings.hero_lede %></p><% } %>
+        <div class="hero-ctas">
+          <a href="#appointment" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3.5 9h17M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>
+            <%= settings.hero_cta_label || 'Book an Appointment' %>
+          </a>
+          <% if (clinic.phone) { %>
+          <a href="tel:<%= clinic.phone_intl || clinic.phone %>" class="btn btn-outline-dark">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.4 21 3 13.6 3 4.5c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1L6.6 10.8z"/></svg>
+            Call Now
+          </a>
+          <% } %>
+          <% if (whatsappUrl) { %>
+          <a href="<%= whatsappUrl %>" target="_blank" rel="noopener" class="btn btn-whatsapp">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.9.5 3.6 1.4 5.1L2 22l5.1-1.3c1.4.8 3.1 1.3 4.9 1.3 5.5 0 10-4.5 10-10S17.5 2 12 2zm5.9 14.2c-.2.7-1.4 1.3-1.9 1.4-.5.1-1.1.1-1.8-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.1.1.3 0 .5-.1.2-.1.3-.3.5-.1.2-.3.4-.4.5-.1.1-.3.3-.1.6.2.3.9 1.5 1.9 2.4 1.3 1.2 2.4 1.5 2.7 1.7.3.2.5.1.7-.1.2-.2.8-.9 1-1.3.2-.3.4-.3.7-.2.3.1 1.8.9 2.1 1 .3.2.5.2.6.3.1.2.1.9-.1 1.6z"/></svg>
+            WhatsApp
+          </a>
+          <% } %>
+        </div>
+        <% if (clinic.doctor) { %>
+        <div class="hero-trust">
+          <div class="hero-trust-avatar"><%= initials %></div>
+          <div class="hero-trust-text">
+            <strong><%= clinic.doctor %><% if (clinic.qualification) { %> &middot; <%= clinic.qualification %><% } %></strong>
+            <span>
+              <% if (clinic.institution) { %><%= clinic.institution %><% } %>
+              <% if (clinic.institution && clinic.registration) { %>&nbsp;&middot;&nbsp;<% } %>
+              <% if (clinic.registration) { %><%= clinic.registration %><% } %>
+            </span>
+          </div>
+        </div>
+        <% } %>
+      </div>
+
+      <div class="hero-visual reveal in">
+        <div class="hero-visual-frame<%= heroImage ? ' has-image' : '' %>">
+          <% if (heroImage) { %>
+            <img src="<%= heroImage.url %>" alt="<%= heroImage.alt || (clinic.name + ' clinic') %>" width="<%= heroImage.width %>" height="<%= heroImage.height %>">
+          <% } else { %>
+            <svg class="arc-deco" viewBox="0 0 400 460" xmlns="http://www.w3.org/2000/svg">
+              <path d="M40 340 Q200 420 360 340" stroke="#C79A4B" stroke-width="2" fill="none" opacity="0.5"/>
+              <path d="M20 90 Q200 20 380 90" stroke="#7C9885" stroke-width="1.5" fill="none" opacity="0.35"/>
+            </svg>
+            <div class="hero-photo-note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="12" cy="12.5" r="3.4"/><path d="M8 5l1.5-2h5L16 5"/></svg>
+              <strong>Clinic &amp; doctor photography</strong>
+              <span>Upload a hero photograph from the admin dashboard to fill this space.</span>
+            </div>
+          <% } %>
+        </div>
+        <% if (settings.hero_trust_text) { %>
+        <div class="hero-card-float">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+          <span><%= settings.hero_trust_text %></span>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CREDENTIAL STRIP ============ -->
+  <div class="cred-strip">
+    <div class="wrap cred-row">
+      <% if (clinic.registration) { %>
+      <div class="cred-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l7 4v6c0 5-3.4 8.4-7 10-3.6-1.6-7-5-7-10V6l7-4z"/></svg><span><strong><%= clinic.registration %></strong></span></div>
+      <% } %>
+      <% if (clinic.qualification) { %>
+      <div class="cred-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg><span><strong><%= clinic.qualification %></strong><% if (clinic.institution) { %> &nbsp;&mdash;&nbsp; <%= clinic.institution %><% } %></span></div>
+      <% } %>
+      <div class="cred-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg><span><%= shortAddress %></span></div>
+    </div>
+  </div>
+
+  <!-- ============ ABOUT / DOCTOR ============ -->
+  <section class="section-pad" id="about">
+    <div class="wrap doctor-grid">
+      <div class="reveal">
+        <div class="doctor-photo<%= doctorPhoto ? ' has-image' : '' %>">
+          <% if (doctorPhoto) { %>
+            <img src="<%= doctorPhoto.url %>" alt="<%= clinic.doctor %>" width="<%= doctorPhoto.width %>" height="<%= doctorPhoto.height %>">
+          <% } else { %>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+            <span>Professional photograph of<br><%= clinic.doctor || 'the dentist' %> &mdash; upload from the dashboard</span>
+          <% } %>
+        </div>
+      </div>
+      <div class="reveal">
+        <span class="eyebrow">The Dentist</span>
+        <h2 class="section-title"><%= settings.about_title || 'Care led by an experienced dentist' %></h2>
+        <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
+        <% if (settings.about_body) { %><p class="section-lede" style="max-width:none;"><%= settings.about_body %></p><% } %>
+        <% if (doctor && doctor.bio && doctor.bio !== settings.about_body) { %>
+          <p class="section-lede" style="max-width:none;"><%= doctor.bio %></p>
+        <% } %>
+        <ul class="cred-list">
+          <% if (clinic.qualification) { %><li><strong>Qualification</strong><span><%= clinic.qualification %></span></li><% } %>
+          <% if (clinic.institution) { %><li><strong>Institution</strong><span><%= clinic.institution %></span></li><% } %>
+          <% if (clinic.registration) { %><li><strong>Registration</strong><span><%= clinic.registration %></span></li><% } %>
+          <% if (doctor && doctor.specialization) { %><li><strong>Focus</strong><span><%= doctor.specialization %></span></li><% } %>
+          <% if (doctor && doctor.languages) { %><li><strong>Languages</strong><span><%= doctor.languages %></span></li><% } %>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CLINIC STORY ============ -->
+  <% if (settings.story_body) { %>
+  <section class="section-pad alt">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">The Clinic</span>
+        <h2 class="section-title"><%= settings.story_title || 'A calm, modern clinic' %></h2>
+        <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
+      </div>
+      <p class="reveal" style="max-width:720px; font-size:16.5px; line-height:1.8; color:#4B564F;"><%= settings.story_body %></p>
+    </div>
+  </section>
+  <% } %>
+
+  <!-- ============ SERVICES ============ -->
+  <section class="section-pad" id="services">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Treatments</span>
+        <h2 class="section-title"><%= settings.services_title || 'Dental services offered at the clinic' %></h2>
+        <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
+        <% if (settings.services_lede) { %><p class="section-lede"><%= settings.services_lede %></p><% } %>
+      </div>
+      <% if (services.length) { %>
+      <div class="services-list reveal">
+        <% services.forEach(function(s) { %>
+        <div class="service-row">
+          <span class="service-tag"><%= s.category_name || 'Dental' %></span>
+          <div>
+            <div class="service-name"><%= s.name %></div>
+            <% if (s.short_desc) { %><div class="service-desc"><%= s.short_desc %></div><% } %>
+          </div>
+          <div style="display:flex; align-items:center; gap:14px;">
+            <% if (s.show_price && s.price_from) { %>
+              <span class="mono" style="font-size:13px; color:#6B7669;">from <%= s.currency === 'INR' ? '₹' : '' %><%= s.price_from %></span>
+            <% } %>
+            <% if (s.bookable) { %>
+              <button type="button" class="btn btn-outline-dark btn-sm book-service" data-service="<%= s.id %>">Book</button>
+            <% } %>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+      <% } else { %>
+        <p class="booking-empty">No services are published yet. Add them from the admin dashboard.</p>
+      <% } %>
+    </div>
+  </section>
+
+  <!-- ============ GALLERY ============ -->
+  <section class="section-pad alt" id="gallery">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Inside The Clinic</span>
+        <h2 class="section-title"><%= settings.gallery_title || 'A closer look at the clinic' %></h2>
+        <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
+        <% if (settings.gallery_lede) { %><p class="section-lede"><%= settings.gallery_lede %></p><% } %>
+      </div>
+
+      <% if (gallery.length) { %>
+        <% if (galleryCategories.length > 1) { %>
+        <div class="gallery-filters reveal" role="group" aria-label="Filter photos">
+          <button type="button" class="gallery-filter" data-filter="all" aria-pressed="true">All</button>
+          <% galleryCategories.forEach(function(c) { %>
+            <button type="button" class="gallery-filter" data-filter="<%= c.key %>" aria-pressed="false"><%= c.label %></button>
+          <% }) %>
+        </div>
+        <% } %>
+        <div class="gallery-grid reveal" id="galleryGrid">
+          <% gallery.forEach(function(g, i) { %>
+          <button type="button" class="gallery-item has-image<%= i === 0 ? ' tall' : '' %>"
+                  data-index="<%= i %>" data-category="<%= g.category %>"
+                  aria-label="View: <%= g.title %>">
+            <figure>
+              <img src="<%= g.thumb_url || g.image_url %>" alt="<%= g.image_alt || g.title %>" loading="lazy" width="480" height="480">
+            </figure>
+            <span class="gi-caption"><%= g.title %></span>
+          </button>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="reveal reviews-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="12" cy="12.5" r="3.4"/><path d="M8 5l1.5-2h5L16 5"/></svg>
+          <h3>Photographs coming soon</h3>
+          <p>Photographs of the clinic, equipment and team will appear here once uploaded from the dashboard.</p>
+        </div>
+      <% } %>
+    </div>
+  </section>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo preview">
+    <div class="lightbox-inner has-image">
+      <button class="lightbox-close" id="lightboxClose" aria-label="Close preview">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <div id="lightboxMedia"></div>
+      <h3 id="lightboxTitle" style="font-size:19px; margin-top:16px;"></h3>
+      <p style="margin-top:8px; color:#5B665A; font-size:14px;" id="lightboxDesc"></p>
+      <div style="display:flex; justify-content:center; gap:10px; margin-top:22px;">
+        <button type="button" class="btn btn-outline-dark btn-sm" id="lightboxPrev" aria-label="Previous photo">&larr; Previous</button>
+        <span class="mono" id="lightboxCount" style="align-self:center; font-size:12px; color:#7C8A78;"></span>
+        <button type="button" class="btn btn-outline-dark btn-sm" id="lightboxNext" aria-label="Next photo">Next &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ REVIEWS ============ -->
+  <section class="section-pad" id="reviews">
+    <div class="wrap">
+      <div class="section-head reveal" style="text-align:center; margin-left:auto; margin-right:auto;">
+        <span class="eyebrow">Patient Reviews</span>
+        <h2 class="section-title" style="margin-left:auto; margin-right:auto;"><%= settings.reviews_title || 'What patients are saying' %></h2>
+      </div>
+
+      <% if (reviews.reviews.length) { %>
+        <div class="reviews-head reveal">
+          <div class="rating-badge">
+            <span class="rating-score"><%= reviews.average %></span>
+            <div>
+              <span class="stars" aria-label="<%= reviews.average %> out of 5">
+                <%- starsHtml(reviews.average) %>
+              </span>
+              <div class="rating-meta">
+                <strong>Google rating</strong>
+                Based on <%= reviews.count %> review<%= reviews.count === 1 ? '' : 's' %>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="reviews-grid reveal">
+          <% reviews.reviews.forEach(function(r) { %>
+          <article class="review-card">
+            <span class="stars" aria-label="<%= r.rating %> out of 5"><%- starsHtml(r.rating) %></span>
+            <% if (r.text) { %><p class="review-text"><%= r.text %></p><% } %>
+            <div class="review-author">
+              <div class="review-avatar">
+                <% if (r.author_photo_url) { %>
+                  <img src="<%= r.author_photo_url %>" alt="" loading="lazy" referrerpolicy="no-referrer">
+                <% } else { %><%= (r.author_name || '?').trim().charAt(0).toUpperCase() %><% } %>
+              </div>
+              <div>
+                <div class="review-name"><%= r.author_name %></div>
+                <% if (r.reviewed_at) { %><div class="review-date"><%= formatReviewDate(r.reviewed_at) %></div><% } %>
+              </div>
+            </div>
+            <span class="review-source">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 11v2h5.5c-.2 1.3-1.6 3.9-5.5 3.9-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.7 2.4 14.6 1.5 12 1.5 6.2 1.5 1.5 6.2 1.5 12S6.2 22.5 12 22.5c6.1 0 10.1-4.3 10.1-10.3 0-.7-.1-1.2-.2-1.7H12z"/></svg>
+              Google review
+            </span>
+          </article>
+          <% }) %>
+        </div>
+        <% if (clinic.reviews_url) { %>
+        <div class="reviews-foot reveal">
+          <a class="btn btn-outline-dark" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener">View all reviews on Google</a>
+        </div>
+        <% } %>
+      <% } else { %>
+        <div class="reveal reviews-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 17.3l-6.2 3.3 1.2-6.9L2 8.9l7-1L12 1.5l3 6.4 7 1-5 4.8 1.2 6.9z"/></svg>
+          <h3>Reviews coming soon</h3>
+          <p>Genuine Google reviews will appear here once the clinic's Google Business Profile is connected. This section only ever displays real, synced reviews.</p>
+          <% if (clinic.reviews_url) { %>
+            <div style="margin-top:20px;"><a class="btn btn-outline-dark btn-sm" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener">Leave a review on Google</a></div>
+          <% } %>
+        </div>
+      <% } %>
+    </div>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <% if (faqs.length) { %>
+  <section class="section-pad alt" id="faq">
+    <div class="wrap">
+      <div class="section-head reveal" style="text-align:center; margin-left:auto; margin-right:auto;">
+        <span class="eyebrow">Good To Know</span>
+        <h2 class="section-title" style="margin-left:auto; margin-right:auto;">Frequently asked questions</h2>
+      </div>
+      <div class="faq-list reveal">
+        <% faqs.forEach(function(f, i) { %>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false" aria-controls="faq-a-<%= i %>" id="faq-q-<%= i %>">
+            <span><%= f.question %></span>
+            <span class="plus" aria-hidden="true"></span>
+          </button>
+          <div class="faq-a" id="faq-a-<%= i %>" role="region" aria-labelledby="faq-q-<%= i %>">
+            <p><%= f.answer %></p>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+  <% } %>
+
+  <!-- ============ BOOKING ============ -->
+  <section class="section-pad" id="appointment">
+    <div class="wrap appt-wrap">
+      <div class="appt-side reveal">
+        <span class="eyebrow">Book a Visit</span>
+        <h2>Book an appointment</h2>
+        <p>Choose a treatment, pick a date and reserve a time that suits you. Availability below is live &mdash; the times shown are genuinely free.</p>
+
+        <div class="appt-contact-list">
+          <% if (clinic.phone) { %>
+          <a href="tel:<%= clinic.phone_intl || clinic.phone %>">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.4 21 3 13.6 3 4.5c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1L6.6 10.8z"/></svg>
+            <span class="mono"><%= clinic.phone %></span>
+          </a>
+          <% } %>
+          <% if (whatsappUrl) { %>
+          <a href="<%= whatsappUrl %>" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.9.5 3.6 1.4 5.1L2 22l5.1-1.3c1.4.8 3.1 1.3 4.9 1.3 5.5 0 10-4.5 10-10S17.5 2 12 2zm5.9 14.2c-.2.7-1.4 1.3-1.9 1.4-.5.1-1.1.1-1.8-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.1.1.3 0 .5-.1.2-.1.3-.3.5-.1.2-.3.4-.4.5-.1.1-.3.3-.1.6.2.3.9 1.5 1.9 2.4 1.3 1.2 2.4 1.5 2.7 1.7.3.2.5.1.7-.1.2-.2.8-.9 1-1.3.2-.3.4-.3.7-.2.3.1 1.8.9 2.1 1 .3.2.5.2.6.3.1.2.1.9-.1 1.6z"/></svg>
+            Chat on WhatsApp
+          </a>
+          <% } %>
+          <a href="#location">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg>
+            <%= shortAddress %>
+          </a>
+        </div>
+
+        <div style="margin-top:34px;">
+          <div class="open-pill <%= clinic.today.is_open ? 'open' : 'closed' %>">
+            <span class="open-dot"></span>
+            <% if (clinic.today.is_open) { %>
+              Open today &middot; <%= clinic.today.open %> &ndash; <%= clinic.today.close %>
+            <% } else { %>
+              Closed today<% if (clinic.today.closure_reason) { %> &middot; <%= clinic.today.closure_reason %><% } %>
+            <% } %>
+          </div>
+          <table class="hours-table">
+            <tbody>
+            <% orderedHours.forEach(function(h) { %>
+              <tr class="<%= h.weekday === clinic.today.weekdayIndex ? 'is-today' : '' %>">
+                <td class="hours-day"><%= h.day %></td>
+                <td class="hours-time">
+                  <% if (h.is_open) { %><%= h.open %> &ndash; <%= h.close %><% } else { %><span class="closed-note">Closed</span><% } %>
+                </td>
+              </tr>
+            <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="reveal">
+        <!-- Booking wizard: rendered and driven by /js/booking.js against the API -->
+        <div class="booking-shell" id="bookingShell" data-services='<%- servicesJson %>'>
+          <div class="booking-steps" id="bookingSteps"></div>
+          <div class="booking-body" id="bookingBody">
+            <noscript>
+              <p class="booking-hint">Online booking needs JavaScript. Please call <strong><%= clinic.phone %></strong> or message the clinic on WhatsApp to book an appointment.</p>
+            </noscript>
+            <div class="spinner" aria-label="Loading availability"></div>
+          </div>
+          <div class="booking-foot" id="bookingFoot" hidden>
+            <button type="button" class="btn btn-outline-dark btn-sm" id="bookBack">Back</button>
+            <button type="button" class="btn btn-primary btn-sm" id="bookNext">Continue</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LOCATION ============ -->
+  <section class="section-pad alt" id="location">
+    <div class="wrap">
+      <div class="location-grid reveal">
+        <div class="location-info">
+          <span class="eyebrow">Find Us</span>
+          <h2>Visit the clinic</h2>
+          <p class="location-address"><%- addressHtml %></p>
+          <div class="location-actions">
+            <a class="btn btn-primary" href="<%= clinic.directions_url %>" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+              Get Directions
+            </a>
+            <% if (clinic.phone) { %><a class="btn btn-outline" href="tel:<%= clinic.phone_intl || clinic.phone %>">Call the Clinic</a><% } %>
+            <% if (whatsappUrl) { %><a class="btn btn-outline" href="<%= whatsappUrl %>" target="_blank" rel="noopener">WhatsApp</a><% } %>
+          </div>
+        </div>
+        <iframe class="map-embed" id="mapEmbed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+          data-src="<%= clinic.map_embed_url %>"
+          title="Map showing <%= clinic.name %>"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA BAND ============ -->
+  <section class="cta-band" id="contact">
+    <div class="wrap">
+      <span class="eyebrow" style="color:var(--honey);">Ready When You Are</span>
+      <h2><%= settings.cta_title || 'Your smile deserves attentive, modern care' %></h2>
+      <% if (settings.cta_body) { %><p><%= settings.cta_body %></p><% } %>
+      <div class="hero-ctas">
+        <a href="#appointment" class="btn btn-primary">Book an Appointment</a>
+        <% if (clinic.phone) { %><a href="tel:<%= clinic.phone_intl || clinic.phone %>" class="btn btn-outline">Call Now</a><% } %>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<%- include('partials/footer') %>
+
+<script src="/js/site.js" defer></script>
+<script src="/js/booking.js" defer></script>
+</body>
+</html>
