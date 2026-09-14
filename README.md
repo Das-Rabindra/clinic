@@ -29,10 +29,25 @@ docker compose up -d --build
 
 ### Vercel
 
-Add the Neon Postgres and Blob integrations (they set `DATABASE_URL` and
-`BLOB_READ_WRITE_TOKEN`), set `APP_SECRET`, `PUBLIC_URL` and `CRON_SECRET`, then
-push. `vercel.json` routes all traffic to `api/index.js` and registers the cron
-that drains the reminder queue.
+**Set these before the first request, or every route returns 500.** The app
+refuses to boot without them rather than inventing an ephemeral key that would
+make stored credentials unreadable after each cold start.
+
+| Variable | Where it comes from |
+|---|---|
+| `DATABASE_URL` | Storage → **Neon Postgres** integration (set automatically) |
+| `BLOB_READ_WRITE_TOKEN` | Storage → **Blob** store (set automatically) |
+| `APP_SECRET` | `openssl rand -hex 32` — add manually |
+| `PUBLIC_URL` | e.g. `https://your-project.vercel.app` |
+| `CRON_SECRET` | `openssl rand -hex 16` — protects `/api/cron` |
+
+Add them under **Settings → Environment Variables** for the Production
+environment, then **redeploy** — environment changes do not apply to an
+existing deployment.
+
+`vercel.json` routes all traffic to `api/index.js` and registers the cron that
+drains the reminder queue. Migrations run on the first request behind a
+Postgres advisory lock, so concurrent cold starts are safe.
 
 Website → http://localhost:8090 · Admin → http://localhost:8090/admin
 

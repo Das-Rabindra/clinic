@@ -12,14 +12,28 @@ const int = (v, d) => (Number.isFinite(Number(v)) && v !== '' && v !== undefined
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const isProd = NODE_ENV === 'production';
 
+const IS_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+
+/**
+ * Fail loudly, but in the way that suits the runtime.
+ *
+ * A long-running process should exit so the container restarts. A serverless
+ * function must throw instead: process.exit() there aborts the invocation with
+ * no explanation, leaving only "FUNCTION_INVOCATION_FAILED" in the log.
+ */
+function fatal(message) {
+  console.error(message);
+  if (IS_SERVERLESS) throw new Error(message.split('\n')[0]);
+  process.exit(1);
+}
+
 /* APP_SECRET encrypts integration credentials at rest and signs OAuth state.
    In production we refuse to boot without one rather than silently falling back
    to an ephemeral key that would make stored secrets unreadable after restart. */
 let APP_SECRET = process.env.APP_SECRET || '';
 if (!APP_SECRET) {
   if (isProd) {
-    console.error('FATAL: APP_SECRET is required in production. Generate one with: openssl rand -hex 32');
-    process.exit(1);
+    fatal('FATAL: APP_SECRET is required in production. Generate one with: openssl rand -hex 32');
   }
   APP_SECRET = crypto.randomBytes(32).toString('hex');
   console.warn('[config] APP_SECRET not set — using an ephemeral development key. Stored integration secrets will not survive a restart.');
@@ -27,18 +41,35 @@ if (!APP_SECRET) {
 
 const DATABASE_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
 if (!DATABASE_URL) {
-  console.error(
+  fatal(
     'FATAL: DATABASE_URL is not set.\n' +
     '  Local:  postgres://postgres:devpass@localhost:55432/clinic\n' +
     '  Vercel: add a Neon/Postgres integration, which sets DATABASE_URL for you.'
   );
-  process.exit(1);
 }
 
 const root = path.resolve(process.cwd());
-const dataDir = path.resolve(root, process.env.DATA_DIR || './data');
-const uploadDir = path.resolve(root, process.env.UPLOAD_DIR || './uploads');
-for (const d of [dataDir, uploadDir]) fs.mkdirSync(d, { recursive: true });
+/*
+ * Serverless filesystems are read-only apart from /tmp, and creating these
+ * directories at import time threw EROFS before anything else could run — the
+ * function crashed with no usable message. Uploads go to Blob there anyway, so
+ * the directories are only needed (and only created) for the local driver.
+ */
+const writableRoot = IS_SERVERLESS ? '/tmp' : root;
+const dataDir = path.resolve(writableRoot, process.env.DATA_DIR || './data');
+const uploadDir = path.resolve(writableRoot, process.env.UPLOAD_DIR || './uploads');
+
+const usingLocalStorage =
+  (process.env.STORAGE_DRIVER || (IS_SERVERLESS ? 'blob' : 'local')) === 'local';
+if (usingLocalStorage) {
+  for (const d of [dataDir, uploadDir]) {
+    try {
+      fs.mkdirSync(d, { recursive: true });
+    } catch (err) {
+      console.warn(`[config] could not create ${d}: ${err.message}`);
+    }
+  }
+}
 
 export const config = Object.freeze({
   env: NODE_ENV,
@@ -56,14 +87,14 @@ export const config = Object.freeze({
     ssl: /sslmode=require|neon\.tech|supabase|amazonaws/.test(DATABASE_URL),
     // Serverless invocations each hold their own pool, so keep it small and
     // let the provider's pooler do the multiplexing.
-    poolMax: int(process.env.PG_POOL_MAX, process.env.VERCEL ? 1 : 10),
+    poolMax: int(process.env.PG_POOL_MAX, IS_SERVERLESS ? 1 : 10),
   }),
 
-  isServerless: Boolean(process.env.VERCEL),
+  isServerless: IS_SERVERLESS,
 
   storage: Object.freeze({
     // Vercel's filesystem is ephemeral, so default to Blob there.
-    driver: process.env.STORAGE_DRIVER || (process.env.VERCEL ? 'blob' : 'local'),
+    driver: process.env.STORAGE_DRIVER || (IS_SERVERLESS ? 'blob' : 'local'),
     blobToken: process.env.BLOB_READ_WRITE_TOKEN || '',
     blobBaseUrl: process.env.BLOB_BASE_URL || '',
     maxUploadBytes: int(process.env.MAX_UPLOAD_MB, 10) * 1024 * 1024,
