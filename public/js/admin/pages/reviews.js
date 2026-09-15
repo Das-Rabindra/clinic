@@ -1,4 +1,4 @@
-import { api, $, $$, esc, fmtDateTime, fmtDate, emptyState, toastOk, toastErr, openModal, closeModal } from '../core.js';
+import { api, $, $$, esc, fmtDateTime, fmtDate, today, emptyState, toastOk, toastErr, openModal, closeModal, confirmAction } from '../core.js';
 
 export async function renderReviews(view) {
   const params = new URLSearchParams(location.hash.split('?')[1] || '');
@@ -53,22 +53,32 @@ export async function renderReviews(view) {
 
       <div class="card">
         <div class="card-head">
-          <div><h2>Reviews</h2>
-            <p class="card-sub">${data.aggregate.count} visible · average ${data.aggregate.average ?? '—'}. Hidden reviews are excluded from the website and from rating structured data.</p></div>
+          <div><h2>Reviews &amp; testimonials</h2>
+            <p class="card-sub">
+              ${data.aggregate.count} shown · average ${data.aggregate.average ?? '—'}.
+              ${data.aggregate_verified?.count
+                ? `${data.aggregate_verified.count} of them are Google reviews, and only those feed the star rating search engines see.`
+                : 'None are Google reviews yet, so no star rating is published to search engines.'}
+            </p></div>
+          <button class="btn btn-primary btn-sm" id="addTestimonial">Add a patient testimonial</button>
         </div>
         ${data.reviews.length ? `
           <div class="table-wrap"><table class="data">
-            <thead><tr><th>Rating</th><th>Author</th><th>Review</th><th>Date</th><th>Visible</th><th></th></tr></thead>
+            <thead><tr><th>Rating</th><th>Author</th><th>Review</th><th>Source</th><th>Date</th><th>Visible</th><th></th></tr></thead>
             <tbody>${data.reviews.map((r) => `
               <tr>
                 <td style="color:var(--honey); white-space:nowrap;">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</td>
                 <td class="t-strong">${esc(r.author_name)}</td>
-                <td style="max-width:340px;">${esc(String(r.text || '—').slice(0, 150))}${(r.text || '').length > 150 ? '…' : ''}</td>
+                <td style="max-width:320px;">${esc(String(r.text || '—').slice(0, 140))}${(r.text || '').length > 140 ? '…' : ''}</td>
+                <td>${r.source === 'manual'
+                  ? `<span class="pill pill-info">clinic</span>${r.collected_via ? `<div class="t-muted">${esc(r.collected_via)}</div>` : ''}`
+                  : '<span class="pill pill-confirmed">Google</span>'}</td>
                 <td class="t-muted">${r.reviewed_at ? fmtDate(String(r.reviewed_at).slice(0, 10)) : '—'}</td>
                 <td>${r.is_visible ? '<span class="pill pill-confirmed">shown</span>' : '<span class="pill pill-disabled">hidden</span>'}</td>
                 <td><div class="t-actions">
                   <button class="btn btn-ghost btn-xs" data-vis="${r.id}" data-to="${r.is_visible ? 0 : 1}">${r.is_visible ? 'Hide' : 'Show'}</button>
                   <button class="btn btn-ghost btn-xs" data-feat="${r.id}" data-to="${r.is_featured ? 0 : 1}">${r.is_featured ? 'Unfeature' : 'Feature'}</button>
+                  ${r.source === 'manual' ? `<button class="btn btn-danger btn-xs" data-delt="${r.id}">Delete</button>` : ''}
                 </div></td>
               </tr>`).join('')}</tbody>
           </table></div>`
@@ -121,6 +131,17 @@ export async function renderReviews(view) {
     const pick = $('#pickLoc');
     if (pick) pick.onclick = () => pickLocation(load);
 
+    $('#addTestimonial').onclick = () => testimonialForm(load);
+    $$('[data-delt]', view).forEach((b) => {
+      b.onclick = async () => {
+        if (!await confirmAction('Delete testimonial',
+          'Remove this testimonial from the website? Google reviews cannot be deleted here — hide them instead.',
+          { confirmLabel: 'Delete' })) return;
+        try { await api(`/api/admin/reviews/testimonials/${b.dataset.delt}`, { method: 'DELETE' }); toastOk('Testimonial deleted'); load(); }
+        catch (err) { toastErr(err.message); }
+      };
+    });
+
     $$('[data-vis]', view).forEach((b) => {
       b.onclick = async () => {
         await api(`/api/admin/reviews/${b.dataset.vis}/visibility`, { method: 'POST', body: { visible: b.dataset.to === '1' } });
@@ -138,6 +159,87 @@ export async function renderReviews(view) {
   }
 
   await load();
+}
+
+/**
+ * Add a testimonial the clinic collected directly.
+ *
+ * The consent checkbox is not decoration: a real person's name and words are
+ * being published, and fabricating a review is an unfair trade practice under
+ * the Consumer Protection Act. The attestation and who made it are recorded in
+ * the audit log.
+ */
+function testimonialForm(reload) {
+  openModal('Add a patient testimonial', `
+    <div class="banner banner-warn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></svg>
+      <span>Only add words a real patient actually said or wrote, and only with their
+      permission. Invented reviews are unlawful, and published testimonials are the
+      kind of thing patients and regulators check.</span>
+    </div>
+
+    <div class="frow">
+      <div class="field"><label>Patient name as it should appear</label>
+        <input type="text" id="tName" placeholder="e.g. Anita R.">
+        <div class="hint">A first name and initial is fine, and is kinder on their privacy.</div></div>
+      <div class="field"><label>Rating</label>
+        <select id="tRating">
+          <option value="5">★★★★★ — 5</option>
+          <option value="4">★★★★☆ — 4</option>
+          <option value="3">★★★☆☆ — 3</option>
+          <option value="2">★★☆☆☆ — 2</option>
+          <option value="1">★☆☆☆☆ — 1</option>
+        </select></div>
+    </div>
+    <div class="field"><label>What the patient said</label>
+      <textarea id="tText" rows="4" placeholder="Their own words, as closely as possible."></textarea></div>
+    <div class="frow">
+      <div class="field"><label>Date</label><input type="date" id="tDate" value="${today()}"></div>
+      <div class="field"><label>How it was collected</label>
+        <input type="text" id="tVia" placeholder="e.g. WhatsApp message, feedback card">
+        <div class="hint">Recorded internally; not shown on the website.</div></div>
+    </div>
+
+    <fieldset>
+      <legend>Consent</legend>
+      <label class="check">
+        <input type="checkbox" id="tConsent">
+        <span><strong>I confirm this is a real patient of this clinic, these are their own
+        words, and they agreed to them being published on the website.</strong>
+        <br><span class="hint">Your name and the date are recorded in the audit log.</span></span>
+      </label>
+      <div class="field"><label>Reference (optional)</label>
+        <input type="text" id="tConsentNote" placeholder="e.g. consent given on WhatsApp, 2 Sep"></div>
+    </fieldset>
+
+    <label class="check"><input type="checkbox" id="tVisible" checked>
+      <span>Show on the website</span></label>`, {
+    footer: '<button class="btn btn-ghost" id="tCancel">Cancel</button><button class="btn btn-primary" id="tSave">Add testimonial</button>',
+    wide: true,
+  });
+
+  $('#tCancel').onclick = closeModal;
+  $('#tSave').onclick = async () => {
+    const body = {
+      author_name: $('#tName').value.trim(),
+      rating: Number($('#tRating').value),
+      text: $('#tText').value.trim(),
+      reviewed_at: $('#tDate').value || undefined,
+      collected_via: $('#tVia').value.trim(),
+      consent_note: $('#tConsentNote').value.trim(),
+      consent_confirmed: $('#tConsent').checked,
+      is_visible: $('#tVisible').checked,
+    };
+    if (!body.author_name || !body.text) { toastErr('Add the patient name and what they said.'); return; }
+    if (body.is_visible && !body.consent_confirmed) {
+      toastErr('Confirm the patient agreed before publishing their words.'); return;
+    }
+    try {
+      await api('/api/admin/reviews/testimonials', { method: 'POST', body });
+      toastOk('Testimonial added');
+      closeModal(); reload();
+    } catch (err) { toastErr(err.message); }
+  };
 }
 
 async function pickLocation(reload) {

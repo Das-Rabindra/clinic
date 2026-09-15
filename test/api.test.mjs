@@ -201,3 +201,82 @@ describe('rate limiting', () => {
     await limiter._reset();
   });
 });
+
+describe('manual patient testimonials', () => {
+  let admin;
+  before(async () => {
+    const usersRepo = await import('../src/repositories/users.repo.js');
+    if (!(await usersRepo.findByEmail('rev@clinic.test'))) {
+      await usersRepo.create({ email: 'rev@clinic.test', name: 'Rev', password: 'TestimonialPass1', role: 'owner' });
+    }
+    admin = await startServer();
+    await admin.call('/api/auth/login', { json: { email: 'rev@clinic.test', password: 'TestimonialPass1' } });
+  });
+  after(async () => { await admin.close(); });
+
+  const add = (body) => admin.call('/api/admin/reviews/testimonials', {
+    method: 'POST', headers: { 'X-CSRF-Token': admin.csrf() }, json: body,
+  });
+
+  test('refuses to publish a testimonial without a consent attestation', async () => {
+    const r = await add({
+      author_name: 'Anita R.', rating: 5, text: 'Very gentle and thorough.',
+      is_visible: true, consent_confirmed: false,
+    });
+    assert.equal(r.status, 422);
+    assert.equal(r.body.code, 'CONSENT_REQUIRED');
+  });
+
+  test('adds one when consent is confirmed, and shows it publicly', async () => {
+    const r = await add({
+      author_name: 'Anita R.', rating: 5, text: 'Very gentle and thorough.',
+      collected_via: 'WhatsApp message', is_visible: true, consent_confirmed: true,
+    });
+    assert.equal(r.status, 201);
+    assert.equal(r.body.review.source, 'manual');
+
+    const pub = await srv.call('/api/reviews');
+    const mine = pub.body.reviews.find((x) => x.author_name === 'Anita R.');
+    assert.ok(mine, 'appears in the public payload');
+    assert.equal(mine.source, 'manual', 'and is identifiable as clinic-collected');
+    assert.equal(pub.body.has_manual, true);
+  });
+
+  test('a clinic-collected testimonial never becomes a Google star rating', async () => {
+    // Google forbids AggregateRating markup for reviews a business gathered
+    // about itself, so only synced reviews may feed it.
+    const pub = await srv.call('/api/reviews');
+    assert.ok(pub.body.count > 0, 'something is displayed');
+    assert.equal(pub.body.google_count, 0, 'none are from Google in this fixture');
+
+    const page = await srv.call('/');
+    assert.ok(!page.body.includes('aggregateRating'),
+      'no rating markup while only clinic-collected testimonials exist');
+    assert.ok(page.body.includes('Shared with the clinic'),
+      'and the card says where it came from');
+  });
+
+  test('deletes a testimonial but refuses to delete a Google review', async () => {
+    const created = (await add({
+      author_name: 'Temp P.', rating: 4, text: 'Good visit.',
+      is_visible: true, consent_confirmed: true,
+    })).body.review;
+
+    const reviewsRepo = await import('../src/repositories/reviews.repo.js');
+    await reviewsRepo.upsertByExternalId({
+      source: 'google', external_id: 'g-test-1', author_name: 'Google User',
+      rating: 5, text: 'Synced review.',
+    });
+    const googleRow = (await reviewsRepo.listAdmin()).find((x) => x.external_id === 'g-test-1');
+
+    const ok = await admin.call(`/api/admin/reviews/testimonials/${created.id}`, {
+      method: 'DELETE', headers: { 'X-CSRF-Token': admin.csrf() },
+    });
+    assert.equal(ok.status, 200);
+
+    const nope = await admin.call(`/api/admin/reviews/testimonials/${googleRow.id}`, {
+      method: 'DELETE', headers: { 'X-CSRF-Token': admin.csrf() },
+    });
+    assert.equal(nope.status, 404, 'a synced review would return on the next sync');
+  });
+});

@@ -1,4 +1,4 @@
-import { one, all, run } from './base.js';
+import { one, all, run, buildUpdate } from './base.js';
 
 export const findById = async (id) => await one('SELECT * FROM reviews WHERE id = ?', id);
 
@@ -26,7 +26,8 @@ export async function upsertByExternalId(r) {
 
 /** Public: only reviews the admin has left visible, with text. */
 export const listPublic = async (limit = 12) =>
-  await all(`SELECT id, author_name, author_photo_url, rating, text, review_url, reviewed_at, is_featured
+  await all(`SELECT id, source, author_name, author_photo_url, rating, text, review_url,
+              reviewed_at, is_featured, collected_via
        FROM reviews WHERE is_visible = 1
        ORDER BY is_featured DESC, reviewed_at DESC, id DESC LIMIT ?`, limit);
 
@@ -54,6 +55,53 @@ export const recent = async (limit = 5) =>
   await all('SELECT * FROM reviews ORDER BY synced_at DESC, id DESC LIMIT ?', limit);
 
 export const count = async () => (await one('SELECT COUNT(*) AS c FROM reviews')).c;
+
+/* ── Manually added patient testimonials ──────────────────────────────────
+   Collected by the clinic rather than synced from Google. Stored alongside
+   Google reviews but always distinguishable by `source`. */
+
+export async function createManual(t) {
+  const info = await run(
+    `INSERT INTO reviews (source, author_name, rating, text, reviewed_at,
+       is_visible, is_featured, consent_confirmed, consent_note, collected_via, added_by)
+     VALUES ('manual', @author_name, @rating, @text, @reviewed_at,
+       @is_visible, @is_featured, @consent_confirmed, @consent_note, @collected_via, @added_by)`,
+    {
+      author_name: t.author_name,
+      rating: t.rating,
+      text: t.text ?? null,
+      reviewed_at: t.reviewed_at ?? new Date().toISOString(),
+      is_visible: t.is_visible ? 1 : 0,
+      is_featured: t.is_featured ? 1 : 0,
+      consent_confirmed: t.consent_confirmed ? 1 : 0,
+      consent_note: t.consent_note ?? null,
+      collected_via: t.collected_via ?? null,
+      added_by: t.added_by ?? null,
+    }
+  );
+  return findById(info.lastInsertRowid);
+}
+
+export const updateManual = async (id, fields) =>
+  buildUpdate('reviews', id, fields,
+    ['author_name', 'rating', 'text', 'reviewed_at', 'is_visible', 'is_featured',
+     'consent_confirmed', 'consent_note', 'collected_via']);
+
+/** Only manual testimonials can be deleted; synced reviews return on next sync. */
+export const deleteManual = async (id) =>
+  (await run(`DELETE FROM reviews WHERE id = ? AND source = 'manual'`, id)).changes;
+
+/**
+ * Aggregate over Google-synced reviews only.
+ *
+ * Testimonials the clinic collected itself must not feed AggregateRating
+ * structured data: Google's guidelines forbid marking up reviews a business
+ * gathered about itself, and doing so risks a manual penalty. They are still
+ * displayed on the page — just not claimed as a verified rating.
+ */
+export const aggregateVerified = () =>
+  one(`SELECT COUNT(*)::int AS count, ROUND(AVG(rating), 1) AS average
+       FROM reviews WHERE is_visible = 1 AND source = 'google'`);
 
 /* Sync state (singleton row) */
 export const syncState = async () => await one('SELECT * FROM review_sync_state WHERE id = 1');

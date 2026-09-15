@@ -45,7 +45,13 @@ export async function structuredData() {
   const s = await settingsRepo.get();
   const url = canonicalUrl(s);
   const doctor = await doctorsRepo.primary();
-  const agg = await reviewsRepo.aggregate();
+  /*
+   * Only Google-synced reviews feed AggregateRating. Google's structured data
+   * policy forbids marking up reviews a business collected about itself, and
+   * doing so risks a manual penalty. Clinic-collected testimonials still appear
+   * on the page — they are simply not claimed as a verified rating.
+   */
+  const agg = await reviewsRepo.aggregateVerified();
 
   const address = {
     '@type': 'PostalAddress',
@@ -89,7 +95,7 @@ export async function structuredData() {
     };
   }
 
-  // Only real, visible, synced reviews produce rating markup.
+  // Only real, visible, Google-synced reviews produce rating markup.
   if (agg.count > 0 && agg.average) {
     node.aggregateRating = {
       '@type': 'AggregateRating',

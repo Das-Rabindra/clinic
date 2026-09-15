@@ -162,11 +162,17 @@ export async function connectionStatus() {
 export async function publicReviews(limit = 12) {
   const rows = await reviewsRepo.listPublic(limit);
   const agg = await reviewsRepo.aggregate();
+  const verified = await reviewsRepo.aggregateVerified();
   const state = await reviewsRepo.syncState();
   return {
     reviews: rows,
     average: agg.count ? agg.average : null,
     count: agg.count || 0,
+    // Google-only figures, so the page can say what the rating is based on
+    // rather than implying every testimonial came from Google.
+    google_average: verified.count ? verified.average : null,
+    google_count: verified.count || 0,
+    has_manual: rows.some(r => r.source === 'manual'),
     last_sync_at: state?.last_sync_at || null,
   };
 }
