@@ -45,7 +45,23 @@ router.get('/diagnostics', requireRole(ROLES.OWNER), asyncHandler(async (_req, r
     };
   }
 
+  // Surface the problems worth acting on rather than leaving them to be
+  // inferred from the raw values below.
+  const warnings = [];
+  if (config.publicUrl.includes('localhost')) {
+    warnings.push('PUBLIC_URL is not set: canonical and Open Graph tags point at localhost, '
+      + 'so search engines index the wrong URL and shared links will not preview.');
+  }
+  if (!process.env.CRON_SECRET) {
+    warnings.push('CRON_SECRET is not set: /api/cron can be triggered by anyone who finds it.');
+  }
+  if (!checks.storage.ok) {
+    warnings.push(`Image uploads will fail: ${checks.storage.error}`);
+  }
+  if (!checks.database.ok) warnings.push('The database is unreachable.');
+
   res.json({
+    warnings,
     runtime: {
       serverless: config.isServerless,
       env: config.env,

@@ -83,8 +83,8 @@ export async function ingestImage(file, { folder = 'clinic', alt = null, userId 
     stored = await storage.put(`${base}.webp`, display, 'image/webp');
     storedThumb = await storage.put(`${base}-thumb.webp`, thumb, 'image/webp');
   } catch (err) {
-    if (err.code === 'STORAGE_NOT_CONFIGURED') {
-      throw new MediaError('STORAGE_NOT_CONFIGURED', err.message, 503);
+    if (err.code === 'STORAGE_NOT_CONFIGURED' || err.code === 'STORAGE_PRIVATE') {
+      throw new MediaError(err.code, err.message, 503);
     }
     throw err;
   }

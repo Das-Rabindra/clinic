@@ -25,6 +25,27 @@ export async function put(key, buffer, contentType = 'image/webp') {
     err.code = 'STORAGE_NOT_CONFIGURED';
     throw err;
   }
+  try {
+    return await upload(key, buffer, contentType);
+  } catch (err) {
+    // A private store cannot serve the images a public website has to show.
+    // Signed URLs would expire, which breaks cached pages and og:image tags,
+    // so the fix is a public store rather than a code workaround.
+    if (/private access|public access/i.test(err.message || '')) {
+      const e = new Error(
+        'This Blob store is private, but clinic photos have to be publicly '
+        + 'readable. In Vercel: Storage → create a new Blob store with '
+        + 'public access, connect it to this project, remove the old '
+        + 'BLOB_READ_WRITE_TOKEN, then redeploy.'
+      );
+      e.code = 'STORAGE_PRIVATE';
+      throw e;
+    }
+    throw err;
+  }
+}
+
+async function upload(key, buffer, contentType) {
   const res = await blobPut(key, buffer, {
     access: 'public',
     contentType,
