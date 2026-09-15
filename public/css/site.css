@@ -759,6 +759,10 @@
      shell looking like a sticker pasted over the front. */
   .tx-art .tx-veneer{ fill:var(--honey); fill-opacity:0.18; stroke:var(--honey); stroke-width:2.2; stroke-linejoin:round; }
   .tx-art .tx-gloss{ fill:var(--white); fill-opacity:0.65; stroke:none; }
+  .tx-art .tx-plate{ fill:var(--honey); fill-opacity:0.22; stroke:var(--honey); stroke-width:2.2; stroke-linejoin:round; }
+  .tx-art .tx-denture-teeth circle{ fill:var(--white); stroke:var(--pine); stroke-width:2; }
+  .tx-art .tx-tooth-impacted{ stroke:var(--pine); stroke-width:4; }
+  .tx-art .tx-gum{ fill:var(--honey); fill-opacity:0.3; stroke:var(--honey); stroke-width:2; stroke-linejoin:round; }
 
   .tx-body{ display:flex; flex-direction:column; flex:1; padding:22px 22px 18px; min-width:0; }
   .tx-cat{

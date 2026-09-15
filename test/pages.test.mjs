@@ -50,14 +50,16 @@ describe('treatment pages', () => {
     const r = await srv.call('/services');
     assert.equal(r.status, 200);
     const published = await servicesRepo.publicSlugs();
-    assert.ok(published.length >= 11);
+    assert.ok(published.length >= 14);
     for (const s of published) assert.ok(r.body.includes(`/services/${s.slug}`), s.slug);
   });
 
   test('covers the treatments the clinic confirmed it offers', async () => {
-    // Implants, orthodontics and aesthetic dentistry are on the clinic's own
-    // opening material and were confirmed directly.
-    for (const slug of ['dental-implants', 'braces-aligners', 'aesthetic-dentistry']) {
+    // Implants, orthodontics and aesthetic dentistry came from the clinic's own
+    // opening material; dentures, wisdom teeth and gum treatment were
+    // confirmed directly. None of them are inferred.
+    for (const slug of ['dental-implants', 'braces-aligners', 'aesthetic-dentistry',
+                        'dentures', 'wisdom-tooth', 'gum-treatment']) {
       const svc = await servicesRepo.findPublicBySlug(slug);
       assert.ok(svc, `${slug} should exist`);
       assert.ok(svc.who_needs, `${slug} needs page content, not an empty page`);
@@ -68,8 +70,9 @@ describe('treatment pages', () => {
   });
 
   test('has no page for a treatment the clinic has not confirmed', async () => {
-    // Dentures, wisdom-tooth surgery and gum treatment are deliberately absent.
-    for (const slug of ['dentures', 'wisdom-tooth', 'gum-treatment', 'smile-makeover']) {
+    // Nothing is listed on inference. These have never been confirmed, so a
+    // patient must not be able to land on a page offering them.
+    for (const slug of ['smile-makeover', 'sedation-dentistry', 'jaw-surgery']) {
       assert.equal((await srv.call(`/services/${slug}`)).status, 404, slug);
     }
   });

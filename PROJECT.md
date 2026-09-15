@@ -368,23 +368,26 @@ The whole card is a link (a stretched `::after` on the title anchor) with the
 treatment, one starts booking, and neither is an interactive element nested
 inside another.
 
-**What is listed.** Eleven treatments, all confirmed by the clinic — the eight
-the original site carried, plus implants, orthodontics and aesthetic dentistry,
-which appear on the clinic's own opening material. Dentures, wisdom-tooth
-surgery and gum treatment stay off the site until confirmed: a card a patient
-can book for a treatment the clinic does not provide is worse than a shorter
-list. Adding one later is an admin task, not a code change — the card, the
-page, the sitemap entry and the booking option all follow from the row.
+**What is listed.** Fourteen treatments, every one confirmed by the clinic —
+the eight the original site carried, plus implants, orthodontics, aesthetic
+dentistry, dentures, wisdom teeth and gum treatment. Nothing is listed on
+inference: a card a patient can book for a treatment the clinic does not
+provide is worse than a shorter list, and a test asserts that unconfirmed
+treatments still 404. Adding one is an admin task, not a code change — the
+card, the page, the sitemap entry and the booking option all follow from the
+row.
 
 **Card imagery.** A real photograph uploaded by the clinic always wins. Without
 one the card renders `partials/treatment-art.ejs`: a per-treatment monoline
 plate — one shared tooth silhouette with a different element per treatment
 (canals traced into the roots for a root canal, a threaded fixture below the
 gum line for an implant, an archwire and brackets for orthodontics, a shade
-scale for whitening, a translucent laminate for a veneer). A slug with no
-branch falls back to an examination mirror, and a test fails if a published
-treatment has no artwork of its own — two identical cards would otherwise ship
-unnoticed. All drawn for
+scale for whitening, a translucent laminate for a veneer). Two treatments
+replace the silhouette rather than decorating it, because a single tooth cannot
+carry them: dentures draws a horseshoe plate of teeth, and a wisdom tooth is
+one tilted tooth under a gum flap. A slug with no branch falls back to an
+examination mirror, and a test fails if a published treatment has no artwork of
+its own — two identical cards would otherwise ship unnoticed. All drawn for
 this site; nothing is licensed from anywhere, and no reference site's assets
 were copied or hotlinked. It reads as a designed set rather than a placeholder,
 and every one is replaceable from *Admin → Services → Card photo* or

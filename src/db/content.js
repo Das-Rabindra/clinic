@@ -80,10 +80,11 @@ const ADDRESS = {
 };
 
 /* ── Treatments the clinic offers but the original site never listed ───────
-   Implants, orthodontics and aesthetic dentistry are on the clinic's own
-   opening material and were confirmed directly. Each is created only when no
-   service with that slug exists at all — including a soft-deleted one — so
-   removing a treatment from the admin panel keeps it removed.
+   Implants, orthodontics and aesthetic dentistry came from the clinic's own
+   opening material; dentures, wisdom teeth and gum treatment were confirmed
+   directly. Each is created only when no service with that slug exists at all —
+   including a soft-deleted one — so removing a treatment from the admin panel
+   keeps it removed.
 
    All three are booked as an assessment rather than as the procedure itself:
    none of them can responsibly begin before an examination, and the copy below
@@ -104,12 +105,24 @@ const ADDED_TREATMENTS = [
     short_desc: 'Improving how your teeth look — their shape, their colour, and how they sit together.',
     duration_min: 45,
   },
+  {
+    slug: 'dentures', name: 'Dentures', category: 'Restorative',
+    short_desc: 'Removable replacements for several missing teeth, or for a whole arch.',
+    duration_min: 45,
+  },
+  {
+    slug: 'wisdom-tooth', name: 'Wisdom Tooth', category: 'Surgical',
+    short_desc: 'Assessment and, where it is genuinely needed, removal of a wisdom tooth.',
+    duration_min: 45,
+  },
+  {
+    slug: 'gum-treatment', name: 'Gum Treatment', category: 'Gum Care',
+    short_desc: 'Treatment for gums that bleed, recede or feel sore, and for the bone beneath them.',
+    duration_min: 45,
+  },
 ];
 
-/* ── Treatment detail content ──────────────────────────────────────────────
-   Dentures, wisdom-tooth surgery and gum treatment remain absent: the clinic
-   has not confirmed those, and listing a treatment a patient cannot actually
-   book is worse than listing fewer. */
+/* ── Treatment detail content ────────────────────────────────────────────── */
 const TREATMENTS = {
   'general-dentistry': {
     long_desc: 'General dentistry covers the routine care that stops everything else becoming urgent: check-ups, cleaning, small fillings, and practical advice on looking after your teeth at home. It is the usual starting point for a new patient at the clinic.',
@@ -200,6 +213,33 @@ const TREATMENTS = {
     seo_title: 'Aesthetic & Cosmetic Dentistry in Talcher | Samal Dental Care',
     seo_description: 'Aesthetic dentistry at Samal Dental Care, Bikrampur, FCI Township, Talcher — reshaping, veneers, tooth-coloured restorations and whitening.',
     is_featured: 0,
+  },
+  dentures: {
+    long_desc: 'A denture replaces missing teeth with a removable plate. It can be partial — filling the gaps while your own remaining teeth stay where they are — or complete, replacing a whole upper or lower arch. Of the ways to replace several teeth it is the one that needs no surgery and takes the least time.',
+    who_needs: 'Several missing teeth, or a full arch gone. It is also a sensible choice where an implant or a bridge is not possible: too little bone, gum disease that has to settle first, or simply a preference for something that does not involve surgery.',
+    what_to_expect: 'Impressions are taken and the denture is built to fit your mouth over several appointments, with a try-in before it is finished so the look and the bite can be adjusted while that is still easy. A new denture always feels bulky at first and takes a few weeks to get used to — softer food and reading aloud both help. Small adjustments in the first month are expected, not a sign that something has gone wrong.',
+    benefits: 'Replaces several teeth at once, with no surgery\nChewing and speech improve as you adapt to it\nCan be relined or adjusted as the gums change shape over the years\nThe least invasive way to close a large gap',
+    seo_title: 'Dentures in Talcher | Samal Dental Care',
+    seo_description: 'Partial and complete dentures at Samal Dental Care, Bikrampur, FCI Township, Talcher. Book a consultation with Dr. Sonali S. Samal.',
+    is_featured: 0,
+  },
+  'wisdom-tooth': {
+    long_desc: 'Wisdom teeth are the last to come through, usually in the late teens or twenties. Many cause no trouble at all and are best left alone. Removal is considered when one is repeatedly infected, is decayed in a spot no brush can reach, or is pressing against the tooth in front of it.',
+    who_needs: 'Pain or swelling at the back of the jaw, a flap of gum that keeps getting sore, a bad taste that keeps returning, difficulty opening your mouth fully, or food packing behind the last tooth. A wisdom tooth that is through and causing none of this usually does not need removing.',
+    what_to_expect: 'The first appointment is an examination and an X-ray to see the tooth\u2019s position and the shape of its roots, which is what determines how straightforward removal would be. Not every wisdom tooth needs to come out, and you will be told plainly if yours does not. If it does, it is done under local anaesthetic, with the aftercare explained and a number to call if anything worries you.',
+    benefits: 'An X-ray assessment before anything is decided\nA straight answer on whether removal is actually needed\nAn end to the cycle of infection and the pain that comes with it\nThe tooth in front protected where it is being pressed on',
+    seo_title: 'Wisdom Tooth Removal in Talcher | Samal Dental Care',
+    seo_description: 'Wisdom tooth assessment and removal at Samal Dental Care, Bikrampur, FCI Township, Talcher. X-ray first, then a clear recommendation.',
+    is_featured: 0,
+  },
+  'gum-treatment': {
+    long_desc: 'Gum disease begins as inflammation that bleeds when you brush and, left alone, goes on to affect the bone holding the teeth in place. Caught at the early stage it is reversible. Further along it can be halted and kept under control, but bone already lost does not grow back — which is exactly why the early stage is worth acting on.',
+    who_needs: 'Gums that bleed when you brush or eat, that look red or puffy, breath that will not freshen, gums that have shrunk back so the teeth look longer, or a tooth that has begun to feel slightly loose.',
+    what_to_expect: 'The gum is measured around each tooth to record how deep the pockets are. That measurement is what separates reversible inflammation from established disease, and it is repeated later to show whether the treatment is working. Cleaning then goes below the gum line, sometimes across more than one appointment and with the area numbed. Most of the result after that depends on cleaning at home, which is why time is spent working through technique with you rather than simply advising you to brush more.',
+    benefits: 'A recorded measurement, so progress is something you can see rather than take on trust\nBleeding and soreness settle as the inflammation resolves\nFurther bone loss halted, which is what keeps the teeth in place\nCleaning technique worked through with you, not just recommended',
+    seo_title: 'Gum Treatment in Talcher | Samal Dental Care',
+    seo_description: 'Treatment for bleeding and receding gums at Samal Dental Care, Bikrampur, FCI Township, Talcher. Book a gum assessment with Dr. Sonali S. Samal.',
+    is_featured: 1,
   },
   'pediatric-dentistry': {
     long_desc: 'Dental care for children — from a first check-up through to fillings and preventive treatment — at a pace that lets a child get used to the chair before anything needs doing.',
