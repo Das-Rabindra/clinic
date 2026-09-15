@@ -18,6 +18,7 @@ import reviews from './reviews.routes.js';
 import content from './content.routes.js';
 import notifications from './notifications.routes.js';
 import settings from './settings.routes.js';
+import diagnostics from './diagnostics.routes.js';
 
 const router = Router();
 
@@ -36,5 +37,6 @@ router.use('/reviews', reviews);
 router.use('/', content);
 router.use('/notifications', notifications);
 router.use('/', settings);
+router.use('/', diagnostics);
 
 export default router;

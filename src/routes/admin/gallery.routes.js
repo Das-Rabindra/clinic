@@ -61,7 +61,14 @@ router.post('/media', upload.single('file'), asyncHandler(async (req, res) => {
     if (err instanceof mediaService.MediaError) {
       return res.status(err.status).json({ error: err.message, code: err.code });
     }
-    throw err;
+    // Upload failures are almost always a storage misconfiguration. The admin
+    // owns this infrastructure, so give them the provider's own message rather
+    // than a generic 500 they cannot act on.
+    console.error('[media] upload failed:', err);
+    return res.status(502).json({
+      error: `Image storage rejected the upload: ${String(err.message).slice(0, 300)}`,
+      code: 'STORAGE_ERROR',
+    });
   }
 }));
 
