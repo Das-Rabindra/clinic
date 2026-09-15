@@ -3,6 +3,11 @@ import { one, all, run } from './base.js';
 export const findById = async (id) => await one('SELECT * FROM media WHERE id = ? AND deleted_at IS NULL', id);
 
 export async function create(m) {
+  // A Promise here would be stored as "{}" and silently break every image that
+  // references this row, so fail loudly at the boundary instead.
+  if (typeof m.url !== 'string' || typeof m.key !== 'string') {
+    throw new Error(`media.create expected string key/url, got ${typeof m.key}/${typeof m.url}`);
+  }
   const info = await run(
     `INSERT INTO media (storage, key, url, folder, mime, ext, bytes, width, height,
        checksum, original_name, alt, variant_of, variant_kind, uploaded_by)

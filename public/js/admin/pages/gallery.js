@@ -191,6 +191,91 @@ async function itemForm(item, data, reload) {
   };
 }
 
+/**
+ * Put an uploaded image somewhere on the public site.
+ *
+ * The library and the places a photo can appear used to be separate screens,
+ * so uploading looked like it had done nothing. This closes that loop.
+ */
+async function placeImage(mediaId, reload) {
+  const doctors = await api('/api/admin/doctors');
+  const doctor = doctors[0];
+
+  openModal('Where should this photo appear?', `
+    <div class="choice-list">
+      <button type="button" class="place-option" data-place="hero">
+        <strong>Hero area</strong>
+        <span>The large photo beside the headline at the top of the homepage.</span>
+      </button>
+      <button type="button" class="place-option" data-place="doctor">
+        <strong>Dentist's portrait</strong>
+        <span>Shown in the About section${doctor ? ` for ${esc(doctor.name)}` : ''}.</span>
+      </button>
+      <button type="button" class="place-option" data-place="gallery">
+        <strong>Gallery</strong>
+        <span>Added to “A closer look at the clinic”. You will be asked for a caption.</span>
+      </button>
+      <button type="button" class="place-option" data-place="logo">
+        <strong>Clinic logo</strong>
+        <span>Replaces the mark in the header and footer.</span>
+      </button>
+    </div>
+    <div id="placeExtra"></div>`, {
+    footer: '<button class="btn btn-ghost" id="placeCancel">Cancel</button>',
+    wide: true,
+  });
+
+  $('#placeCancel').onclick = closeModal;
+
+  $$('.place-option').forEach((btn) => {
+    btn.onclick = async () => {
+      const where = btn.dataset.place;
+      try {
+        if (where === 'hero') {
+          await api('/api/admin/clinic', { method: 'PUT', body: { hero_media_id: mediaId } });
+          toastOk('Set as the hero photo — refresh the website to see it');
+          closeModal(); reload();
+        } else if (where === 'logo') {
+          await api('/api/admin/clinic', { method: 'PUT', body: { logo_media_id: mediaId } });
+          toastOk('Set as the clinic logo');
+          closeModal(); reload();
+        } else if (where === 'doctor') {
+          if (!doctor) { toastErr('No dentist record exists yet.'); return; }
+          await api(`/api/admin/doctors/${doctor.id}`, { method: 'PUT', body: { photo_media_id: mediaId } });
+          toastOk(`Set as ${doctor.name}'s photo`);
+          closeModal(); reload();
+        } else {
+          // The gallery needs a caption, so ask for one in place.
+          $('#placeExtra').innerHTML = `
+            <hr style="border:none; border-top:1px solid var(--line); margin:18px 0;">
+            <div class="field"><label>Caption shown on the website</label>
+              <input type="text" id="galTitle" placeholder="e.g. Reception area" autofocus></div>
+            <div class="field"><label>Category</label>
+              <select id="galCat">${Object.entries(CATEGORY_LABELS)
+                .filter(([k]) => k !== 'treatment')
+                .map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('')}</select>
+              <div class="hint">Patient before-and-after photos are added from the Gallery items tab, where consent is recorded.</div>
+            </div>
+            <button class="btn btn-primary" id="galGo">Add to gallery</button>`;
+          $('#galTitle').focus();
+          $('#galGo').onclick = async () => {
+            const title = $('#galTitle').value.trim();
+            if (!title) { toastErr('Give the photo a short caption.'); return; }
+            try {
+              await api('/api/admin/gallery', {
+                method: 'POST',
+                body: { media_id: mediaId, title, category: $('#galCat').value, is_published: true },
+              });
+              toastOk('Added to the gallery and published');
+              closeModal(); reload();
+            } catch (err) { toastErr(err.message); }
+          };
+        }
+      } catch (err) { toastErr(err.message); }
+    };
+  });
+}
+
 /* ══════════ Media library ══════════ */
 async function renderMedia(box, reload) {
   box.innerHTML = '<div class="spin"></div>';
@@ -200,6 +285,13 @@ async function renderMedia(box, reload) {
     <div class="card">
       <div class="card-head"><div><h2>Media library</h2>
         <p class="card-sub">JPEG, PNG or WebP up to 10 MB. Images are re-encoded and all EXIF data (including GPS location) is removed automatically.</p></div></div>
+
+      <div class="banner banner-info">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg>
+        <span><strong>Uploading stores a photo here; it does not place it on the website yet.</strong>
+        Once uploaded, press <em>Use this photo</em> on the image and choose where it should appear —
+        the hero area, the dentist's portrait, the gallery, or the logo.</span>
+      </div>
 
       <div class="field">
         <label>Upload to folder</label>
@@ -228,6 +320,7 @@ async function renderMedia(box, reload) {
               <div class="mt-meta">${m.width}×${m.height} · ${Math.round(m.bytes / 1024)} KB · ${esc(m.folder)}</div>
             </div>
             <div class="mt-actions">
+              <button class="btn btn-accent btn-xs" data-use="${m.id}">Use this photo</button>
               <a class="btn btn-ghost btn-xs" href="${esc(m.url)}" target="_blank" rel="noopener">View</a>
               <button class="btn btn-danger btn-xs" data-delm="${m.id}">Delete</button>
             </div>
@@ -269,6 +362,10 @@ async function renderMedia(box, reload) {
     if (ok) toastOk(`${ok} image(s) uploaded`);
     reload();
   }
+
+  $$('[data-use]', box).forEach((b) => {
+    b.onclick = () => placeImage(Number(b.dataset.use), reload);
+  });
 
   $$('[data-delm]', box).forEach((b) => {
     b.onclick = async () => {

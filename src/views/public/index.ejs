@@ -63,7 +63,8 @@
             <div class="hero-photo-note">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="12" cy="12.5" r="3.4"/><path d="M8 5l1.5-2h5L16 5"/></svg>
               <strong>Clinic &amp; doctor photography</strong>
-              <span>Upload a hero photograph from the admin dashboard to fill this space.</span>
+              <span>Admin &rarr; Gallery &rarr; Media library: upload a photo, then press
+              &ldquo;Use this photo&rdquo; and choose <em>Hero area</em>.</span>
             </div>
           <% } %>
         </div>
@@ -99,7 +100,8 @@
             <img src="<%= doctorPhoto.url %>" alt="<%= clinic.doctor %>" width="<%= doctorPhoto.width %>" height="<%= doctorPhoto.height %>">
           <% } else { %>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
-            <span>Professional photograph of<br><%= clinic.doctor || 'the dentist' %> &mdash; upload from the dashboard</span>
+            <span>Photograph of <%= clinic.doctor || 'the dentist' %><br>
+            Admin &rarr; Gallery &rarr; Media library, then &ldquo;Use this photo&rdquo; &rarr; <em>Dentist&rsquo;s portrait</em>.</span>
           <% } %>
         </div>
       </div>
@@ -206,7 +208,8 @@
         <div class="reveal reviews-empty">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="12" cy="12.5" r="3.4"/><path d="M8 5l1.5-2h5L16 5"/></svg>
           <h3>Photographs coming soon</h3>
-          <p>Photographs of the clinic, equipment and team will appear here once uploaded from the dashboard.</p>
+          <p>Add them in Admin &rarr; Gallery &rarr; Media library: upload a photo, press
+          &ldquo;Use this photo&rdquo; and choose <em>Gallery</em>.</p>
         </div>
       <% } %>
     </div>

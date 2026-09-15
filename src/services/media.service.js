@@ -78,8 +78,16 @@ export async function ingestImage(file, { folder = 'clinic', alt = null, userId 
   const base = `${folder}/${checksum.slice(0, 20)}`;
   const originalName = slugify(String(file.originalname || 'image').replace(/\.[^.]+$/, '')).slice(0, 60);
 
-  const stored = await storage.put(`${base}.webp`, display, 'image/webp');
-  const storedThumb = await storage.put(`${base}-thumb.webp`, thumb, 'image/webp');
+  let stored, storedThumb;
+  try {
+    stored = await storage.put(`${base}.webp`, display, 'image/webp');
+    storedThumb = await storage.put(`${base}-thumb.webp`, thumb, 'image/webp');
+  } catch (err) {
+    if (err.code === 'STORAGE_NOT_CONFIGURED') {
+      throw new MediaError('STORAGE_NOT_CONFIGURED', err.message, 503);
+    }
+    throw err;
+  }
 
   const row = await mediaRepo.create({
     storage: storage.driverName(),

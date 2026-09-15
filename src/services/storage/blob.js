@@ -12,7 +12,19 @@ export const name = 'blob';
 
 const token = () => config.storage.blobToken || undefined;
 
+/** True when a Blob store is actually wired up. */
+export const isConfigured = () => Boolean(config.storage.blobToken);
+
 export async function put(key, buffer, contentType = 'image/webp') {
+  // Without a token @vercel/blob throws something opaque; say what is wrong.
+  if (!isConfigured()) {
+    const err = new Error(
+      'Image storage is not connected. In Vercel: Storage → create or connect a '
+      + 'Blob store to this project (Production), then redeploy.'
+    );
+    err.code = 'STORAGE_NOT_CONFIGURED';
+    throw err;
+  }
   const res = await blobPut(key, buffer, {
     access: 'public',
     contentType,
