@@ -6,13 +6,14 @@ const FIELDS = [
   'address_line1','address_line2','area','city','state','postal_code','country',
   'maps_url','place_id','latitude','longitude','timezone',
   'slot_interval_min','booking_lead_hours','booking_horizon_days','auto_confirm',
-  'reviews_url','instagram_url','facebook_url',
+  'reviews_url','instagram_url','facebook_url','youtube_url',
   'logo_media_id','favicon_media_id','og_image_media_id','hero_media_id',
   'seo_title','seo_description','seo_canonical','og_title','og_description',
   'hero_eyebrow','hero_title','hero_lede','hero_cta_label','hero_trust_text',
   'about_title','about_body','story_title','story_body',
   'services_title','services_lede','gallery_title','gallery_lede',
   'reviews_title','cta_title','cta_body',
+  'location_title','location_body','treatments_eyebrow',
 ];
 export const SETTINGS_FIELDS = FIELDS;
 

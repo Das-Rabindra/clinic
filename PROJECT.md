@@ -275,6 +275,9 @@ cancel, reschedule, status, availability/grid) · patients · enquiries ·
 gallery (+media, publish, consent) · reviews (+sync, connect, google/*) ·
 faqs · notifications (+retry) · users · integrations · seo · audit-logs`
 
+**Pages** (server-rendered) — `/ · /services · /services/:slug · /privacy ·
+/robots.txt · /sitemap.xml · /healthz`
+
 **Conventions:** errors return `{ error, code }` and, for validation,
 `{ fields: { name: message } }`. Codes are stable strings (`SLOT_TAKEN`,
 `CONSENT_REQUIRED`, `CSRF`, `RATE_LIMITED`) so clients branch on `code`, never
@@ -328,14 +331,59 @@ appears four times on the homepage.
 
 ### 7.2 Public site anatomy
 
-`Header → Hero → Credential strip → About/Doctor → Clinic story → Services →
-Gallery → Reviews → FAQ → Booking → Location → CTA band → Footer`
-plus a sticky mobile action bar and a floating WhatsApp button.
+Three page types, all server-rendered from the database:
 
-Every section is server-rendered from the database. Empty states are honest:
-with no synced reviews the section says so rather than inventing testimonials,
-and `AggregateRating` structured data is emitted **only** when real reviews
-exist.
+```
+/                  Header → Hero → Credential strip → About/Doctor → Clinic story
+                   → Treatments → Gallery → Testimonials → FAQ → Booking
+                   → Location → CTA band → Footer
+/services          Index of every published treatment
+/services/<slug>   Treatment hero → What it is → When it may be needed
+                   → What to expect → Benefits → sticky contact card
+                   → FAQ → Other treatments → CTA
+/privacy           Privacy and appointment policy
+```
+
+Persistent actions come in two forms that never appear together:
+
+- **≥ 900px** — a fixed right-hand rail: *Appointment*, *Request a call back*,
+  *WhatsApp*. Collapsed to icons, expanding on hover or keyboard focus.
+- **< 900px** — the sticky bottom bar: *Call*, *WhatsApp*, *Book Appointment*.
+
+Both breakpoints are 900px deliberately. They were 900 and 760, which left a
+140px band — a tablet in portrait — with neither.
+
+Every section is server-rendered. Empty states are honest: with no reviews the
+section says so rather than inventing testimonials, and `AggregateRating` is
+emitted **only** for Google-synced reviews.
+
+### 7.2.1 Treatment cards
+
+Image-led cards, three across, two on tablet, one on a phone. A fixed 3:2 media
+ratio keeps every card the same height regardless of caption length and reserves
+the space before an image loads, so the grid never shifts.
+
+The whole card is a link (a stretched `::after` on the title anchor) with the
+**Book** button layered above it at a higher stacking level — one tap opens the
+treatment, one starts booking, and neither is an interactive element nested
+inside another.
+
+**Card imagery.** A real photograph uploaded by the clinic always wins. Without
+one the card renders `partials/treatment-art.ejs`: a per-treatment monoline
+plate — one shared tooth silhouette with a different element per treatment
+(canals traced into the roots for a root canal, a seated crown, a shade scale
+for whitening, a second smaller tooth for children's dentistry). All drawn for
+this site; nothing is licensed from anywhere, and no reference site's assets
+were copied or hotlinked. It reads as a designed set rather than a placeholder,
+and every one is replaceable from *Admin → Services → Card photo* or
+*Gallery → Use this photo → Treatment card*.
+
+### 7.2.2 Testimonial slider
+
+A CSS scroll-snap track, not a JavaScript carousel. It is a real scroll
+container, so it works with a finger, a trackpad, the arrow keys and a screen
+reader before any script runs; the arrows and page dots only enhance it.
+Each card is labelled at source — *Google review* or *Shared with the clinic*.
 
 ### 7.3 The booking wizard
 
@@ -498,7 +546,14 @@ database) and `clinic-uploads` (media).
 
 1. Create a Postgres database (Neon integration) — it sets `DATABASE_URL`.
 2. Create a Blob store — it sets `BLOB_READ_WRITE_TOKEN`.
-3. Set `APP_SECRET`, `PUBLIC_URL` and `CRON_SECRET` in project settings.
+3. Set `APP_SECRET` in project settings. `PUBLIC_URL` is optional on Vercel —
+   when unset the app derives its own absolute URL from
+   `VERCEL_PROJECT_PRODUCTION_URL` / `VERCEL_URL`, so canonical links, `og:url`
+   and the sitemap are correct on the first deploy instead of claiming the site
+   lives on `http://localhost:8090`. Set it explicitly once a custom domain is
+   attached. `CRON_SECRET` is optional too: without it `/api/cron` accepts only
+   Vercel's own scheduler (identified by the `x-vercel-cron` header the platform
+   strips from inbound requests), and refuses everything else.
 4. Push. `vercel.json` routes everything to `api/index.js` and registers the
    cron that drains the job queue.
 
@@ -564,9 +619,17 @@ Recorded because each represents a class worth watching for.
 | Grid `min-width: auto` | Public site scrolled sideways on mobile | `min-width: 0` on affected tracks |
 | Booleans bound to SQLite | 500 on any update sending a boolean | Coerced to 0/1 at the single statement boundary |
 | `SELECT MAX(...)+1` for reference numbers | Two bookings for *different* slots at the same instant computed the same reference; one failed and was misreported as "slot taken". Invisible under SQLite, which serialises writes. | Postgres sequences, and slot conflicts now identified by constraint name rather than any unique violation |
+| Mobile menu toggled the wrong classes | The script toggled `.open`/`.active`; the stylesheet keys the panel off `.show` and the hamburger off `.open`. **The mobile menu never opened**, while reporting `aria-expanded="true"` to screen readers. | Toggle the classes the stylesheet actually uses; Escape closes; browser test asserts the computed `display` changes |
+| `[hidden]` never enforced in `site.css` | The attribute only sets `display:none` at user-agent weight, so any rule setting its own `display` silently overrode it. The gallery category filter appeared to do nothing (`.gallery-item{display:flex}`), the wizard's footer showed after a completed booking, and a dialog marked `hidden` covered the whole page and swallowed every click. | One `[hidden]{display:none!important}` rule, which `admin.css` had always had |
+| `/book` in the sitemap | Advertised to crawlers for months; it has never been a route, so every crawl of it 404'd | Sitemap generated from real routes, with a test that fetches every `<loc>` and asserts 200 |
+| `addressLocality` read from `area` | The structured data named the neighbourhood and omitted the town entirely, so nothing tied the clinic to "Talcher" — the word patients actually search | Town goes in `addressLocality`, neighbourhood joins the street address; `addressCountry` is now the ISO code, not "India" |
+| `/api/cron` open when `CRON_SECRET` was unset | `if (secret && ...)` meant no secret configured = no authentication at all; anyone could drain the notification queue | Fail closed: require the secret, or Vercel's own unforgeable `x-vercel-cron` header |
 
-The recurring lesson: **an absent field must mean "leave alone"**. Three of six
-bugs were variations of that.
+Two recurring lessons. **An absent field must mean "leave alone"** — three of
+these were variations of that. And **a stylesheet and the script that drives it
+must agree**: the broken mobile menu and the inert `[hidden]` attribute both
+passed every server-side test, because neither is observable from the server.
+Browser-level checks now cover the menu, the dialog, the slider and the cards.
 
 ---
 

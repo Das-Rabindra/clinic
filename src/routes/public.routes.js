@@ -50,9 +50,51 @@ function resolveFaq(text, clinic) {
     .replaceAll('{{clinic}}', clinic.name || '');
 }
 
-router.get('/', async (req, res) => {
+/**
+ * Locals every public page needs: branding, contact actions and the footer.
+ *
+ * Collected in one place so a new page cannot quietly ship with a broken logo
+ * or a missing WhatsApp link, and so the header/footer partials can assume
+ * these are always present.
+ */
+async function baseLocals({ navBase = '/' } = {}) {
   const settings = await settingsRepo.get();
   const clinic = await publicClinic();
+  const todayIdx = weekdayOf(todayIn(clinic.timezone));
+
+  const logo = settings.logo_media_id ? await mediaRepo.findById(settings.logo_media_id) : null;
+  const favicon = settings.favicon_media_id ? await mediaRepo.findById(settings.favicon_media_id) : null;
+
+  /* A short list for the footer: the treatments patients most often look for,
+     taken from the clinic's own ordering rather than hardcoded. */
+  const footerServices = (await servicesRepo.list({ activeOnly: true, featuredFirst: true }))
+    .filter(s => s.has_detail_page).slice(0, 6);
+
+  return {
+    settings,
+    clinic: { ...clinic, youtube_url: settings.youtube_url, today: { ...clinic.today, weekdayIndex: todayIdx } },
+    navBase,
+    logoUrl: logo?.url || '/img/logo-96.png',
+    faviconUrl: favicon?.url || '/img/logo-64.png',
+    whatsappUrl: await whatsappLink(),
+    footerServices,
+    todayHours: clinic.today.is_open
+      ? `Open today · ${clinic.today.open} – ${clinic.today.close}`
+      : `Closed today${clinic.today.closure_reason ? ` · ${clinic.today.closure_reason}` : ''}`,
+    shortAddress: [settings.area, settings.city].filter(Boolean).join(', ')
+      || [settings.address_line1, settings.city].filter(Boolean).join(', ')
+      || clinic.address,
+    initials: (settings.doctor_name || settings.name || '')
+      .split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'SD',
+    jsonForScript,
+  };
+}
+
+/* ── Home ────────────────────────────────────────────────────────────────── */
+router.get('/', async (req, res) => {
+  const base = await baseLocals({ navBase: '' });
+  const { settings, clinic } = base;
+
   const services = await servicesRepo.list({ activeOnly: true });
   const doctor = await doctorsRepo.primary();
   const gallery = await galleryRepo.listPublic();
@@ -64,7 +106,6 @@ router.get('/', async (req, res) => {
   issuePublicToken(req, res);
 
   const categoryKeys = [...new Set(gallery.map(g => g.category))];
-  const todayIdx = weekdayOf(todayIn(clinic.timezone));
 
   // Weekly hours starting Monday, which is how a clinic reads them.
   const orderedHours = [1, 2, 3, 4, 5, 6, 0]
@@ -73,38 +114,123 @@ router.get('/', async (req, res) => {
 
   const heroMedia = settings.hero_media_id ? await mediaRepo.findById(settings.hero_media_id) : null;
   const doctorMedia = doctor?.photo_media_id ? await mediaRepo.findById(doctor.photo_media_id) : null;
-  const logo = settings.logo_media_id ? await mediaRepo.findById(settings.logo_media_id) : null;
-  const favicon = settings.favicon_media_id ? await mediaRepo.findById(settings.favicon_media_id) : null;
 
   const metaTags = seo.meta(settings);
   if (heroMedia && !metaTags.ogImage) metaTags.ogImage = new URL(heroMedia.url, metaTags.canonical).toString();
 
   res.render('public/index', {
-    settings,
-    clinic: { ...clinic, today: { ...clinic.today, weekdayIndex: todayIdx } },
-    services, doctor, gallery, faqs, reviews,
-    orderedHours,
+    ...base,
+    services, doctor, gallery, faqs, reviews, orderedHours,
     galleryCategories: categoryKeys.map(k => ({ key: k, label: CATEGORY_LABELS[k] || k })),
     meta: metaTags,
-    structuredData: await seo.structuredData(),
-    faqSchema: seo.faqStructuredData(faqs),
-    whatsappUrl: await whatsappLink(),
-    logoUrl: logo?.url || '/img/logo-96.png',
-    faviconUrl: favicon?.url || '/img/logo-64.png',
+    schemas: [await seo.structuredData(), seo.faqStructuredData(faqs)],
     heroImage: heroMedia,
     doctorPhoto: doctorMedia,
-    initials: (settings.doctor_name || settings.name || '')
-      .split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'SD',
-    shortAddress: [settings.address_line1, settings.area].filter(Boolean).join(', ') || clinic.address,
     addressHtml: [settings.name, settings.address_line1, settings.address_line2,
-      [settings.area, settings.city].filter(Boolean).join(', '), settings.postal_code]
+      settings.area, [settings.city, settings.state].filter(Boolean).join(', '), settings.postal_code]
       .filter(Boolean).map(esc).join('<br>'),
     heroTitleHtml: esc(settings.hero_title || settings.name).replace(/\n/g, '<br>'),
     servicesJson: JSON.stringify(services.map(s => ({
-      id: s.id, name: s.name, duration: s.duration_min,
+      id: s.id, name: s.name, slug: s.slug, duration: s.duration_min,
       desc: s.short_desc, category: s.category_name, bookable: s.bookable === 1,
     }))).replace(/'/g, '&#39;'),
-    starsHtml, formatReviewDate, jsonForScript,
+    starsHtml, formatReviewDate,
+  });
+});
+
+/* ── Treatments ──────────────────────────────────────────────────────────── */
+router.get('/services', async (_req, res) => {
+  const base = await baseLocals();
+  const cards = await servicesRepo.list({ activeOnly: true, featuredFirst: true });
+  const canonical = seo.canonicalUrl(base.settings);
+  const town = base.settings.city || base.settings.area || '';
+
+  res.render('public/services', {
+    ...base,
+    cards,
+    meta: {
+      title: `Dental Treatments${town ? ` in ${town}` : ''} | ${base.settings.name}`,
+      description: base.settings.services_lede || base.settings.seo_description || '',
+      canonical: `${canonical}/services`,
+      ogTitle: `Dental Treatments${town ? ` in ${town}` : ''} | ${base.settings.name}`,
+      ogDescription: base.settings.services_lede || '',
+      ogUrl: `${canonical}/services`,
+      ogImage: base.settings.og_image_url || null,
+    },
+    ogType: 'website',
+    schemas: [
+      seo.breadcrumbs(canonical, [{ name: 'Home', path: '/' }, { name: 'Treatments', path: '/services' }]),
+      {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        itemListElement: cards.map((s, i) => ({
+          '@type': 'ListItem', position: i + 1, name: s.name,
+          url: s.has_detail_page ? `${canonical}/services/${s.slug}` : undefined,
+        })),
+      },
+    ],
+  });
+});
+
+router.get('/services/:slug', async (req, res, next) => {
+  const service = await servicesRepo.findPublicBySlug(req.params.slug);
+  if (!service) return next();               // falls through to the 404 handler
+
+  const base = await baseLocals();
+  const { settings, clinic } = base;
+  const canonical = seo.canonicalUrl(settings);
+
+  const doctor = await doctorsRepo.primary();
+  const doctorPhoto = doctor?.photo_media_id ? await mediaRepo.findById(doctor.photo_media_id) : null;
+
+  const related = (await servicesRepo.list({ activeOnly: true, featuredFirst: true }))
+    .filter(s => s.id !== service.id && s.has_detail_page).slice(0, 3);
+
+  const faqs = (await contentRepo.listFaqs({ publishedOnly: true }))
+    .map(f => ({ question: resolveFaq(f.question, clinic), answer: resolveFaq(f.answer, clinic) }))
+    .slice(0, 5);
+
+  issuePublicToken(req, res);
+
+  res.render('public/service', {
+    ...base,
+    service,
+    benefits: String(service.benefits || '').split('\n').map(s => s.trim()).filter(Boolean),
+    related, faqs, doctorPhoto,
+    meta: seo.serviceMeta(service, settings),
+    ogType: 'article',
+    schemas: [
+      seo.serviceStructuredData(service, settings),
+      seo.breadcrumbs(canonical, [
+        { name: 'Home', path: '/' },
+        { name: 'Treatments', path: '/services' },
+        { name: service.name, path: `/services/${service.slug}` },
+      ]),
+      seo.faqStructuredData(faqs),
+    ],
+    treatmentWhatsapp: await whatsappLink(
+      `Hello ${settings.name}, I would like to ask about ${service.name}.`),
+  });
+});
+
+/* ── Privacy / appointment policy ────────────────────────────────────────── */
+router.get('/privacy', async (_req, res) => {
+  const base = await baseLocals();
+  const canonical = seo.canonicalUrl(base.settings);
+  res.render('public/privacy', {
+    ...base,
+    meta: {
+      title: `Privacy & Appointment Policy | ${base.settings.name}`,
+      description: `How ${base.settings.name} handles the information you give through this website, and how to change or cancel an appointment.`,
+      canonical: `${canonical}/privacy`,
+      ogTitle: `Privacy & Appointment Policy | ${base.settings.name}`,
+      ogDescription: 'What this website collects, why, and what it is never used for.',
+      ogUrl: `${canonical}/privacy`,
+      ogImage: null,
+    },
+    ogType: 'website',
+    schemas: [seo.breadcrumbs(canonical, [{ name: 'Home', path: '/' }, { name: 'Privacy', path: '/privacy' }])],
+    updatedAt: new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }),
   });
 });
 
@@ -113,7 +239,7 @@ router.get('/robots.txt', async (_req, res) => {
   res.type('text/plain').send(seo.robotsTxt(seo.canonicalUrl(await settingsRepo.get())));
 });
 router.get('/sitemap.xml', async (_req, res) => {
-  res.type('application/xml').send(seo.sitemapXml(seo.canonicalUrl(await settingsRepo.get())));
+  res.type('application/xml').send(await seo.sitemapXml(seo.canonicalUrl(await settingsRepo.get())));
 });
 
 router.get('/healthz', async (_req, res) => res.json({ ok: true, uptime: Math.round(process.uptime()) }));

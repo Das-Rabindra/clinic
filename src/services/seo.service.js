@@ -10,6 +10,8 @@ import * as servicesRepo from '../repositories/services.repo.js';
 import { config } from '../config/env.js';
 import { minToHHMM } from '../utils/time.js';
 
+const COUNTRY_CODES = { india: 'IN', in: 'IN' };
+
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export function canonicalUrl(s) {
@@ -53,13 +55,21 @@ export async function structuredData() {
    */
   const agg = await reviewsRepo.aggregateVerified();
 
+  /*
+   * addressLocality must be the town Google matches against a search like
+   * "dentist in Talcher" — so it is the city, and the neighbourhood (`area`)
+   * belongs in the street address alongside the building. Reading locality from
+   * `area` instead left the town out of the markup entirely.
+   */
   const address = {
     '@type': 'PostalAddress',
-    streetAddress: [s.address_line1, s.address_line2].filter(Boolean).join(', ') || undefined,
-    addressLocality: s.area || s.city || undefined,
+    streetAddress: [s.address_line1, s.address_line2, s.area].filter(Boolean).join(', ') || undefined,
+    addressLocality: s.city || s.area || undefined,
     addressRegion: s.state || undefined,
     postalCode: s.postal_code || undefined,
-    addressCountry: s.country || 'IN',
+    /* schema.org expects the ISO 3166-1 alpha-2 code, not the country's
+       display name — "India" is not a value Google resolves. */
+    addressCountry: COUNTRY_CODES[String(s.country || '').trim().toLowerCase()] || 'IN',
   };
 
   const node = {
@@ -81,6 +91,11 @@ export async function structuredData() {
     node.geo = { '@type': 'GeoCoordinates', latitude: s.latitude, longitude: s.longitude };
   }
   if (s.maps_url) node.hasMap = s.maps_url;
+
+  /* sameAs is how Google ties the website to the clinic's own profiles.
+     Only links the clinic has actually supplied are emitted. */
+  const sameAs = [s.instagram_url, s.facebook_url, s.youtube_url].filter(Boolean);
+  if (sameAs.length) node.sameAs = sameAs;
 
   const hours = await openingHours();
   if (hours.length) node.openingHoursSpecification = hours;
@@ -112,7 +127,12 @@ export async function structuredData() {
       name: 'Dental services',
       itemListElement: services.map(sv => ({
         '@type': 'Offer',
-        itemOffered: { '@type': 'MedicalProcedure', name: sv.name, description: sv.short_desc || undefined },
+        itemOffered: {
+          '@type': 'MedicalProcedure',
+          name: sv.name,
+          description: sv.short_desc || undefined,
+          url: sv.has_detail_page ? `${url}/services/${sv.slug}` : undefined,
+        },
       })),
     };
   }
@@ -138,12 +158,94 @@ export function faqStructuredData(faqs) {
 export const robotsTxt = (canonical) =>
   `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\n\nSitemap: ${canonical}/sitemap.xml\n`;
 
-export function sitemapXml(canonical) {
-  const url = canonical;
+/**
+ * Sitemap over the routes that genuinely exist.
+ *
+ * The previous version advertised /book, which has never been a route — it
+ * returned 404 to every crawler that followed it. Treatment pages are listed
+ * from the database, so adding or retiring one in the admin panel is reflected
+ * without a code change.
+ */
+export async function sitemapXml(canonical) {
   const today = new Date().toISOString().slice(0, 10);
+  const lastmod = (v) => (v ? String(v).slice(0, 10) : today);
+
+  const entries = [
+    { loc: `${canonical}/`, lastmod: today, changefreq: 'weekly', priority: '1.0' },
+    { loc: `${canonical}/services`, lastmod: today, changefreq: 'monthly', priority: '0.8' },
+  ];
+  for (const sv of await servicesRepo.publicSlugs()) {
+    entries.push({
+      loc: `${canonical}/services/${sv.slug}`,
+      lastmod: lastmod(sv.updated_at), changefreq: 'monthly', priority: '0.7',
+    });
+  }
+  entries.push({ loc: `${canonical}/privacy`, lastmod: today, changefreq: 'yearly', priority: '0.2' });
+
+  const body = entries.map(e =>
+    `  <url><loc>${e.loc}</loc><lastmod>${e.lastmod}</lastmod>` +
+    `<changefreq>${e.changefreq}</changefreq><priority>${e.priority}</priority></url>`
+  ).join('\n');
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>${url}/</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>${url}/book</loc><lastmod>${today}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
+${body}
 </urlset>`;
+}
+
+/**
+ * Meta for one treatment page. Falls back to generated wording so a treatment
+ * the clinic adds later still gets a sensible title rather than an empty one.
+ */
+export function serviceMeta(service, settings) {
+  const url = canonicalUrl(settings);
+  const town = settings.city || settings.area || '';
+  const title = service.seo_title
+    || `${service.name}${town ? ` in ${town}` : ''} | ${settings.name}`;
+  const description = service.seo_description
+    || service.short_desc
+    || `${service.name} at ${settings.name}${town ? `, ${town}` : ''}.`;
+  return {
+    title,
+    description: description.slice(0, 300),
+    canonical: `${url}/services/${service.slug}`,
+    ogTitle: title,
+    ogDescription: description.slice(0, 300),
+    ogUrl: `${url}/services/${service.slug}`,
+    ogImage: service.image_url ? new URL(service.image_url, url).toString() : (settings.og_image_url || null),
+  };
+}
+
+/** MedicalProcedure markup for a treatment page, linked back to the clinic. */
+export function serviceStructuredData(service, settings) {
+  const url = canonicalUrl(settings);
+  return JSON.parse(JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'MedicalProcedure',
+    name: service.name,
+    url: `${url}/services/${service.slug}`,
+    description: service.short_desc || service.long_desc || undefined,
+    image: service.image_url ? new URL(service.image_url, url).toString() : undefined,
+    howPerformed: service.what_to_expect || undefined,
+    /* Left deliberately unset unless the clinic has written it: inventing an
+       indication for a medical procedure is not a copywriting decision. */
+    indication: service.who_needs
+      ? { '@type': 'MedicalIndication', description: service.who_needs }
+      : undefined,
+    provider: { '@id': `${url}#clinic` },
+  }));
+}
+
+/** Breadcrumbs so search results show Home › Treatments › <name>. */
+export function breadcrumbs(canonical, trail) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: trail.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.name,
+      item: `${canonical}${item.path}`,
+    })),
+  };
 }

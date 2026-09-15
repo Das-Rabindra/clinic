@@ -16,8 +16,20 @@ export default async function handler(req, res) {
   const supplied = req.headers.authorization?.replace(/^Bearer\s+/i, '')
     || req.query?.key;
 
-  // Vercel Cron sends the secret as a Bearer token automatically.
-  if (secret && supplied !== secret) {
+  /*
+   * Fail closed. Previously an unset CRON_SECRET left this endpoint open to
+   * anyone who guessed the path, letting them drain the notification queue at
+   * will. Two callers are now accepted:
+   *
+   *   1. A matching CRON_SECRET (Vercel Cron sends it as a Bearer token, and
+   *      an external pinger can pass ?key=).
+   *   2. Vercel's own scheduler, identified by x-vercel-cron. The platform
+   *      strips inbound x-vercel-* headers, so this cannot be forged from
+   *      outside — it just means the deployment works before the secret is set.
+   */
+  const fromVercelCron = Boolean(req.headers['x-vercel-cron']);
+  const authorised = secret ? (supplied === secret || fromVercelCron) : fromVercelCron;
+  if (!authorised) {
     return res.status(401).json({ error: 'Unauthorised.', code: 'UNAUTHENTICATED' });
   }
 

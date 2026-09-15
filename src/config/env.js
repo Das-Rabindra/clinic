@@ -15,6 +15,30 @@ const isProd = NODE_ENV === 'production';
 const IS_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 
 /**
+ * The site's own absolute URL, used for canonical links, og:url, the sitemap
+ * and OAuth redirects.
+ *
+ * PUBLIC_URL wins when set. Failing that, Vercel injects the deployment's own
+ * hostname, so the canonical URL is correct out of the box rather than
+ * defaulting to http://localhost:8090 and telling Google the site lives on the
+ * developer's laptop. VERCEL_PROJECT_PRODUCTION_URL is the stable production
+ * domain; VERCEL_URL is the per-deployment hostname and is the better fallback
+ * for a preview build.
+ */
+function resolvePublicUrl() {
+  const explicit = (process.env.PUBLIC_URL || '').trim();
+  if (explicit) return explicit.replace(/\/+$/, '');
+
+  const vercelHost = process.env.VERCEL_ENV === 'production'
+    ? (process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL)
+    : (process.env.VERCEL_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL);
+  if (vercelHost) return `https://${vercelHost.replace(/^https?:\/\//, '').replace(/\/+$/, '')}`;
+
+  return `http://localhost:${int(process.env.PORT, 8090)}`;
+}
+const PUBLIC_URL = resolvePublicUrl();
+
+/**
  * Fail loudly, but in the way that suits the runtime.
  *
  * A long-running process should exit so the container restarts. A serverless
@@ -75,7 +99,7 @@ export const config = Object.freeze({
   env: NODE_ENV,
   isProd,
   port: int(process.env.PORT, 8090),
-  publicUrl: (process.env.PUBLIC_URL || `http://localhost:${int(process.env.PORT, 8090)}`).replace(/\/+$/, ''),
+  publicUrl: PUBLIC_URL,
   trustProxy: bool(process.env.TRUST_PROXY),
   appSecret: APP_SECRET,
 
@@ -149,7 +173,6 @@ export const config = Object.freeze({
      * browser silently discards such a cookie - making login appear to succeed
      * while no session is ever stored.
      */
-    secureCookies: bool(process.env.TRUST_PROXY)
-      || /^https:/i.test(process.env.PUBLIC_URL || ''),
+    secureCookies: bool(process.env.TRUST_PROXY) || /^https:/i.test(PUBLIC_URL),
   }),
 });

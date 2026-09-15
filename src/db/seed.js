@@ -15,6 +15,7 @@ import * as doctorsRepo from '../repositories/doctors.repo.js';
 import * as settingsRepo from '../repositories/settings.repo.js';
 import * as contentRepo from '../repositories/content.repo.js';
 import { config } from '../config/env.js';
+import { applyContent } from './content.js';
 
 /* Content carried over verbatim from legacy/index.original.html */
 const CLINIC = {
@@ -26,9 +27,14 @@ const CLINIC = {
   phone: '9124839288',
   phone_intl: '+919124839288',
   whatsapp: '919124839288',
+  /* Split so each part lands in the right schema.org slot:
+     address_line1 + area -> streetAddress, city -> addressLocality (the town
+     patients actually search for), state -> addressRegion. */
   address_line1: 'Annapurna Market Complex',
-  address_line2: 'Housing Board, FCI',
-  area: 'Vikrampur',
+  address_line2: null,
+  area: 'Bikrampur, FCI Township',
+  city: 'Talcher',
+  state: 'Odisha',
   postal_code: '759106',
   country: 'India',
 };
@@ -68,11 +74,12 @@ export async function seed({ log = console.log } = {}) {
     if (!(await settingsRepo.get())) {
       await run(
         `INSERT INTO clinic_settings (id, name, doctor_name, qualification, registration, institution,
-           phone, phone_intl, whatsapp, address_line1, address_line2, area, postal_code, country,
+           phone, phone_intl, whatsapp, address_line1, address_line2, area, city, state,
+           postal_code, country,
            timezone, slot_interval_min, booking_lead_hours, booking_horizon_days)
          VALUES (1, @name, @doctor_name, @qualification, @registration, @institution,
-           @phone, @phone_intl, @whatsapp, @address_line1, @address_line2, @area, @postal_code,
-           @country, 'Asia/Kolkata', 30, 2, 60)`,
+           @phone, @phone_intl, @whatsapp, @address_line1, @address_line2, @area, @city, @state,
+           @postal_code, @country, 'Asia/Kolkata', 30, 2, 60)`,
         CLINIC
       );
       await settingsRepo.update({
@@ -152,6 +159,11 @@ export async function seed({ log = console.log } = {}) {
     if (!(await one('SELECT id FROM review_sync_state WHERE id = 1'))) {
       await run('INSERT INTO review_sync_state (id, connected) VALUES (1, 0)');
     }
+
+    /* Guarded content upgrades. These cannot live in a .sql migration: those
+       run before the seed, so on a fresh database they would match no rows,
+       be marked applied, and never run again. */
+    await applyContent({ log });
   });
 
   /* First admin user. Only from env, only when no users exist. */

@@ -38,8 +38,8 @@ make stored credentials unreadable after each cold start.
 | `DATABASE_URL` | Storage → **Neon Postgres** integration (set automatically) |
 | `BLOB_READ_WRITE_TOKEN` | Storage → **Blob** store (set automatically) |
 | `APP_SECRET` | `openssl rand -hex 32` — add manually |
-| `PUBLIC_URL` | e.g. `https://your-project.vercel.app` |
-| `CRON_SECRET` | `openssl rand -hex 16` — protects `/api/cron` |
+| `PUBLIC_URL` | e.g. `https://your-project.vercel.app`. Optional on Vercel — derived from the deployment's own hostname when unset. Set it once a custom domain is attached. |
+| `CRON_SECRET` | `openssl rand -hex 16` — protects `/api/cron`. Optional on Vercel: without it only Vercel's own scheduler is accepted. Required for any external pinger. |
 
 Add them under **Settings → Environment Variables** for the Production
 environment, then **redeploy** — environment changes do not apply to an
@@ -150,7 +150,7 @@ Until then the app runs normally and reports each integration as
 | **WhatsApp Cloud API** | Phone number ID + permanent access token from Meta, and approved message templates named `booking_received`, `appointment_confirmed`, `reminder_24h`, `reminder_2h`, `rescheduled`, `cancelled`, `follow_up`, `new_appointment_admin` | Bookings work; messages queue as `not_configured` and can be retried once configured |
 | **Google Business Profile** | OAuth client ID + secret (Google Cloud), with the redirect URI shown on the Integrations screen, then connect and pick the clinic location | Reviews section shows its honest empty state |
 | **SMTP** | Host, port, username, password | Email is skipped; WhatsApp and the dashboard still work |
-| **Domain** | Set `PUBLIC_URL` and the website URL in Clinic Information | Canonical/OG tags point at localhost |
+| **Domain** | Set `PUBLIC_URL` and the website URL in Clinic Information | Canonical/OG tags follow the deployment host, not the custom domain |
 
 Reviews are only ever displayed if the API actually returned them, and
 `AggregateRating` structured data is emitted only when real synced reviews

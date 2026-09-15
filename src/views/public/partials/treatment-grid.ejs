@@ -1,0 +1,47 @@
+<%#
+  Premium treatment cards. Locals: cards (array of services), navBase.
+
+  The whole card is a link to the treatment page, with the Book button as a
+  separate control layered on top — so one tap reaches the detail page and one
+  reaches booking, without nesting an interactive element inside another.
+%>
+<div class="tx-grid">
+  <% cards.forEach(function (s, i) { %>
+  <article class="tx-card">
+    <div class="tx-media<%= s.image_url ? ' has-photo' : '' %>">
+      <% if (s.image_url) { %>
+        <img src="<%= s.thumb_url || s.image_url %>"
+             alt="<%= s.image_alt || (s.name + ' at ' + clinic.name) %>"
+             width="<%= s.image_width || 640 %>" height="<%= s.image_height || 420 %>"
+             loading="<%= i < 3 ? 'eager' : 'lazy' %>" decoding="async">
+      <% } else { %>
+        <%- include('treatment-art', { slug: s.slug, name: s.name }) %>
+      <% } %>
+    </div>
+
+    <div class="tx-body">
+      <% if (s.category_name) { %><span class="tx-cat"><%= s.category_name %></span><% } %>
+      <h3 class="tx-name">
+        <% if (s.has_detail_page) { %>
+          <a href="/services/<%= s.slug %>" class="tx-link"><%= s.name %></a>
+        <% } else { %><%= s.name %><% } %>
+      </h3>
+      <% if (s.short_desc) { %><p class="tx-desc"><%= s.short_desc %></p><% } %>
+
+      <div class="tx-foot">
+        <% if (s.has_detail_page) { %>
+        <span class="tx-more" aria-hidden="true">
+          Learn more
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+        </span>
+        <% } else { %><span></span><% } %>
+        <% if (s.bookable) { %>
+        <button type="button" class="tx-book book-service"
+                data-service="<%= s.id %>" data-service-name="<%= s.name %>"
+                data-track="appointment_started">Book<span class="visually-hidden"> <%= s.name %></span></button>
+        <% } %>
+      </div>
+    </div>
+  </article>
+  <% }) %>
+</div>

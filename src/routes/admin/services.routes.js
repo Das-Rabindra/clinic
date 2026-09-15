@@ -25,6 +25,14 @@ const serviceSchema = z.object({
   show_price: zBool.default(false),
   bookable: zBool.default(true),
   is_active: zBool.default(true),
+  /* Treatment page content. */
+  who_needs: z.string().trim().max(2000).nullish(),
+  what_to_expect: z.string().trim().max(2000).nullish(),
+  benefits: z.string().trim().max(2000).nullish(),
+  seo_title: z.string().trim().max(120).nullish(),
+  seo_description: z.string().trim().max(300).nullish(),
+  is_featured: zBool.default(false),
+  has_detail_page: zBool.default(true),
 });
 
 router.post('/', validate(serviceSchema), async (req, res) => {

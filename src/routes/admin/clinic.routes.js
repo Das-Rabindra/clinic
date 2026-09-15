@@ -50,6 +50,7 @@ const settingsSchema = z.object({
   booking_horizon_days: z.coerce.number().int().min(1).max(365).optional(),
   auto_confirm: zBool.optional(),
   reviews_url: nullableStr(600), instagram_url: nullableStr(300), facebook_url: nullableStr(300),
+  youtube_url: nullableStr(300),
   logo_media_id: zId.nullish(), favicon_media_id: zId.nullish(),
   og_image_media_id: zId.nullish(), hero_media_id: zId.nullish(),
   seo_title: nullableStr(200), seo_description: nullableStr(400), seo_canonical: nullableStr(300),
@@ -61,6 +62,8 @@ const settingsSchema = z.object({
   services_title: nullableStr(200), services_lede: nullableStr(600),
   gallery_title: nullableStr(200), gallery_lede: nullableStr(600),
   reviews_title: nullableStr(200), cta_title: nullableStr(200), cta_body: nullableStr(600),
+  treatments_eyebrow: nullableStr(120),
+  location_title: nullableStr(200), location_body: nullableStr(1500),
 }).strict();
 
 router.put('/', requireRole(ROLES.ADMIN), validate(settingsSchema), async (req, res) => {

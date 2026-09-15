@@ -418,3 +418,54 @@ table.data tbody tr:hover{background:rgba(124,152,133,.05);}
 .place-option:hover{border-color:var(--sage); background:rgba(124,152,133,.06);}
 .place-option strong{display:block; font-size:14.5px; color:var(--pine-700); margin-bottom:3px;}
 .place-option span{display:block; font-size:12.5px; color:#6B7669; line-height:1.5;}
+
+/* ══════════ Treatment photos ══════════ */
+.svc-thumb{
+  width:52px; height:36px; border-radius:6px; object-fit:cover;
+  border:1px solid var(--line); display:block;
+}
+.svc-thumb-empty{
+  display:flex; align-items:center; justify-content:center;
+  background:var(--paper-dim); color:var(--muted); font-size:12px;
+}
+.svc-photo-pick{ display:flex; gap:14px; align-items:flex-start; }
+.svc-photo-preview{
+  width:104px; height:72px; border-radius:8px; flex-shrink:0; overflow:hidden;
+  border:1px solid var(--line); background:var(--paper-dim);
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; color:var(--muted); text-align:center;
+}
+.svc-photo-preview img{ width:100%; height:100%; object-fit:cover; }
+
+/* Collapsed by default so the everyday fields stay at the top of the form. */
+.svc-more{ border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin:14px 0; }
+.svc-more > summary{ cursor:pointer; font-weight:600; font-size:14px; color:var(--ink); }
+.svc-more[open] > summary{ margin-bottom:10px; }
+
+/* ══════════ Photo picker (opens over an existing form) ══════════ */
+.picker-layer{
+  position:fixed; inset:0; z-index:400; display:flex; align-items:center; justify-content:center;
+  padding:24px; background:rgba(18,32,30,0.5); overflow-y:auto;
+}
+.picker-panel{
+  width:100%; max-width:720px; margin:auto; background:var(--card, #fff);
+  border-radius:12px; padding:20px; box-shadow:0 24px 64px -20px rgba(0,0,0,0.4);
+}
+.picker-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.picker-head h3{ margin:0; font-size:17px; }
+.picker-grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:12px;
+  max-height:60vh; overflow-y:auto;
+}
+.picker-item{
+  background:none; border:1px solid var(--line); border-radius:8px; padding:0;
+  overflow:hidden; text-align:left; display:flex; flex-direction:column;
+}
+.picker-item:hover{ border-color:var(--accent, #C79A4B); }
+.picker-item img{ width:100%; aspect-ratio:4/3; object-fit:cover; display:block; }
+.picker-item span{
+  padding:7px 9px; font-size:11px; color:var(--muted);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.t-link{ font-size:11px; color:var(--muted); text-decoration:none; }
+.t-link:hover{ text-decoration:underline; }

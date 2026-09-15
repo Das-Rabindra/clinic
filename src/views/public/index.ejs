@@ -138,37 +138,28 @@
   </section>
   <% } %>
 
-  <!-- ============ SERVICES ============ -->
+  <!-- ============ TREATMENTS ============ -->
   <section class="section-pad" id="services">
     <div class="wrap">
       <div class="section-head reveal">
-        <span class="eyebrow">Treatments</span>
-        <h2 class="section-title"><%= settings.services_title || 'Dental services offered at the clinic' %></h2>
+        <span class="eyebrow"><%= settings.treatments_eyebrow || 'Our Treatments' %></span>
+        <h2 class="section-title"><%= settings.services_title || 'Dental treatments offered at the clinic' %></h2>
         <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
         <% if (settings.services_lede) { %><p class="section-lede"><%= settings.services_lede %></p><% } %>
       </div>
+
       <% if (services.length) { %>
-      <div class="services-list reveal">
-        <% services.forEach(function(s) { %>
-        <div class="service-row">
-          <span class="service-tag"><%= s.category_name || 'Dental' %></span>
-          <div>
-            <div class="service-name"><%= s.name %></div>
-            <% if (s.short_desc) { %><div class="service-desc"><%= s.short_desc %></div><% } %>
-          </div>
-          <div style="display:flex; align-items:center; gap:14px;">
-            <% if (s.show_price && s.price_from) { %>
-              <span class="mono" style="font-size:13px; color:#6B7669;">from <%= s.currency === 'INR' ? '₹' : '' %><%= s.price_from %></span>
-            <% } %>
-            <% if (s.bookable) { %>
-              <button type="button" class="btn btn-outline-dark btn-sm book-service" data-service="<%= s.id %>">Book</button>
-            <% } %>
-          </div>
+        <div class="reveal">
+          <%- include('partials/treatment-grid', { cards: services }) %>
         </div>
-        <% }) %>
-      </div>
+        <div class="tx-index-foot reveal">
+          <a class="btn btn-outline-dark" href="/services">See all treatments</a>
+        </div>
       <% } else { %>
-        <p class="booking-empty">No services are published yet. Add them from the admin dashboard.</p>
+        <div class="reveal reviews-empty">
+          <h3>Treatments are being updated</h3>
+          <p>Please call <strong class="mono"><%= clinic.phone %></strong> and the clinic will tell you what is available.</p>
+        </div>
       <% } %>
     </div>
   </section>
@@ -231,12 +222,13 @@
     </div>
   </div>
 
-  <!-- ============ REVIEWS ============ -->
+  <!-- ============ TESTIMONIALS ============ -->
   <section class="section-pad" id="reviews">
     <div class="wrap">
       <div class="section-head reveal" style="text-align:center; margin-left:auto; margin-right:auto;">
-        <span class="eyebrow">Patient Reviews</span>
+        <span class="eyebrow">Testimonials From Patients</span>
         <h2 class="section-title" style="margin-left:auto; margin-right:auto;"><%= settings.reviews_title || 'What patients are saying' %></h2>
+        <svg class="smile-arc" viewBox="0 0 64 16" style="margin-left:auto; margin-right:auto;"><path d="M4 4 Q32 18 60 4"/></svg>
       </div>
 
       <% if (reviews.reviews.length) { %>
@@ -259,44 +251,62 @@
             </div>
           </div>
         </div>
-        <div class="reviews-grid reveal">
-          <% reviews.reviews.forEach(function(r) { %>
-          <article class="review-card">
-            <span class="stars" aria-label="<%= r.rating %> out of 5"><%- starsHtml(r.rating) %></span>
-            <% if (r.text) { %><p class="review-text"><%= r.text %></p><% } %>
-            <div class="review-author">
-              <div class="review-avatar">
-                <% if (r.author_photo_url) { %>
-                  <img src="<%= r.author_photo_url %>" alt="" loading="lazy" referrerpolicy="no-referrer">
-                <% } else { %><%= (r.author_name || '?').trim().charAt(0).toUpperCase() %><% } %>
-              </div>
-              <div>
-                <div class="review-name"><%= r.author_name %></div>
-                <% if (r.reviewed_at) { %><div class="review-date"><%= formatReviewDate(r.reviewed_at) %></div><% } %>
-              </div>
-            </div>
-            <span class="review-source">
-              <% if (r.source === 'manual') { %>
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.1A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg>
-                Shared with the clinic
-              <% } else { %>
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 11v2h5.5c-.2 1.3-1.6 3.9-5.5 3.9-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.7 2.4 14.6 1.5 12 1.5 6.2 1.5 1.5 6.2 1.5 12S6.2 22.5 12 22.5c6.1 0 10.1-4.3 10.1-10.3 0-.7-.1-1.2-.2-1.7H12z"/></svg>
-                Google review
-              <% } %>
-            </span>
-          </article>
-          <% }) %>
+
+        <%#
+          Slider, not a static grid. Built on CSS scroll-snap so it is a real
+          scrollable region: it works with a finger, a trackpad, the arrow keys
+          and a screen reader before any JavaScript runs, and the buttons below
+          only enhance it.
+        %>
+        <div class="tm-slider reveal" data-slider>
+          <div class="tm-track" id="tmTrack" tabindex="0" role="group"
+               aria-label="Patient testimonials, scrollable">
+            <% reviews.reviews.forEach(function (r) { %>
+            <article class="tm-card">
+              <svg class="tm-quote" viewBox="0 0 32 24" aria-hidden="true"><path d="M13 24V13.6C13 6.4 16.7 1.8 24 0l1.4 3.6c-4.4 1.4-6.6 4-6.6 7.6H24V24zm-13 0V13.6C0 6.4 3.7 1.8 11 0l1.4 3.6c-4.4 1.4-6.6 4-6.6 7.6H11V24z"/></svg>
+              <span class="stars" aria-label="<%= r.rating %> out of 5"><%- starsHtml(r.rating) %></span>
+              <% if (r.text) { %><p class="tm-text"><%= r.text %></p><% } %>
+              <footer class="tm-author">
+                <div class="tm-avatar">
+                  <% if (r.author_photo_url) { %>
+                    <img src="<%= r.author_photo_url %>" alt="" loading="lazy" referrerpolicy="no-referrer" width="42" height="42">
+                  <% } else { %><%= (r.author_name || '?').trim().charAt(0).toUpperCase() %><% } %>
+                </div>
+                <div class="tm-who">
+                  <span class="tm-name"><%= r.author_name %></span>
+                  <span class="tm-meta">
+                    <% if (r.source === 'manual') { %>Shared with the clinic<% } else { %>Google review<% } %>
+                    <% if (r.reviewed_at) { %> &middot; <%= formatReviewDate(r.reviewed_at) %><% } %>
+                  </span>
+                </div>
+              </footer>
+            </article>
+            <% }) %>
+          </div>
+
+          <div class="tm-controls">
+            <button type="button" class="tm-arrow" data-slider-prev aria-label="Previous testimonials">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+            </button>
+            <div class="tm-dots" data-slider-dots aria-hidden="true"></div>
+            <button type="button" class="tm-arrow" data-slider-next aria-label="More testimonials">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+          </div>
         </div>
+
         <% if (clinic.reviews_url) { %>
         <div class="reviews-foot reveal">
-          <a class="btn btn-outline-dark" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener">View all reviews on Google</a>
+          <a class="btn btn-outline-dark" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener">Read the reviews on Google</a>
         </div>
         <% } %>
       <% } else { %>
         <div class="reveal reviews-empty">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 17.3l-6.2 3.3 1.2-6.9L2 8.9l7-1L12 1.5l3 6.4 7 1-5 4.8 1.2 6.9z"/></svg>
-          <h3>Reviews coming soon</h3>
-          <p>Genuine Google reviews will appear here once the clinic's Google Business Profile is connected. This section only ever displays real, synced reviews.</p>
+          <h3>Testimonials coming soon</h3>
+          <p>This section shows genuine feedback only &mdash; reviews synced from the clinic&rsquo;s
+          Google Business Profile, and testimonials patients have shared directly and agreed to
+          have published. Nothing here is written by the clinic.</p>
           <% if (clinic.reviews_url) { %>
             <div style="margin-top:20px;"><a class="btn btn-outline-dark btn-sm" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener">Leave a review on Google</a></div>
           <% } %>
@@ -406,20 +416,25 @@
       <div class="location-grid reveal">
         <div class="location-info">
           <span class="eyebrow">Find Us</span>
-          <h2>Visit the clinic</h2>
+          <h2><%= settings.location_title || 'Visit the clinic' %></h2>
+          <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
           <p class="location-address"><%- addressHtml %></p>
+          <% if (settings.location_body) { %>
+          <p class="location-note"><%= settings.location_body %></p>
+          <% } %>
           <div class="location-actions">
-            <a class="btn btn-primary" href="<%= clinic.directions_url %>" target="_blank" rel="noopener">
+            <a class="btn btn-primary" href="<%= clinic.directions_url %>" target="_blank" rel="noopener" data-track="directions_clicked">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
               Get Directions
             </a>
-            <% if (clinic.phone) { %><a class="btn btn-outline" href="tel:<%= clinic.phone_intl || clinic.phone %>">Call the Clinic</a><% } %>
-            <% if (whatsappUrl) { %><a class="btn btn-outline" href="<%= whatsappUrl %>" target="_blank" rel="noopener">WhatsApp</a><% } %>
+            <% if (clinic.phone) { %><a class="btn btn-outline" href="tel:<%= clinic.phone_intl || clinic.phone %>" data-track="call_clicked">Call the Clinic</a><% } %>
+            <% if (whatsappUrl) { %><a class="btn btn-outline" href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked">WhatsApp</a><% } %>
           </div>
+          <%- include('partials/social') %>
         </div>
         <iframe class="map-embed" id="mapEmbed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
           data-src="<%= clinic.map_embed_url %>"
-          title="Map showing <%= clinic.name %>"></iframe>
+          title="Map showing <%= clinic.name %>, <%= shortAddress %>"></iframe>
       </div>
     </div>
   </section>

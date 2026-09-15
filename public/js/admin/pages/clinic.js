@@ -75,7 +75,24 @@ export async function renderClinic(view) {
 
       <fieldset><legend>Social &amp; reviews</legend>
         ${text('reviews_url', 'Google reviews URL', 'The "write a review" or reviews link for the clinic')}
-        <div class="frow">${text('instagram_url', 'Instagram')}${text('facebook_url', 'Facebook')}</div>
+        <div class="frow">
+          ${text('instagram_url', 'Instagram', 'Full profile link, e.g. https://www.instagram.com/samaldentalcare')}
+          ${text('facebook_url', 'Facebook', 'Leave empty until the page exists — an empty box shows no icon')}
+        </div>
+        ${text('youtube_url', 'YouTube', 'Channel link. Leave empty until there is a channel.')}
+        <div class="hint">Each link that is filled in adds an icon to the footer and the location
+        section, and tells Google these profiles belong to the clinic. An empty box shows nothing,
+        so there is never a dead link.</div>
+      </fieldset>
+
+      <fieldset><legend>Website wording</legend>
+        ${text('treatments_eyebrow', 'Label above the treatments heading', 'e.g. Our Treatments')}
+        ${text('location_title', 'Heading for the location section', 'e.g. Finding the clinic')}
+        <div class="field"><label>How to find the clinic</label>
+          <textarea data-field="location_body" rows="3">${esc(settings.location_body || '')}</textarea>
+          <div class="hint">Landmarks, parking, which side of the market — whatever actually helps
+          a patient arriving for the first time.</div>
+        </div>
       </fieldset>
     </div>`;
 

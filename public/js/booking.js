@@ -448,18 +448,55 @@
     renderBody();
   });
 
-  /* "Book" buttons in the services list jump straight into the wizard. */
+  /* Jump straight into the wizard with a treatment already chosen. */
+  async function startWithService(serviceId) {
+    if (!BOOKABLE.some(function (s) { return s.id === serviceId; })) return false;
+    state.serviceId = serviceId;
+    state.step = 1;
+    state.result = null;
+    state.error = null;
+    renderSteps();
+    var target = document.getElementById('appointment');
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    await loadCalendar();
+    return true;
+  }
+
+  /* "Book" buttons on treatment cards and detail pages. On the homepage these
+     open the wizard in place; on a treatment page the button is a link to
+     /#appointment?treatment=<slug>, which the block below picks up on arrival. */
   document.querySelectorAll('.book-service').forEach(function (btn) {
-    btn.addEventListener('click', async function () {
-      state.serviceId = Number(btn.dataset.service);
-      state.step = 1;
-      state.result = null;
-      renderSteps();
-      document.getElementById('appointment').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      await loadCalendar();
+    btn.addEventListener('click', function (e) {
+      var id = Number(btn.dataset.service);
+      if (!document.getElementById('bookingShell')) return;   // let the link navigate
+      e.preventDefault();
+      startWithService(id);
     });
   });
 
+  /*
+   * Arriving from a treatment page: /#appointment?treatment=root-canal-treatment
+   *
+   * The query lives in the fragment rather than the URL's own query string so
+   * the browser still scrolls to #appointment on its own, and so the homepage
+   * is never served under a second, duplicate URL that a crawler would index
+   * separately from "/".
+   */
+  function preselectFromHash() {
+    var hash = window.location.hash || '';
+    var q = hash.indexOf('?');
+    if (q === -1) return;
+    var params = new URLSearchParams(hash.slice(q + 1));
+    var slug = params.get('treatment');
+    var match = slug && SERVICES.filter(function (s) { return s.slug === slug; })[0];
+    if (!match) return;
+    startWithService(match.id);
+    // Drop the query from the address bar; the selection is now in the wizard.
+    history.replaceState(null, '', hash.slice(0, q));
+  }
+
   renderSteps();
   renderBody();
+  preselectFromHash();
+  window.addEventListener('hashchange', preselectFromHash);
 })();

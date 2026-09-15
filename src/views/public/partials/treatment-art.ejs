@@ -1,0 +1,93 @@
+<%#
+  Card artwork for a treatment that has no photograph yet.
+
+  Real clinic photography always wins — the card only falls back to this when
+  image_media_id is unset. Rather than a grey placeholder box, each treatment
+  gets its own monoline plate: one shared tooth silhouette with a different
+  element per treatment, so the set reads as a designed family and still tells
+  the patient what the card is about.
+
+  Geometry: the tooth occupies x 20–84, y 18–98 in its own group, which the
+  translate below centres in the 120×120 box. Every per-treatment mark is drawn
+  in that same space — crown 18–50, roots 60–98, centre line x = 52.
+
+  Thin strokes and the existing pine/sage/honey palette keep it alongside the
+  site's smile-arc motif rather than competing with it. Nothing is licensed
+  from anywhere: the paths are drawn for this site.
+
+  Locals: slug, name.
+%>
+<% var TOOTH = 'M60 20c-9-9-24-10-33-2-9 7-11 21-7 34 3 10 5 17 7 28 1 9 3 18 10 18 6 0 7-10 8-18 1-7 3-12 6-12h2c3 0 5 5 6 12 1 8 2 18 8 18 7 0 9-9 10-18 2-11 4-18 7-28 4-13 2-27-7-34-9-8-24-7-33 2z'; %>
+<svg class="tx-art" viewBox="0 0 120 120" role="img" aria-label="<%= name %>" focusable="false">
+  <defs>
+    <clipPath id="txclip-<%= slug %>"><path d="<%= TOOTH %>"/></clipPath>
+  </defs>
+
+  <%# Ground: arcs echoing the smile motif used across the site. %>
+  <path class="tx-ground" d="M10 100 Q60 122 110 100"/>
+  <path class="tx-ground tx-ground-2" d="M16 26 Q60 4 104 26"/>
+
+  <g transform="translate(8, 2)">
+    <path class="tx-tooth" d="<%= TOOTH %>"/>
+
+    <% if (slug === 'root-canal-treatment') { %>
+      <%# The canals themselves, traced from the pulp chamber into both roots. %>
+      <g clip-path="url(#txclip-<%= slug %>)">
+        <path class="tx-accent" d="M48 42 Q42 68 38 94"/>
+        <path class="tx-accent" d="M56 42 Q62 68 66 94"/>
+      </g>
+      <ellipse class="tx-accent-fill" cx="52" cy="36" rx="8" ry="6"/>
+
+    <% } else if (slug === 'dental-fillings') { %>
+      <%# A cavity, closed by the restoration. %>
+      <g clip-path="url(#txclip-<%= slug %>)">
+        <ellipse class="tx-accent-fill" cx="43" cy="37" rx="10" ry="8"/>
+      </g>
+      <path class="tx-mark" d="M70 30 L86 14"/>
+      <path class="tx-accent" d="M83 10 l8 8 -5 5 -8-8z"/>
+
+    <% } else if (slug === 'dental-cleaning') { %>
+      <%# Scaler tip at the gum line, and the polish it leaves behind. %>
+      <path class="tx-mark" d="M74 34 L88 20"/>
+      <path class="tx-accent" d="M85 15 l9 9 -6 6 -9-9z"/>
+      <g class="tx-spark">
+        <path class="tx-accent" d="M36 34l1.8 4.8L42.6 40.6l-4.8 1.8L36 47.2l-1.8-4.8L29.4 40.6l4.8-1.8z"/>
+        <path class="tx-accent" d="M50 22l1.3 3.4L54.7 26.7l-3.4 1.3L50 31.4l-1.3-3.4L45.3 26.7l3.4-1.3z"/>
+      </g>
+
+    <% } else if (slug === 'crowns-bridges') { %>
+      <%# A crown seated over the prepared tooth. %>
+      <path class="tx-accent" d="M24 44 L28 24 L38 34 L52 20 L66 34 L76 24 L80 44 Z"/>
+      <path class="tx-accent" d="M24 44 H80"/>
+
+    <% } else if (slug === 'tooth-extraction') { %>
+      <%# Forceps either side, and the direction of travel: up and out. %>
+      <path class="tx-mark" d="M30 16 Q34 30 40 36"/>
+      <path class="tx-mark" d="M74 16 Q70 30 64 36"/>
+      <path class="tx-accent" d="M52 68 V40 M45 47 l7-7 7 7"/>
+
+    <% } else if (slug === 'teeth-whitening') { %>
+      <%# A shade scale across the crown, lightening left to right. %>
+      <g clip-path="url(#txclip-<%= slug %>)">
+        <rect class="tx-shade tx-shade-1" x="16" y="12" width="23" height="92"/>
+        <rect class="tx-shade tx-shade-2" x="39" y="12" width="23" height="92"/>
+        <rect class="tx-shade tx-shade-3" x="62" y="12" width="26" height="92"/>
+      </g>
+      <path class="tx-accent" d="M88 16l2 5.4L95.4 23.4l-5.4 2L88 30.8l-2-5.4L80.6 23.4l5.4-2z"/>
+
+    <% } else if (slug === 'pediatric-dentistry') { %>
+      <%# A smaller tooth beside the adult one. %>
+      <g transform="translate(70, 58) scale(0.42)">
+        <path class="tx-tooth" d="<%= TOOTH %>"/>
+      </g>
+      <path class="tx-ground tx-ground-2" d="M26 108 Q60 120 96 108"/>
+
+    <% } else { %>
+      <%# General dentistry, and any treatment added later: the examination
+          mirror, which reads as "a check-up" without claiming anything
+          specific about the procedure. %>
+      <path class="tx-mark" d="M72 34 L84 22"/>
+      <circle class="tx-accent" cx="90" cy="16" r="9"/>
+    <% } %>
+  </g>
+</svg>

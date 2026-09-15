@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head') %>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<%- include('partials/header') %>
+
+<main id="main">
+  <section class="tx-index-hero">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">Privacy</span>
+      </nav>
+      <span class="eyebrow">Your Information</span>
+      <h1>Privacy and appointment policy</h1>
+      <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
+      <p class="tx-index-lede">What <%= clinic.name %> collects through this website, why, and what it is never used for.</p>
+    </div>
+  </section>
+
+  <section class="section-pad" style="padding-top:0;">
+    <div class="wrap prose">
+
+      <h2>What this website collects</h2>
+      <p>Only what is needed to arrange your visit. When you book an appointment or request a
+      call back, the clinic records your name, mobile number, an email address if you give one,
+      the treatment you selected, and anything you type in the message box.</p>
+      <p>The website does not ask for, and you should not send through it, details of your medical
+      history, medication or diagnosis. Bring those to your appointment or discuss them on the phone.</p>
+
+      <h2>What it is used for</h2>
+      <ul>
+        <li>Holding the appointment slot you chose, and confirming it.</li>
+        <li>Sending you a reminder before your appointment, if the clinic has that enabled.</li>
+        <li>Calling or messaging you back when you ask for it.</li>
+      </ul>
+      <p>Your details are not sold, and are not passed to anyone for advertising. They are visible
+      to <%= clinic.doctor || 'the dentist' %> and clinic staff, who need them to run your appointment.</p>
+
+      <h2>Messages on WhatsApp</h2>
+      <p>If you contact the clinic on WhatsApp, or the clinic messages you there, that conversation
+      also passes through WhatsApp under its own terms. Appointment confirmations and reminders
+      carry only your name, the date, the time and the treatment — never clinical detail.</p>
+
+      <h2>Photographs</h2>
+      <p>Photographs of patients or of treatment results are only published on this website with
+      the patient's explicit consent, recorded at the time. The same applies to any testimonial
+      that carries a patient's name. Consent can be withdrawn at any time by telling the clinic,
+      and the photograph or testimonial is then removed.</p>
+
+      <h2>Cancelling or changing an appointment</h2>
+      <p>Your confirmation carries a booking reference. You can cancel online using that reference
+      together with the mobile number you booked with, or simply call or message the clinic.
+      Letting the clinic know early frees the slot for another patient.</p>
+      <p>The clinic holds your booked time for you. If you cannot make it, a message beforehand is
+      appreciated — it is the only way another patient can use the time.</p>
+
+      <h2>How long information is kept</h2>
+      <p>Appointment and patient records are kept as part of the clinic's ordinary dental records.
+      A call-back request that does not lead to an appointment is kept only while it is being
+      followed up.</p>
+
+      <h2>Asking about your information</h2>
+      <p>To ask what the clinic holds about you, to correct it, or to ask for it to be removed,
+      contact <%= clinic.name %>:</p>
+      <ul>
+        <% if (clinic.phone) { %><li>Phone: <a class="mono" href="tel:<%= clinic.phone_intl || clinic.phone %>"><%= clinic.phone %></a></li><% } %>
+        <% if (clinic.email) { %><li>Email: <a href="mailto:<%= clinic.email %>"><%= clinic.email %></a></li><% } %>
+        <li>In person: <%= clinic.address %></li>
+      </ul>
+
+      <p class="prose-note">Last updated <%= updatedAt %>.</p>
+    </div>
+  </section>
+</main>
+
+<%- include('partials/footer') %>
+<script src="/js/site.js" defer></script>
+</body>
+</html>

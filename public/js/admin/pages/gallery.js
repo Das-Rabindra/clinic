@@ -211,6 +211,10 @@ async function placeImage(mediaId, reload) {
         <strong>Dentist's portrait</strong>
         <span>Shown in the About section${doctor ? ` for ${esc(doctor.name)}` : ''}.</span>
       </button>
+      <button type="button" class="place-option" data-place="treatment">
+        <strong>Treatment card</strong>
+        <span>The photo on one of the treatment cards, and at the top of that treatment's page.</span>
+      </button>
       <button type="button" class="place-option" data-place="gallery">
         <strong>Gallery</strong>
         <span>Added to “A closer look at the clinic”. You will be asked for a caption.</span>
@@ -244,6 +248,26 @@ async function placeImage(mediaId, reload) {
           await api(`/api/admin/doctors/${doctor.id}`, { method: 'PUT', body: { photo_media_id: mediaId } });
           toastOk(`Set as ${doctor.name}'s photo`);
           closeModal(); reload();
+        } else if (where === 'treatment') {
+          const { services } = await api('/api/admin/services');
+          const choices = services.filter((sv) => !sv.deleted_at);
+          if (!choices.length) { toastErr('No treatments exist yet.'); return; }
+          $('#placeExtra').innerHTML = `
+            <hr style="border:none; border-top:1px solid var(--line); margin:18px 0;">
+            <div class="field"><label>Which treatment?</label>
+              <select id="txPick">${choices.map((sv) =>
+                `<option value="${sv.id}">${esc(sv.name)}${sv.image_url ? ' — replaces the current photo' : ''}</option>`).join('')}</select>
+            </div>
+            <button class="btn btn-primary" id="txGo">Use for this treatment</button>`;
+          $('#txGo').onclick = async () => {
+            try {
+              await api(`/api/admin/services/${$('#txPick').value}`, {
+                method: 'PUT', body: { image_media_id: mediaId },
+              });
+              toastOk('Set as the treatment photo');
+              closeModal(); reload();
+            } catch (err) { toastErr(err.message); }
+          };
         } else {
           // The gallery needs a caption, so ask for one in place.
           $('#placeExtra').innerHTML = `

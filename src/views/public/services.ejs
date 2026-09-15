@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head') %>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<%- include('partials/header') %>
+
+<main id="main">
+  <section class="tx-index-hero">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">Treatments</span>
+      </nav>
+      <span class="eyebrow"><%= settings.treatments_eyebrow || 'Our Treatments' %></span>
+      <h1><%= settings.services_title || 'Dental treatments offered at the clinic' %></h1>
+      <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
+      <% if (settings.services_lede) { %><p class="tx-index-lede"><%= settings.services_lede %></p><% } %>
+    </div>
+  </section>
+
+  <section class="section-pad" style="padding-top:0;">
+    <div class="wrap">
+      <% if (cards.length) { %>
+        <div class="reveal in">
+          <%- include('partials/treatment-grid', { cards: cards }) %>
+        </div>
+      <% } else { %>
+        <div class="reveal in reviews-empty">
+          <h3>Treatments are being updated</h3>
+          <p>Please call <strong class="mono"><%= clinic.phone %></strong> and the clinic will tell you what is available.</p>
+        </div>
+      <% } %>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="wrap">
+      <span class="eyebrow" style="color:var(--honey);">Not Sure Which You Need?</span>
+      <h2>Start with a consultation</h2>
+      <p>Book a 30-minute consultation and <%= clinic.doctor || 'the dentist' %> will examine your teeth, explain what is going on, and set out the options — before any treatment is decided.</p>
+      <div class="hero-ctas">
+        <a href="/#appointment" class="btn btn-primary">Book a Consultation</a>
+        <% if (clinic.phone) { %><a href="tel:<%= clinic.phone_intl || clinic.phone %>" class="btn btn-outline" data-track="call_clicked">Call the Clinic</a><% } %>
+      </div>
+    </div>
+  </section>
+</main>
+
+<%- include('partials/footer') %>
+<script src="/js/site.js" defer></script>
+</body>
+</html>
