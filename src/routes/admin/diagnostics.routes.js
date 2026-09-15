@@ -52,8 +52,12 @@ router.get('/diagnostics', requireRole(ROLES.OWNER), asyncHandler(async (_req, r
     warnings.push('PUBLIC_URL is not set: canonical and Open Graph tags point at localhost, '
       + 'so search engines index the wrong URL and shared links will not preview.');
   }
-  if (!process.env.CRON_SECRET) {
-    warnings.push('CRON_SECRET is not set: /api/cron can be triggered by anyone who finds it.');
+  /* /api/cron fails closed, so an unset secret is no longer a hole — but on a
+     non-Vercel host it is the only accepted credential, which means reminders
+     silently never send. Report it where that actually applies. */
+  if (!process.env.CRON_SECRET && !config.isServerless) {
+    warnings.push('CRON_SECRET is not set: /api/cron rejects every caller, so '
+      + 'appointment reminders will never be sent by an external scheduler.');
   }
   if (!checks.storage.ok) {
     warnings.push(`Image uploads will fail: ${checks.storage.error}`);

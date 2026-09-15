@@ -176,3 +176,51 @@ describe('cross-page navigation', () => {
     assert.ok(r.body.includes('href="#about"'));
   });
 });
+
+describe('content security policy', () => {
+  test('permits the origins the pages genuinely load from', async () => {
+    const r = await srv.call('/');
+    const csp = r.headers.get('content-security-policy');
+    const directive = (name) =>
+      (csp.split(';').map((d) => d.trim()).find((d) => d.startsWith(name + ' ')) || '');
+
+    const img = directive('img-src');
+    assert.ok(img.includes("'self'"));
+    // Google review author avatars.
+    assert.ok(img.includes('googleusercontent.com'));
+    const style = directive('style-src');
+    assert.ok(style.includes('https://fonts.googleapis.com'), 'the page loads Google Fonts');
+    const font = directive('font-src');
+    assert.ok(font.includes('https://fonts.gstatic.com'));
+    // The map is an iframe, and both embeds the app can emit must be allowed.
+    const frame = directive('frame-src');
+    assert.ok(frame.includes('https://www.google.com'));
+    assert.ok(frame.includes('https://www.openstreetmap.org'),
+      'mapEmbedUrl() emits an OpenStreetMap embed once coordinates are set');
+  });
+
+  test('allows the blob store to serve uploaded images', async () => {
+    /*
+     * `blob:` in img-src is the client-side object-URL scheme, not Vercel Blob.
+     * Without the storage host every uploaded photo was fetched with a 200 and
+     * then refused by the browser — empty frames on the live site, and no way
+     * for the admin who uploaded it to tell why.
+     */
+    const { imageSources } = await import('../src/middleware/security.js');
+
+    const blob = imageSources('blob');
+    assert.ok(blob.includes('blob.vercel-storage.com'),
+      `the blob host must be allowed to serve images; got: ${blob}`);
+
+    // An explicit base URL narrows the wildcard to that one origin.
+    const pinned = imageSources('blob', 'https://abc123.public.blob.vercel-storage.com/x/y.webp');
+    assert.ok(pinned.includes('https://abc123.public.blob.vercel-storage.com'));
+    assert.ok(!pinned.includes('*.public.blob'), 'a known origin should not stay a wildcard');
+
+    // A malformed value must not drop the host entirely.
+    assert.ok(imageSources('blob', 'not a url').includes('blob.vercel-storage.com'));
+
+    // The local driver serves from the app's own origin, so it needs nothing extra.
+    assert.ok(!imageSources('local').includes('vercel-storage'));
+  });
+});
