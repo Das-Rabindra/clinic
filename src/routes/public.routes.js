@@ -41,6 +41,36 @@ function formatReviewDate(value) {
   return d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
 }
 
+/**
+ * Is the doctor's own bio worth printing under the About copy?
+ *
+ * Only when it actually says something the About copy does not. The seeded bio
+ * is a shorter restatement of it, so an exact `!==` comparison let both render
+ * and the section repeated itself almost word for word. Comparing on
+ * normalised text — case, punctuation and spacing removed — catches the
+ * restatement, while a genuinely different bio the clinic has written still
+ * shows.
+ */
+function saysSomethingNew(bio, about) {
+  if (!bio) return false;
+  if (!about) return true;
+
+  const words = (t) => String(t).toLowerCase().match(/[a-z0-9]+/g) || [];
+  const bioWords = words(bio);
+  const aboutWords = new Set(words(about));
+  if (!bioWords.length) return false;
+
+  /* Below a handful of words the ratio is too coarse to trust, so fall back to
+     an exact comparison. */
+  if (bioWords.length < 5) return bioWords.join(' ') !== [...words(about)].join(' ');
+
+  /* The seeded bio differs from the About copy by a single conjunction
+     ("BDS, FRCD" against "BDS and FRCD"), which defeats a substring test but
+     leaves every word accounted for. */
+  const covered = bioWords.filter((w) => aboutWords.has(w)).length;
+  return covered / bioWords.length < 0.9;
+}
+
 /** Resolve FAQ placeholders so answers track the clinic's real details. */
 function resolveFaq(text, clinic) {
   return String(text || '')
@@ -126,6 +156,7 @@ router.get('/', async (req, res) => {
     schemas: [await seo.structuredData(), seo.faqStructuredData(faqs)],
     heroImage: heroMedia,
     doctorPhoto: doctorMedia,
+    showDoctorBio: saysSomethingNew(doctor?.bio, settings.about_body),
     addressHtml: [settings.name, settings.address_line1, settings.address_line2,
       settings.area, [settings.city, settings.state].filter(Boolean).join(', '), settings.postal_code]
       .filter(Boolean).map(esc).join('<br>'),

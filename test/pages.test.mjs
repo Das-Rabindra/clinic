@@ -224,3 +224,38 @@ describe('content security policy', () => {
     assert.ok(!imageSources('local').includes('vercel-storage'));
   });
 });
+
+describe('about section', () => {
+  test('does not print the doctor bio twice when it restates the About copy', async () => {
+    const r = await srv.call('/');
+    const body = r.body;
+    // The seeded bio differs from about_body only by a conjunction, so an
+    // exact-match guard let the section repeat itself almost word for word.
+    const phrase = 'holds a BDS';
+    const occurrences = body.split(phrase).length - 1;
+    assert.equal(occurrences, 1, `"${phrase}" appears ${occurrences} times in the About section`);
+  });
+
+  test('still shows a bio that says something the About copy does not', async () => {
+    const doctorsRepo = await import('../src/repositories/doctors.repo.js');
+    const doctor = await doctorsRepo.primary();
+    const original = doctor.bio;
+    const distinct = 'She has a particular interest in treating anxious patients.';
+    await doctorsRepo.update(doctor.id, { bio: distinct });
+    try {
+      const r = await srv.call('/');
+      assert.ok(r.body.includes(distinct), 'a genuinely different bio must still render');
+    } finally {
+      await doctorsRepo.update(doctor.id, { bio: original });
+    }
+  });
+
+  test('gives the credential list its own styling hook', async () => {
+    const r = await srv.call('/');
+    assert.ok(r.body.includes('class="cred-list"'));
+    const css = await srv.call('/css/site.css');
+    // Only `.doctor-cred-list` was ever styled, so every row rendered as
+    // unspaced running text: "QualificationBDS, FRCD".
+    assert.match(css.body, /\.cred-list\b/, 'the class the template uses must be styled');
+  });
+});

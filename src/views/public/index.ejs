@@ -110,7 +110,11 @@
         <h2 class="section-title"><%= settings.about_title || 'Care led by an experienced dentist' %></h2>
         <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
         <% if (settings.about_body) { %><p class="section-lede" style="max-width:none;"><%= settings.about_body %></p><% } %>
-        <% if (doctor && doctor.bio && doctor.bio !== settings.about_body) { %>
+        <%# The doctor record carries its own bio, which is very often a
+            shorter restatement of the About copy above. An exact-match guard
+            missed that — the two differed by a comma — and the section showed
+            the same sentence twice. %>
+        <% if (showDoctorBio) { %>
           <p class="section-lede" style="max-width:none;"><%= doctor.bio %></p>
         <% } %>
         <ul class="cred-list">
