@@ -248,6 +248,16 @@ describe('secrets handling', () => {
     assert.equal(wa.has_secrets, true, 'but the UI is told a secret exists');
   });
 
+  test('updating one credential does not wipe the others', async () => {
+    const integrations = await import('../src/repositories/integrations.repo.js');
+    await integrations.upsert('smtp', { secrets: { user: 'alice', pass: 'first-pass' } });
+    // Change only the password; the username must survive.
+    await integrations.upsert('smtp', { secrets: { pass: 'second-pass' } });
+    const stored = await integrations.getSecrets('smtp');
+    assert.equal(stored.user, 'alice', 'the untouched credential must persist');
+    assert.equal(stored.pass, 'second-pass');
+  });
+
   test('secrets are encrypted at rest', async () => {
     const { one } = await import('../src/repositories/base.js');
     const row = await one("SELECT secret_json FROM integrations WHERE provider = 'whatsapp'");

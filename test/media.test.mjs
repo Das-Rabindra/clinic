@@ -5,7 +5,7 @@ import { setupEnv, bootDb, cleanup } from './helpers.mjs';
 
 let ctx;
 const SUITE = 'media';
-let mediaService, galleryRepo, storage, usersRepo, userId;
+let mediaService, galleryRepo, storage, usersRepo, userId, mediaRepo;
 
 before(async () => {
   ctx = await setupEnv(SUITE);
@@ -13,6 +13,7 @@ before(async () => {
   mediaService = await import('../src/services/media.service.js');
   galleryRepo = await import('../src/repositories/gallery.repo.js');
   storage = await import('../src/services/storage/index.js');
+  mediaRepo = await import('../src/repositories/media.repo.js');
   usersRepo = await import('../src/repositories/users.repo.js');
   userId = (await usersRepo.create({ email: 'm@clinic.test', name: 'M', password: 'MediaTestPass123', role: 'owner' })).id;
 });
@@ -70,6 +71,27 @@ describe('media ingest', () => {
     await assert.rejects(
       mediaService.ingestImage({ buffer, originalname: 'a.jpg' }, { folder: '../../etc' }),
       (err) => err.code === 'BAD_FOLDER');
+  });
+});
+
+describe('media deletion', () => {
+  test('deletes the image and its thumbnail variant', async () => {
+    const m = await mediaService.ingestImage(
+      { buffer: await jpeg(), originalname: 'to-delete.jpg' }, { folder: 'clinic', userId });
+    assert.ok(await storage.exists(m.key));
+    assert.ok(await storage.exists(m.thumb.key));
+
+    // The variants lookup is async; spreading it without await made this throw
+    // "is not iterable" and every delete returned a 500.
+    assert.equal(await mediaService.deleteMedia(m.id), true);
+
+    assert.equal(await mediaRepo.findById(m.id), undefined, 'row is soft-deleted');
+    assert.equal(await storage.exists(m.key), false, 'stored file is gone');
+    assert.equal(await storage.exists(m.thumb.key), false, 'thumbnail is gone too');
+  });
+
+  test('deleting an unknown image reports false rather than throwing', async () => {
+    assert.equal(await mediaService.deleteMedia(999999), false);
   });
 });
 

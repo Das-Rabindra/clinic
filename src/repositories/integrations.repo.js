@@ -28,9 +28,12 @@ export async function getSecrets(provider) {
 export async function upsert(provider, { config, secrets, is_enabled, status, last_error } = {}) {
   const existing = await get(provider);
   const mergedConfig = { ...(existing?.config || {}), ...(config || {}) };
+  // getSecrets is async: spreading it without await yields {} rather than
+  // throwing, which would silently drop every credential already stored for
+  // this provider whenever one of them was updated.
   const mergedSecrets = secrets === undefined
     ? null
-    : { ...getSecrets(provider), ...secrets };
+    : { ...(await getSecrets(provider)), ...secrets };
 
   await run(
     `INSERT INTO integrations (provider, config_json, secret_json, is_enabled, status, last_error, last_checked_at)
@@ -47,8 +50,16 @@ export async function upsert(provider, { config, secrets, is_enabled, status, la
       provider,
       config_json: JSON.stringify(mergedConfig),
       secret_json: mergedSecrets ? encryptSecret(JSON.stringify(mergedSecrets)) : null,
-      is_enabled: is_enabled === undefined ? null : (is_enabled ? 1 : 0),
-      status: status ?? null,
+      /*
+       * Postgres validates NOT NULL on the proposed row before it resolves the
+       * conflict, so passing null here failed outright rather than falling
+       * through to COALESCE in the DO UPDATE clause. Resolve "leave unchanged"
+       * against the row we already fetched instead.
+       */
+      is_enabled: is_enabled === undefined
+        ? (existing ? (existing.is_enabled ? 1 : 0) : 0)
+        : (is_enabled ? 1 : 0),
+      status: status ?? existing?.status ?? 'not_configured',
       last_error: last_error ?? null,
     }
   );

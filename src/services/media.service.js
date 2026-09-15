@@ -112,7 +112,7 @@ export async function ingestImage(file, { folder = 'clinic', alt = null, userId 
 export async function deleteMedia(id) {
   const row = await mediaRepo.findById(id);
   if (!row) return false;
-  for (const m of [row, ...mediaRepo.variants(id)]) {
+  for (const m of [row, ...(await mediaRepo.variants(id))]) {
     try { await storage.remove(m.key); }
     catch (err) { console.error('[media] failed to remove stored file', m.key, err.message); }
   }
