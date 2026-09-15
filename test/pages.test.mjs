@@ -50,8 +50,41 @@ describe('treatment pages', () => {
     const r = await srv.call('/services');
     assert.equal(r.status, 200);
     const published = await servicesRepo.publicSlugs();
-    assert.ok(published.length >= 8);
+    assert.ok(published.length >= 11);
     for (const s of published) assert.ok(r.body.includes(`/services/${s.slug}`), s.slug);
+  });
+
+  test('covers the treatments the clinic confirmed it offers', async () => {
+    // Implants, orthodontics and aesthetic dentistry are on the clinic's own
+    // opening material and were confirmed directly.
+    for (const slug of ['dental-implants', 'braces-aligners', 'aesthetic-dentistry']) {
+      const svc = await servicesRepo.findPublicBySlug(slug);
+      assert.ok(svc, `${slug} should exist`);
+      assert.ok(svc.who_needs, `${slug} needs page content, not an empty page`);
+      assert.ok(svc.what_to_expect);
+      assert.ok(svc.benefits);
+      assert.equal((await srv.call(`/services/${slug}`)).status, 200);
+    }
+  });
+
+  test('has no page for a treatment the clinic has not confirmed', async () => {
+    // Dentures, wisdom-tooth surgery and gum treatment are deliberately absent.
+    for (const slug of ['dentures', 'wisdom-tooth', 'gum-treatment', 'smile-makeover']) {
+      assert.equal((await srv.call(`/services/${slug}`)).status, 404, slug);
+    }
+  });
+
+  test('gives every treatment card its own artwork', async () => {
+    const r = await srv.call('/services');
+    // A slug with no branch in treatment-art.ejs silently falls back to the
+    // general-dentistry mirror, which would make two cards identical.
+    const art = await import('node:fs/promises')
+      .then((fs) => fs.readFile('src/views/public/partials/treatment-art.ejs', 'utf8'));
+    for (const s of await servicesRepo.publicSlugs()) {
+      assert.ok(art.includes(`'${s.slug}'`) || s.slug === 'general-dentistry',
+        `${s.slug} has no artwork branch and would reuse the generic mirror`);
+    }
+    assert.ok(r.body.includes('tx-art'));
   });
 
   test('renders a treatment page with its own title and markup', async () => {
@@ -69,7 +102,7 @@ describe('treatment pages', () => {
   });
 
   test('an unknown slug is a 404, not an empty page', async () => {
-    const r = await srv.call('/services/dental-implants');
+    const r = await srv.call('/services/teeth-transplant');
     assert.equal(r.status, 404);
   });
 

@@ -12,6 +12,7 @@
  * the clinic has edited in the admin panel survives a redeploy untouched.
  */
 import { one, run, all } from '../repositories/base.js';
+import * as servicesRepo from '../repositories/services.repo.js';
 
 /* ── Site copy ─────────────────────────────────────────────────────────────
    Keyed by the exact text the first seed wrote. Once the clinic edits a field
@@ -78,11 +79,37 @@ const ADDRESS = {
   state: 'Odisha',
 };
 
+/* ── Treatments the clinic offers but the original site never listed ───────
+   Implants, orthodontics and aesthetic dentistry are on the clinic's own
+   opening material and were confirmed directly. Each is created only when no
+   service with that slug exists at all — including a soft-deleted one — so
+   removing a treatment from the admin panel keeps it removed.
+
+   All three are booked as an assessment rather than as the procedure itself:
+   none of them can responsibly begin before an examination, and the copy below
+   says so. */
+const ADDED_TREATMENTS = [
+  {
+    slug: 'dental-implants', name: 'Dental Implants', category: 'Restorative',
+    short_desc: 'A replacement for a missing tooth that sits in the jaw like a natural root.',
+    duration_min: 45,
+  },
+  {
+    slug: 'braces-aligners', name: 'Braces & Aligners', category: 'Orthodontics',
+    short_desc: 'Straightening crowded, gapped or protruding teeth with braces or clear aligners.',
+    duration_min: 45,
+  },
+  {
+    slug: 'aesthetic-dentistry', name: 'Aesthetic Dentistry', category: 'Cosmetic',
+    short_desc: 'Improving how your teeth look — their shape, their colour, and how they sit together.',
+    duration_min: 45,
+  },
+];
+
 /* ── Treatment detail content ──────────────────────────────────────────────
-   Only the eight treatments the clinic already lists. Implants, dentures,
-   braces, aligners and smile-makeover work are deliberately absent: the clinic
-   has not confirmed it offers them, and listing a treatment a patient cannot
-   actually book is worse than listing fewer. */
+   Dentures, wisdom-tooth surgery and gum treatment remain absent: the clinic
+   has not confirmed those, and listing a treatment a patient cannot actually
+   book is worse than listing fewer. */
 const TREATMENTS = {
   'general-dentistry': {
     long_desc: 'General dentistry covers the routine care that stops everything else becoming urgent: check-ups, cleaning, small fillings, and practical advice on looking after your teeth at home. It is the usual starting point for a new patient at the clinic.',
@@ -147,6 +174,33 @@ const TREATMENTS = {
     seo_description: 'Professional teeth whitening at Samal Dental Care, Bikrampur, FCI Township, Talcher, with a shade check before and after. Book a consultation.',
     is_featured: 0,
   },
+  'dental-implants': {
+    long_desc: 'An implant is a small titanium post placed in the jawbone to take the place of a missing tooth\u2019s root. Once the bone has grown around it, a crown is fitted on top. Unlike a bridge it does not rely on the teeth either side, and unlike a denture it does not come out.',
+    who_needs: 'A missing tooth, or several — from an extraction, an injury, or a gap you have lived with for years. Whether an implant is possible depends on how much bone is there and on the health of your gums, which is exactly what the first appointment establishes.',
+    what_to_expect: 'The first visit is an assessment, not surgery: an examination, X-rays, and an honest discussion of whether an implant, a bridge or a denture suits your situation better. If you go ahead, the post is placed under local anaesthetic and then left to integrate with the bone for a few months before the crown is made. This is a treatment measured in months rather than visits.',
+    benefits: 'Fills the gap without cutting down the healthy teeth on either side\nNothing to take out at night\nChewing and speaking feel closer to a natural tooth\nHelps preserve the jawbone, which shrinks where a tooth is missing',
+    seo_title: 'Dental Implants in Talcher | Samal Dental Care',
+    seo_description: 'Dental implants to replace missing teeth at Samal Dental Care, Bikrampur, FCI Township, Talcher. Book an assessment with Dr. Sonali S. Samal.',
+    is_featured: 1,
+  },
+  'braces-aligners': {
+    long_desc: 'Orthodontic treatment moves teeth gradually into better alignment — with fixed braces, or with a series of clear removable aligners. Which of the two suits you depends on how much movement is needed and on what you are willing to wear day to day.',
+    who_needs: 'Crowded or overlapping teeth, gaps, teeth that stick out, or a bite where the upper and lower teeth do not meet evenly. Children are usually assessed once the adult teeth are coming through, but there is no upper age limit — adults are treated too.',
+    what_to_expect: 'The first appointment is an assessment: photographs, an impression or scan, X-rays, and then a discussion of the options with how long each would take and what each costs. Treatment itself runs over months to a couple of years, with a short adjustment appointment every few weeks. Retainers afterwards are part of the treatment, not an optional extra — teeth drift back without them.',
+    benefits: 'Teeth that are easier to clean, which lowers the risk of decay and gum disease\nA bite that spreads the load evenly instead of wearing down particular teeth\nA written plan with a timescale and a cost before you commit to anything\nClear aligners as an option where they suit the movement needed',
+    seo_title: 'Braces & Clear Aligners in Talcher | Samal Dental Care',
+    seo_description: 'Orthodontic treatment with braces or clear aligners at Samal Dental Care, Bikrampur, FCI Township, Talcher. Book an orthodontic assessment.',
+    is_featured: 1,
+  },
+  'aesthetic-dentistry': {
+    long_desc: 'Aesthetic dentistry covers the treatments aimed at how a smile looks rather than at pain or disease: reshaping a chipped or uneven edge, closing a small gap, replacing old dark fillings with tooth-coloured ones, veneers, and whitening. Most plans combine more than one of these.',
+    who_needs: 'A tooth that is chipped, uneven, discoloured or out of line with the rest; old grey fillings that show when you smile; or a small gap you would rather not have. What is realistically achievable depends on the teeth you already have, so it begins with an examination.',
+    what_to_expect: 'It helps to come able to say which tooth bothers you rather than describe the smile in general. The dentist examines your teeth and gums, explains what can and cannot be changed, and sets out the options with costs against each. Anything that permanently alters tooth structure — a veneer, for instance — is explained in full before it is started, because it cannot be undone.',
+    benefits: 'A straight answer about what can be changed, before anything is begun\nTooth-coloured materials matched to the shade of your own teeth\nDecay and gum problems treated first — appearance work belongs on a sound tooth\nCosts set out per option, so you can choose how far to go',
+    seo_title: 'Aesthetic & Cosmetic Dentistry in Talcher | Samal Dental Care',
+    seo_description: 'Aesthetic dentistry at Samal Dental Care, Bikrampur, FCI Township, Talcher — reshaping, veneers, tooth-coloured restorations and whitening.',
+    is_featured: 0,
+  },
   'pediatric-dentistry': {
     long_desc: 'Dental care for children — from a first check-up through to fillings and preventive treatment — at a pace that lets a child get used to the chair before anything needs doing.',
     who_needs: 'Children from around their first birthday onwards. A first visit when nothing is wrong is by far the easiest introduction; after that a check every six months catches decay in milk teeth before it starts to hurt.',
@@ -205,6 +259,28 @@ export async function applyContent({ log = console.log } = {}) {
     copyChanged++;
   }
   if (copyChanged) log(`[content] ${copyChanged} copy field group(s) updated`);
+
+  /* Create the treatments the original site never listed. The existence check
+     deliberately ignores deleted_at: a soft-deleted service still holds the
+     slug, and re-creating one the clinic has removed would both resurrect it
+     and collide with the unique index. */
+  let added = 0;
+  for (const t of ADDED_TREATMENTS) {
+    if (await one('SELECT id FROM services WHERE slug = ?', t.slug)) continue;
+    const category = await servicesRepo.ensureCategory(t.category);
+    const created = await servicesRepo.create({
+      name: t.name, category_id: category.id, short_desc: t.short_desc,
+      duration_min: t.duration_min, bookable: true, is_active: true,
+    });
+    /* servicesRepo.create() derives the slug from the name. If that ever stops
+       matching, the detail content below would silently never attach, so say
+       so loudly rather than shipping an empty treatment page. */
+    if (created.slug !== t.slug) {
+      log(`[content] WARNING: "${t.name}" got slug "${created.slug}", expected "${t.slug}" — its page content will not attach`);
+    }
+    added++;
+  }
+  if (added) log(`[content] ${added} treatment(s) added`);
 
   let treatments = 0;
   for (const [slug, t] of Object.entries(TREATMENTS)) {
