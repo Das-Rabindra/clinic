@@ -65,7 +65,7 @@ const DEFAULT_HOURS = [0, 1, 2, 3, 4, 5, 6].map(weekday => ({
 export async function seed({ log = console.log } = {}) {
   await tx(async () => {
     /* Clinic settings singleton */
-    if (!await settingsRepo.get()) {
+    if (!(await settingsRepo.get())) {
       await run(
         `INSERT INTO clinic_settings (id, name, doctor_name, qualification, registration, institution,
            phone, phone_intl, whatsapp, address_line1, address_line2, area, postal_code, country,
@@ -103,13 +103,13 @@ export async function seed({ log = console.log } = {}) {
     }
 
     /* Weekly hours */
-    if (!await settingsRepo.getHours().length) {
+    if (!(await settingsRepo.getHours()).length) {
       for (const h of DEFAULT_HOURS) await settingsRepo.upsertHours(h.weekday, h);
       log('[seed] clinic hours created (every day 08:00-21:00, break 13:00-15:00)');
     }
 
     /* The clinic's dentist */
-    if (!await doctorsRepo.list().length) {
+    if (!(await doctorsRepo.list()).length) {
       const doc = await doctorsRepo.create({
         name: CLINIC.doctor_name,
         qualification: CLINIC.qualification,
@@ -123,7 +123,7 @@ export async function seed({ log = console.log } = {}) {
     }
 
     /* Services (previously the SERVICES array) */
-    if (!await servicesRepo.list().length) {
+    if (!(await servicesRepo.list()).length) {
       for (const [i, [cat, name, desc, duration]] of SERVICES.entries()) {
         const category = await servicesRepo.ensureCategory(cat);
         await servicesRepo.create({
@@ -135,7 +135,7 @@ export async function seed({ log = console.log } = {}) {
     }
 
     /* FAQs (previously the FAQS array). Placeholders resolve at render time. */
-    if (!await contentRepo.listFaqs().length) {
+    if (!(await contentRepo.listFaqs()).length) {
       for (const [i, [question, answer]] of FAQS.entries()) {
         await contentRepo.createFaq({ question, answer, display_order: i, is_published: true });
       }
@@ -144,12 +144,12 @@ export async function seed({ log = console.log } = {}) {
 
     /* Integration placeholders so the admin Integrations screen lists them */
     for (const p of ['whatsapp', 'google_business', 'smtp']) {
-      if (!await one('SELECT id FROM integrations WHERE provider = ?', p)) {
+      if (!(await one('SELECT id FROM integrations WHERE provider = ?', p))) {
         await run(`INSERT INTO integrations (provider, status) VALUES (?, 'not_configured')`, p);
       }
     }
 
-    if (!await one('SELECT id FROM review_sync_state WHERE id = 1')) {
+    if (!(await one('SELECT id FROM review_sync_state WHERE id = 1'))) {
       await run('INSERT INTO review_sync_state (id, connected) VALUES (1, 0)');
     }
   });

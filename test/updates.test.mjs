@@ -169,3 +169,35 @@ describe('gallery partial update', () => {
     assert.equal(r.body.item.is_published, 1);
   });
 });
+
+describe('seed idempotency', () => {
+  test('re-running the seed does not duplicate clinic data', async () => {
+    // On a serverless platform the seed runs on every cold start, so its
+    // guards must actually hold. They previously read `.length` off an
+    // un-awaited Promise, which is undefined, so every boot re-seeded:
+    // a deployment with five cold starts held five copies of every service.
+    const servicesRepo = await import('../src/repositories/services.repo.js');
+    const doctorsRepo = await import('../src/repositories/doctors.repo.js');
+    const contentRepo = await import('../src/repositories/content.repo.js');
+    const settingsRepo = await import('../src/repositories/settings.repo.js');
+    const { seed } = await import('../src/db/seed.js');
+
+    const before = {
+      services: (await servicesRepo.list()).length,
+      doctors: (await doctorsRepo.list()).length,
+      faqs: (await contentRepo.listFaqs()).length,
+      hours: (await settingsRepo.getHours()).length,
+    };
+    assert.ok(before.services > 0, 'fixture is seeded');
+
+    await seed({ log: () => {} });
+    await seed({ log: () => {} });
+
+    assert.deepEqual({
+      services: (await servicesRepo.list()).length,
+      doctors: (await doctorsRepo.list()).length,
+      faqs: (await contentRepo.listFaqs()).length,
+      hours: (await settingsRepo.getHours()).length,
+    }, before, 'a second and third seed must add nothing');
+  });
+});
