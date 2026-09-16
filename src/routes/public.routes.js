@@ -114,6 +114,15 @@ async function baseLocals({ navBase = '/' } = {}) {
     shortAddress: [settings.area, settings.city].filter(Boolean).join(', ')
       || [settings.address_line1, settings.city].filter(Boolean).join(', ')
       || clinic.address,
+    /*
+     * A deliberately short version for the header, where the brand, a phone
+     * number and two controls already compete for a phone's width. The full
+     * shortAddress ("Bikrampur, FCI Township, Talcher") is nearly twice as long
+     * as the doctor's name it replaced and, being nowrap, pushed the header
+     * 53px wider than the viewport on a 414px phone.
+     */
+    brandLocation: [String(settings.area || '').split(',')[0].trim(), settings.city]
+      .filter(Boolean).join(' · ') || settings.city || '',
     initials: (settings.doctor_name || settings.name || '')
       .split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'SD',
     jsonForScript,

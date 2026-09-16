@@ -295,3 +295,26 @@ describe('about section', () => {
     assert.match(css.body, /\.cred-list\b/, 'the class the template uses must be styled');
   });
 });
+
+describe('header on a phone', () => {
+  test('keeps the brand line short enough not to widen the page', async () => {
+    const r = await srv.call('/');
+    // The full address is nearly twice the length of the doctor's name it
+    // replaced and the sub-line is nowrap, so putting it here pushed the header
+    // 53px past the viewport on a 414px phone — wide phones broke while narrow
+    // ones passed, because below 400px the header CTA is hidden and it fit.
+    const m = r.body.match(/class="brand-sub">([^<]*)</);
+    assert.ok(m, 'the header carries a location line');
+    const line = m[1].trim();
+    assert.ok(line.length <= 24, `brand line is ${line.length} chars: "${line}"`);
+    assert.ok(line.includes('Talcher'), 'the town is the part worth keeping');
+    // The full address still belongs further down the page.
+    assert.ok(r.body.includes('FCI Township'), 'the full address stays in the body');
+  });
+
+  test('lets the brand block shrink instead of pushing the header wider', async () => {
+    const css = await srv.call('/css/site.css');
+    assert.match(css.body, /\.brand-text\{[^}]*min-width:0/,
+      'a flex item defaults to min-width:auto, which is what lets nowrap text widen the header');
+  });
+});
