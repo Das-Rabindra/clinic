@@ -31,13 +31,22 @@
       </button>
     </div>
   </div>
-  <nav class="mobile-panel" id="mobilePanel" aria-label="Mobile">
-    <a href="<%= nav %>#about">About</a>
-    <a href="/services">Treatments</a>
-    <a href="<%= nav %>#gallery">Clinic</a>
-    <a href="<%= nav %>#reviews">Testimonials</a>
-    <a href="<%= nav %>#faq">FAQ</a>
-    <a href="<%= nav %>#location">Contact &amp; directions</a>
-    <a class="btn btn-primary" href="<%= nav %>#appointment">Book an Appointment</a>
-  </nav>
 </header>
+
+<%#
+  The panel sits outside <header> on purpose. The header carries
+  backdrop-filter, and a filter makes an element the containing block for its
+  position:fixed descendants — so nested here, the panel's inset resolved
+  against the 70px header instead of the viewport and opened as a 40px sliver
+  with the page showing through beneath it. As a sibling it fills the screen.
+  aria-controls still reaches it by id.
+%>
+<nav class="mobile-panel" id="mobilePanel" aria-label="Mobile">
+  <a href="<%= nav %>#about">About</a>
+  <a href="/services">Treatments</a>
+  <a href="<%= nav %>#gallery">Clinic</a>
+  <a href="<%= nav %>#reviews">Testimonials</a>
+  <a href="<%= nav %>#faq">FAQ</a>
+  <a href="<%= nav %>#location">Contact &amp; directions</a>
+  <a class="btn btn-primary" href="<%= nav %>#appointment">Book an Appointment</a>
+</nav>

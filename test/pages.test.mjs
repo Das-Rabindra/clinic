@@ -318,3 +318,30 @@ describe('header on a phone', () => {
       'a flex item defaults to min-width:auto, which is what lets nowrap text widen the header');
   });
 });
+
+describe('mobile menu', () => {
+  test('the panel is not nested inside the header', async () => {
+    const r = await srv.call('/');
+    /*
+     * The header carries backdrop-filter, and a filter makes an element the
+     * containing block for its position:fixed descendants. Nested inside it the
+     * panel's inset resolved against the 70px header rather than the viewport,
+     * so it opened as a 40px sliver with the page showing through — while still
+     * reporting display:block and aria-expanded="true", which is why a check
+     * for "does it open" passed straight over it.
+     */
+    const headerEnd = r.body.indexOf('</header>');
+    const panelStart = r.body.indexOf('id="mobilePanel"');
+    assert.ok(headerEnd > -1 && panelStart > -1);
+    assert.ok(panelStart > headerEnd,
+      'the panel must be a sibling of <header>, not a descendant of it');
+  });
+
+  test('every page carries the panel, so the menu works away from home', async () => {
+    for (const path of ['/', '/services', '/services/dentures', '/privacy']) {
+      const r = await srv.call(path);
+      assert.ok(r.body.includes('id="mobilePanel"'), path);
+      assert.ok(r.body.indexOf('id="mobilePanel"') > r.body.indexOf('</header>'), path);
+    }
+  });
+});
