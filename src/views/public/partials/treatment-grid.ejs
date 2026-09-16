@@ -10,9 +10,11 @@
   <article class="tx-card">
     <div class="tx-media<%= s.image_url ? ' has-photo' : '' %>">
       <% if (s.image_url) { %>
-        <img src="<%= s.thumb_url || s.image_url %>"
+        <%# image_url, not the thumb: the thumb is a square crop and this frame
+            is 16:9, so the sides would be cut off. %>
+        <img src="<%= s.image_url %>"
              alt="<%= s.image_alt || (s.name + ' at ' + clinic.name) %>"
-             width="<%= s.image_width || 640 %>" height="<%= s.image_height || 420 %>"
+             width="<%= s.image_width || 1280 %>" height="<%= s.image_height || 720 %>"
              loading="<%= i < 3 ? 'eager' : 'lazy' %>" decoding="async">
       <% } else { %>
         <%- include('treatment-art', { slug: s.slug, name: s.name }) %>

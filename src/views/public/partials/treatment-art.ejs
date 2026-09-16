@@ -2,155 +2,250 @@
   Card artwork for a treatment that has no photograph yet.
 
   Real clinic photography always wins — the card only falls back to this when
-  image_media_id is unset. Rather than a grey placeholder box, each treatment
-  gets its own monoline plate: one shared tooth silhouette with a different
-  element per treatment, so the set reads as a designed family and still tells
-  the patient what the card is about.
+  image_media_id is unset. Rather than flat line art, which reads as a sketch
+  rather than a finished product, each treatment is rendered with volume:
+  gradient-shaded enamel, a specular highlight, a soft contact shadow, and
+  metallic instrumentation.
+
+  Everything is pure SVG gradients — no filters. feGaussianBlur on fourteen
+  cards costs real paint time on a phone, and layered gradients give the same
+  softness for nothing.
 
   Geometry: the tooth occupies x 20–84, y 18–98 in its own group, which the
-  translate below centres in the 120×120 box. Every per-treatment mark is drawn
-  in that same space — crown 18–50, roots 60–98, centre line x = 52.
+  translate below centres. Per-treatment marks are drawn in that same space —
+  crown 18–50, roots 60–98, centre line x = 52.
 
-  Thin strokes and the existing pine/sage/honey palette keep it alongside the
-  site's smile-arc motif rather than competing with it. Nothing is licensed
-  from anywhere: the paths are drawn for this site.
+  Gradient ids are suffixed with the slug because fourteen of these appear on
+  one page and duplicate ids would cross-reference each other.
 
   Locals: slug, name.
 %>
 <% var TOOTH = 'M60 20c-9-9-24-10-33-2-9 7-11 21-7 34 3 10 5 17 7 28 1 9 3 18 10 18 6 0 7-10 8-18 1-7 3-12 6-12h2c3 0 5 5 6 12 1 8 2 18 8 18 7 0 9-9 10-18 2-11 4-18 7-28 4-13 2-27-7-34-9-8-24-7-33 2z'; %>
-<svg class="tx-art" viewBox="0 0 120 120" role="img" aria-label="<%= name %>" focusable="false">
+<% var id = function (n) { return n + '-' + slug; }; %>
+<svg class="tx-art" viewBox="0 0 120 132" role="img" aria-label="<%= name %>" focusable="false">
   <defs>
-    <clipPath id="txclip-<%= slug %>"><path d="<%= TOOTH %>"/></clipPath>
+    <clipPath id="<%= id('clip') %>"><path d="<%= TOOTH %>" transform="translate(8 2)"/></clipPath>
+
+    <%# Enamel: cool at the top where the light falls, warming into the body. %>
+    <linearGradient id="<%= id('enamel') %>" x1="0.25" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.5" stop-color="#FCFBF8"/>
+      <stop offset="1" stop-color="#EAE6DC"/>
+    </linearGradient>
+
+    <%# The turned-away side, and the ambient shadow gathering in the roots. %>
+    <linearGradient id="<%= id('side') %>" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1F3D3A" stop-opacity="0"/>
+      <stop offset="1" stop-color="#1F3D3A" stop-opacity="0.13"/>
+    </linearGradient>
+    <linearGradient id="<%= id('occl') %>" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1F3D3A" stop-opacity="0"/>
+      <stop offset="1" stop-color="#1F3D3A" stop-opacity="0.11"/>
+    </linearGradient>
+
+    <%# Specular highlight on the crown. %>
+    <linearGradient id="<%= id('gloss') %>" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <%# Polished metal, for instruments and implant hardware. %>
+    <linearGradient id="<%= id('metal') %>" x1="0" y1="0" x2="1" y2="0.3">
+      <stop offset="0" stop-color="#A87F35"/>
+      <stop offset="0.35" stop-color="#EBCC92"/>
+      <stop offset="0.6" stop-color="#C79A4B"/>
+      <stop offset="1" stop-color="#9A742F"/>
+    </linearGradient>
+    <linearGradient id="<%= id('steel') %>" x1="0" y1="0" x2="1" y2="0.4">
+      <stop offset="0" stop-color="#8FA3A0"/>
+      <stop offset="0.35" stop-color="#E4EAE8"/>
+      <stop offset="0.7" stop-color="#A9BBB7"/>
+      <stop offset="1" stop-color="#778C89"/>
+    </linearGradient>
+
+    <%# Soft gum tissue. %>
+    <linearGradient id="<%= id('gum') %>" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D3A091"/>
+      <stop offset="1" stop-color="#B07B6B"/>
+    </linearGradient>
+
+    <%# Ground shadow and the light pooled behind the subject. %>
+    <radialGradient id="<%= id('ground') %>" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#16302D" stop-opacity="0.26"/>
+      <stop offset="0.6" stop-color="#16302D" stop-opacity="0.09"/>
+      <stop offset="1" stop-color="#16302D" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="<%= id('halo') %>" cx="0.5" cy="0.45" r="0.55">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
   </defs>
 
-  <%# Ground: arcs echoing the smile motif used across the site. %>
-  <path class="tx-ground" d="M10 100 Q60 122 110 100"/>
-  <path class="tx-ground tx-ground-2" d="M16 26 Q60 4 104 26"/>
+  <%# Light pooled behind the subject, then the contact shadow it casts. %>
+  <ellipse cx="60" cy="60" rx="52" ry="48" fill="url(#<%= id('halo') %>)"/>
+  <ellipse cx="60" cy="112" rx="34" ry="7" fill="url(#<%= id('ground') %>)"/>
 
-  <g transform="translate(8, 2)">
-    <%# Every treatment decorates the shared silhouette except dentures, which
-        is about a whole arch — a single tooth cannot carry that, so it draws
-        its own subject instead. %>
+  <g transform="translate(8 2)">
+    <%# Dentures and wisdom tooth draw their own subject: an arch cannot be
+        carried by one tooth, and an impacted tooth is defined by its angle. %>
     <% if (slug !== 'dentures' && slug !== 'wisdom-tooth') { %>
-    <path class="tx-tooth" d="<%= TOOTH %>"/>
+      <path d="<%= TOOTH %>" fill="url(#<%= id('enamel') %>)"/>
+      <g clip-path="url(#<%= id('clip') %>)" transform="translate(-8 -2)">
+        <rect x="52" y="10" width="48" height="110" fill="url(#<%= id('side') %>)"/>
+        <rect x="10" y="60" width="100" height="60" fill="url(#<%= id('occl') %>)"/>
+      </g>
+      <path d="M33 26 Q40 18 48 20 Q44 28 41 40 Q36 50 33 44 Q30 34 33 26z" fill="url(#<%= id('gloss') %>)"/>
     <% } %>
 
     <% if (slug === 'root-canal-treatment') { %>
-      <%# The canals themselves, traced from the pulp chamber into both roots. %>
-      <g clip-path="url(#txclip-<%= slug %>)">
-        <path class="tx-accent" d="M48 42 Q42 68 38 94"/>
-        <path class="tx-accent" d="M56 42 Q62 68 66 94"/>
+      <%# Canals traced from the pulp chamber down into both roots. %>
+      <g clip-path="url(#<%= id('clip') %>)" transform="translate(-8 -2)">
+        <path d="M56 44 Q50 70 46 100 L54 100 Q56 70 60 46z" fill="url(#<%= id('metal') %>)" opacity="0.9"/>
+        <path d="M64 44 Q70 70 74 100 L66 100 Q64 70 60 46z" fill="url(#<%= id('metal') %>)" opacity="0.9"/>
       </g>
-      <ellipse class="tx-accent-fill" cx="52" cy="36" rx="8" ry="6"/>
+      <ellipse cx="52" cy="36" rx="9" ry="7" fill="url(#<%= id('metal') %>)"/>
+      <ellipse cx="50" cy="34" rx="3.4" ry="2.4" fill="#FFF" opacity="0.5"/>
 
     <% } else if (slug === 'dental-fillings') { %>
-      <%# A cavity, closed by the restoration. %>
-      <g clip-path="url(#txclip-<%= slug %>)">
-        <ellipse class="tx-accent-fill" cx="43" cy="37" rx="10" ry="8"/>
+      <%# A prepared cavity, and the composite dome closing it. %>
+      <g clip-path="url(#<%= id('clip') %>)" transform="translate(-8 -2)">
+        <ellipse cx="51" cy="39" rx="12" ry="10" fill="#16302D" opacity="0.32"/>
+        <ellipse cx="51" cy="37.5" rx="10" ry="8" fill="url(#<%= id('metal') %>)"/>
+        <ellipse cx="48" cy="35" rx="3.6" ry="2.6" fill="#FFF" opacity="0.55"/>
       </g>
-      <path class="tx-mark" d="M70 30 L86 14"/>
-      <path class="tx-accent" d="M83 10 l8 8 -5 5 -8-8z"/>
 
     <% } else if (slug === 'dental-cleaning') { %>
-      <%# Scaler tip at the gum line, and the polish it leaves behind. %>
-      <path class="tx-mark" d="M74 34 L88 20"/>
-      <path class="tx-accent" d="M85 15 l9 9 -6 6 -9-9z"/>
-      <g class="tx-spark">
-        <path class="tx-accent" d="M36 34l1.8 4.8L42.6 40.6l-4.8 1.8L36 47.2l-1.8-4.8L29.4 40.6l4.8-1.8z"/>
-        <path class="tx-accent" d="M50 22l1.3 3.4L54.7 26.7l-3.4 1.3L50 31.4l-1.3-3.4L45.3 26.7l3.4-1.3z"/>
+      <%# Scaler tip at the gum line, and the polish it leaves. %>
+      <path d="M72 36 L88 20 L94 26 L78 42z" fill="url(#<%= id('steel') %>)"/>
+      <path d="M72 36 L88 20 L90 22 L74 38z" fill="#FFF" opacity="0.45"/>
+      <g fill="url(#<%= id('metal') %>)">
+        <path d="M34 32l2.2 5.6L41.8 39.8l-5.6 2.2L34 47.6l-2.2-5.6L26.2 39.8l5.6-2.2z"/>
+        <path d="M48 20l1.5 3.8L53.3 25.3l-3.8 1.5L48 30.6l-1.5-3.8L42.7 25.3l3.8-1.5z"/>
       </g>
 
     <% } else if (slug === 'crowns-bridges') { %>
-      <%# A crown seated over the prepared tooth. %>
-      <path class="tx-accent" d="M24 44 L28 24 L38 34 L52 20 L66 34 L76 24 L80 44 Z"/>
-      <path class="tx-accent" d="M24 44 H80"/>
+      <%# A ceramic crown seated over the prepared tooth. %>
+      <path d="M24 46 L28 24 L38 34 L52 19 L66 34 L76 24 L80 46z" fill="url(#<%= id('metal') %>)"/>
+      <path d="M24 46 L28 24 L38 34 L52 19 L52 46z" fill="#FFF" opacity="0.28"/>
+      <rect x="24" y="44" width="56" height="5" rx="2.5" fill="#9A742F" opacity="0.8"/>
 
     <% } else if (slug === 'tooth-extraction') { %>
-      <%# Forceps either side, and the direction of travel: up and out. %>
-      <path class="tx-mark" d="M30 16 Q34 30 40 36"/>
-      <path class="tx-mark" d="M74 16 Q70 30 64 36"/>
-      <path class="tx-accent" d="M52 68 V40 M45 47 l7-7 7 7"/>
+      <%# Forceps closing either side, and the direction of travel. %>
+      <path d="M26 12 Q32 30 40 38 L36 42 Q26 32 22 14z" fill="url(#<%= id('steel') %>)"/>
+      <path d="M78 12 Q72 30 64 38 L68 42 Q78 32 82 14z" fill="url(#<%= id('steel') %>)"/>
+      <path d="M48 70 L48 46 L41 46 L52 32 L63 46 L56 46 L56 70z" fill="url(#<%= id('metal') %>)"/>
 
     <% } else if (slug === 'teeth-whitening') { %>
-      <%# A shade scale across the crown, lightening left to right. %>
-      <g clip-path="url(#txclip-<%= slug %>)">
-        <rect class="tx-shade tx-shade-1" x="16" y="12" width="23" height="92"/>
-        <rect class="tx-shade tx-shade-2" x="39" y="12" width="23" height="92"/>
-        <rect class="tx-shade tx-shade-3" x="62" y="12" width="26" height="92"/>
+      <%# The shade lifting across the tooth, dark on the left to bright right. %>
+      <g clip-path="url(#<%= id('clip') %>)" transform="translate(-8 -2)">
+        <linearGradient id="<%= id('shade') %>" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#C79A4B" stop-opacity="0.55"/>
+          <stop offset="0.5" stop-color="#C79A4B" stop-opacity="0.22"/>
+          <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.5"/>
+        </linearGradient>
+        <rect x="20" y="10" width="84" height="110" fill="url(#<%= id('shade') %>)"/>
       </g>
-      <path class="tx-accent" d="M88 16l2 5.4L95.4 23.4l-5.4 2L88 30.8l-2-5.4L80.6 23.4l5.4-2z"/>
+      <g fill="url(#<%= id('metal') %>)">
+        <path d="M84 18l2.4 6.2L92.6 26.6l-6.2 2.4L84 35.2l-2.4-6.2L75.4 26.6l6.2-2.4z"/>
+        <path d="M72 46l1.5 3.9L77.4 51.4l-3.9 1.5L72 56.8l-1.5-3.9L66.6 51.4l3.9-1.5z"/>
+      </g>
 
     <% } else if (slug === 'dental-implants') { %>
-      <%# The fixture standing where the root used to be, with the gum line
-          across it. Drawn over the silhouette rather than clipped inside it:
-          the roots fork apart exactly where the post belongs, so clipping cut
-          the post in half down the middle.  %>
-      <path class="tx-mark" d="M18 58 Q52 68 86 58"/>
-      <path class="tx-post" d="M40 48 H64 V58 H40 Z"/>
-      <path class="tx-post" d="M43 58 H61 L57 98 H47 Z"/>
-      <path class="tx-accent" d="M44 66 H60 M45 75 H59 M46 84 H58 M47 92 H57"/>
+      <%# The fixture standing where the root was, with the gum line across it.
+          Drawn over the silhouette rather than clipped into it: the roots fork
+          apart exactly where the post belongs. %>
+      <path d="M12 56 Q52 66 92 56 L92 66 Q52 76 12 66z" fill="url(#<%= id('gum') %>)" opacity="0.85"/>
+      <path d="M41 44 H63 V56 H41z" fill="url(#<%= id('metal') %>)"/>
+      <path d="M43 56 H61 L57 100 H47z" fill="url(#<%= id('metal') %>)"/>
+      <g fill="#7A5B22" opacity="0.65">
+        <path d="M44 63 H60 L59.6 66 H44.4z"/><path d="M45 72 H59 L58.6 75 H45.4z"/>
+        <path d="M46 81 H58 L57.6 84 H46.4z"/><path d="M47 90 H57 L56.6 93 H47.4z"/>
+      </g>
+      <path d="M44 56 H48 L46 100 H44z" fill="#FFF" opacity="0.32"/>
 
     <% } else if (slug === 'braces-aligners') { %>
-      <%# The archwire and brackets running across the crown. %>
-      <g clip-path="url(#txclip-<%= slug %>)">
-        <path class="tx-accent" d="M14 40 Q52 34 90 40"/>
-        <rect class="tx-accent-fill" x="45" y="33" width="14" height="13" rx="3"/>
+      <%# Archwire and brackets across the crown. %>
+      <g clip-path="url(#<%= id('clip') %>)" transform="translate(-8 -2)">
+        <path d="M14 42 Q60 34 106 42 L106 46 Q60 38 14 46z" fill="url(#<%= id('steel') %>)"/>
       </g>
-      <rect class="tx-accent" x="19" y="31" width="13" height="13" rx="3"/>
-      <rect class="tx-accent" x="72" y="31" width="13" height="13" rx="3"/>
+      <g fill="url(#<%= id('metal') %>)">
+        <rect x="19" y="32" width="14" height="14" rx="3.5"/>
+        <rect x="45" y="31" width="15" height="15" rx="3.5"/>
+        <rect x="71" y="32" width="14" height="14" rx="3.5"/>
+      </g>
+      <g fill="#FFF" opacity="0.4">
+        <rect x="21" y="34" width="5" height="5" rx="2"/>
+        <rect x="47" y="33" width="5" height="5" rx="2"/>
+        <rect x="73" y="34" width="5" height="5" rx="2"/>
+      </g>
 
     <% } else if (slug === 'aesthetic-dentistry') { %>
-      <%# A veneer shell lifted off the face of the tooth. Deliberately not the
-          shade bands used for whitening — these two sit next to each other in
-          the Cosmetic category and must not read as the same card. %>
-      <path class="tx-veneer" d="M36 24 Q52 17 68 24 L68 52 Q52 60 36 52 Z"/>
-      <path class="tx-gloss" d="M44 27 L49 27 L41 50 L36 50 Z"/>
-      <path class="tx-accent" d="M86 20l2.2 5.8L94 28l-5.8 2.2L86 36l-2.2-5.8L78 28l5.8-2.2z"/>
-      <path class="tx-accent" d="M76 46l1.4 3.6L81 51l-3.6 1.4L76 56l-1.4-3.6L71 51l3.6-1.4z"/>
+      <%# A veneer lifted onto the face of the tooth. Deliberately not the shade
+          wash used for whitening — the two sit together under Cosmetic. %>
+      <path d="M34 24 Q52 15 70 24 Q72 39 69 55 Q52 64 35 55 Q32 39 34 24z"
+            fill="#FFFFFF" fill-opacity="0.72"/>
+      <path d="M34 24 Q52 15 70 24 Q72 39 69 55 Q52 64 35 55 Q32 39 34 24z"
+            fill="none" stroke="url(#<%= id('metal') %>)" stroke-width="2" stroke-opacity="0.9"/>
+      <path d="M41 26 Q47 24 50 26 L41 57 Q36 56 35 53z" fill="#FFF" opacity="0.85"/>
+      <path d="M84 18l2.4 6.2L92.6 26.6l-6.2 2.4L84 35.2l-2.4-6.2L75.4 26.6l6.2-2.4z" fill="url(#<%= id('metal') %>)"/>
 
     <% } else if (slug === 'dentures') { %>
-      <%# A horseshoe plate carrying a full arch of teeth. %>
-      <path class="tx-plate" d="M16 30 Q16 88 52 94 Q88 88 88 30 L70 32 Q70 72 52 77 Q34 72 34 32 Z"/>
-      <g class="tx-denture-teeth">
-        <circle cx="25" cy="38" r="6"/><circle cx="27" cy="54" r="6"/>
-        <circle cx="34" cy="70" r="6"/><circle cx="52" cy="80" r="6"/>
-        <circle cx="70" cy="70" r="6"/><circle cx="77" cy="54" r="6"/>
-        <circle cx="79" cy="38" r="6"/>
+      <%# A horseshoe plate carrying a full arch. %>
+      <path d="M14 26 Q14 88 52 96 Q90 88 90 26 L72 28 Q72 72 52 78 Q32 72 32 28z" fill="url(#<%= id('gum') %>)"/>
+      <path d="M14 26 Q14 88 52 96 L52 78 Q32 72 32 28z" fill="#FFF" opacity="0.16"/>
+      <g fill="url(#<%= id('enamel') %>)" stroke="#B07B6B" stroke-width="1.2" stroke-opacity="0.5">
+        <ellipse cx="23" cy="36" rx="7" ry="6"/><ellipse cx="25" cy="53" rx="7" ry="6"/>
+        <ellipse cx="33" cy="70" rx="7" ry="6"/><ellipse cx="52" cy="81" rx="7.5" ry="6"/>
+        <ellipse cx="71" cy="70" rx="7" ry="6"/><ellipse cx="79" cy="53" rx="7" ry="6"/>
+        <ellipse cx="81" cy="36" rx="7" ry="6"/>
       </g>
 
     <% } else if (slug === 'wisdom-tooth') { %>
-      <%# A single tooth coming through at an angle with the gum still half over
-          it — the flap that keeps getting sore. Two teeth at this size only
-          collided; one tilted tooth says the same thing far more clearly.
-
-          Transforms compose right-to-left: the geometry is centred on the
-          origin first, then scaled, rotated, and finally positioned. %>
-      <g transform="translate(54 56) rotate(24) scale(0.92) translate(-52 -58)">
-        <path class="tx-tooth" d="<%= TOOTH %>"/>
+      <%# One tooth coming through at an angle, half under the gum flap. %>
+      <g transform="translate(54 54) rotate(24) scale(0.92) translate(-52 -58)">
+        <path d="<%= TOOTH %>" fill="url(#<%= id('enamel') %>)"/>
+        <g clip-path="url(#<%= id('clip') %>)" transform="translate(-8 -2)">
+          <rect x="52" y="10" width="48" height="110" fill="url(#<%= id('side') %>)"/>
+        </g>
+        <path d="M33 26 Q40 18 48 20 Q44 28 41 40 Q36 50 33 44 Q30 34 33 26z" fill="url(#<%= id('gloss') %>)"/>
       </g>
-      <path class="tx-gum" d="M8 56 Q40 46 76 60 Q94 67 100 78 L96 90 Q84 74 68 68 Q36 56 10 68 Z"/>
-      <path class="tx-accent" d="M84 34l1.8 4.8L90 40.6l-4.8 1.8L84 47l-1.8-4.6L78 40.6l4.2-1.8z"/>
+      <path d="M6 54 Q40 44 76 58 Q94 65 100 78 L94 92 Q84 72 68 66 Q36 54 8 68z" fill="url(#<%= id('gum') %>)"/>
+      <path d="M6 54 Q40 44 76 58 Q94 65 100 78 L98 82 Q88 68 72 62 Q38 50 7 62z" fill="#FFF" opacity="0.2"/>
 
     <% } else if (slug === 'gum-treatment') { %>
-      <%# The gum line, inflamed and receded on one side, with a probe reading
-          the depth of the pocket. %>
-      <path class="tx-gum" d="M10 58 Q30 70 52 62 Q74 54 94 62 L94 76 Q74 68 52 76 Q30 84 10 72 Z"/>
-      <path class="tx-mark" d="M30 26 L30 72"/>
-      <path class="tx-accent" d="M25 36 h10 M25 45 h10 M25 54 h10"/>
+      <%# The gum line, receded on one side, with a probe reading the pocket. %>
+      <path d="M8 56 Q30 68 52 60 Q74 52 96 60 L96 78 Q74 70 52 78 Q30 86 8 74z" fill="url(#<%= id('gum') %>)"/>
+      <path d="M8 56 Q30 68 52 60 Q74 52 96 60 L96 64 Q74 56 52 64 Q30 72 8 60z" fill="#FFF" opacity="0.22"/>
+      <path d="M27 20 H33 L32 70 H28z" fill="url(#<%= id('steel') %>)"/>
+      <g fill="#C79A4B">
+        <rect x="24" y="36" width="12" height="2.4" rx="1.2"/>
+        <rect x="24" y="45" width="12" height="2.4" rx="1.2"/>
+        <rect x="24" y="54" width="12" height="2.4" rx="1.2"/>
+      </g>
 
     <% } else if (slug === 'pediatric-dentistry') { %>
-      <%# A smaller tooth beside the adult one. %>
-      <g transform="translate(70, 58) scale(0.42)">
-        <path class="tx-tooth" d="<%= TOOTH %>"/>
+      <%# A child's tooth beside the adult one. %>
+      <g transform="translate(84 76) scale(0.44) translate(-52 -58)">
+        <path d="<%= TOOTH %>" fill="url(#<%= id('enamel') %>)"/>
+        <g clip-path="url(#<%= id('clip') %>)" transform="translate(-8 -2)">
+          <rect x="52" y="10" width="48" height="110" fill="url(#<%= id('side') %>)"/>
+        </g>
+        <path d="M33 26 Q40 18 48 20 Q44 28 41 40 Q36 50 33 44 Q30 34 33 26z" fill="url(#<%= id('gloss') %>)"/>
+        <path d="<%= TOOTH %>" fill="none" stroke="#1F3D3A" stroke-opacity="0.3" stroke-width="3.4" stroke-linejoin="round"/>
       </g>
-      <path class="tx-ground tx-ground-2" d="M26 108 Q60 120 96 108"/>
 
     <% } else { %>
-      <%# General dentistry, and any treatment added later: the examination
-          mirror, which reads as "a check-up" without claiming anything
-          specific about the procedure. %>
-      <path class="tx-mark" d="M72 34 L84 22"/>
-      <circle class="tx-accent" cx="90" cy="16" r="9"/>
+      <%# General dentistry, and anything added later: the examination mirror,
+          which reads as "a check-up" without claiming a specific procedure. %>
+      <path d="M70 36 L84 22 L88 26 L74 40z" fill="url(#<%= id('steel') %>)"/>
+      <circle cx="92" cy="17" r="10" fill="url(#<%= id('steel') %>)"/>
+      <circle cx="92" cy="17" r="7" fill="#F2F6F5"/>
+      <path d="M88 13 a7 7 0 0 1 7 -2.6 a7 7 0 0 0 -8.6 5.2z" fill="#FFF" opacity="0.9"/>
+    <% } %>
+
+    <%# A thin contour last, for definition against a light card. %>
+    <% if (slug !== 'dentures' && slug !== 'wisdom-tooth') { %>
+      <path d="<%= TOOTH %>" fill="none" stroke="#1F3D3A" stroke-opacity="0.28" stroke-width="1.6" stroke-linejoin="round"/>
     <% } %>
   </g>
 </svg>
