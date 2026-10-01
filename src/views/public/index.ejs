@@ -312,7 +312,9 @@
           <p>This section shows genuine feedback only &mdash; reviews synced from the clinic&rsquo;s
           Google Business Profile, and testimonials patients have shared directly and agreed to
           have published. Nothing here is written by the clinic.</p>
-          <% if (clinic.reviews_url) { %>
+          <%# No button here when the scan panel below carries the same action:
+              two "leave a review" CTAs a few lines apart is just noise. %>
+          <% if (clinic.reviews_url && !reviewQr) { %>
             <div style="margin-top:20px;"><a class="btn btn-outline-dark btn-sm" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener">Leave a review on Google</a></div>
           <% } %>
         </div>
