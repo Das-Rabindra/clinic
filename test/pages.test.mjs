@@ -437,3 +437,64 @@ describe('call back about a treatment', () => {
     assert.equal((await repo.findEnquiry(r.body.id)).service_id, null);
   });
 });
+
+describe('FAQ accordion', () => {
+  test('every published question ships an answer with real content', async () => {
+    const repo = await import('../src/repositories/content.repo.js');
+    const faqs = await repo.listFaqs({ publishedOnly: true });
+    assert.ok(faqs.length >= 10);
+    for (const f of faqs) {
+      assert.ok(f.answer && f.answer.trim().length > 40, `"${f.question}" has a thin answer`);
+      assert.ok(!/\{\{\w+\}\}/.test(
+        f.answer.replaceAll('{{hours}}', '').replaceAll('{{phone}}', '')
+          .replaceAll('{{phone2}}', '').replaceAll('{{address}}', '')
+          .replaceAll('{{clinic}}', '').replaceAll('{{whatsapp}}', '')),
+        `"${f.question}" uses an unknown placeholder`);
+    }
+  });
+
+  test('renders every answer into the page, not just the questions', async () => {
+    const r = await srv.call('/');
+    const repo = await import('../src/repositories/content.repo.js');
+    for (const f of await repo.listFaqs({ publishedOnly: true })) {
+      // A distinctive fragment, with placeholders and entities avoided.
+      /*
+       * Compare on words only: the page HTML-escapes quotes and dashes, so a
+       * literal match fails on punctuation the answer never lost. And probe
+       * the longest run that contains no placeholder — a probe spanning
+       * {{hours}} can never match, because the placeholder has been replaced
+       * by the time it reaches the page.
+       */
+      const words = (t) => t.replace(/[^A-Za-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean);
+      const run = f.answer.split(/\{\{\w+\}\}/)
+        .reduce((a, b) => (words(b).length > words(a).length ? b : a), '');
+      const probe = words(run).slice(0, 6).join(' ');
+      const page = words(r.body).join(' ');
+      assert.ok(page.includes(probe), `answer missing from the page: "${f.question}"`);
+    }
+  });
+
+  test('the answer panel can actually be opened', async () => {
+    /*
+     * `.faq-a` collapses to max-height:0 and nothing in the stylesheet ever
+     * expanded it, while the padding was written against `.faq-a-inner` — a
+     * class the markup has never contained. Clicking a question did nothing.
+     */
+    const css = (await srv.call('/css/site.css')).body;
+    assert.match(css, /\.js \.faq-a\{[^}]*max-height:0/,
+      'collapsed state must be gated on JS being present');
+    assert.match(css, /\.faq-a > p\{/,
+      'the answer padding must target the element the markup actually renders');
+    // Only a selector counts — the comment above the rule names the old class.
+    assert.ok(!/\.faq-a-inner\s*[{,]/.test(css),
+      'no rules left pointing at a class that is never rendered');
+
+    const js = (await srv.call('/js/site.js')).body;
+    assert.match(js, /maxHeight = panel\.scrollHeight/,
+      'opening must set the measured height so no answer is clipped');
+
+    const page = (await srv.call('/')).body;
+    assert.match(page, /classList\.add\('js'\)/,
+      'the js class must be set before paint, or the answers flash open on load');
+  });
+});

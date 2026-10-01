@@ -314,8 +314,21 @@
   .faq-q .plus::before{ width:14px; height:2px; top:10px; left:4px; }
   .faq-q .plus::after{ width:2px; height:14px; top:4px; left:10px; transition:transform var(--dur-s) var(--ease); }
   .faq-item.open .plus::after{ transform:rotate(90deg); }
-  .faq-a{ max-height:0; overflow:hidden; transition:max-height var(--dur-m) var(--ease); }
-  .faq-a-inner{ padding:0 4px 22px; font-size:15px; color:#5B665A; max-width:620px; }
+  /*
+   * The answer collapses to max-height:0 and is expanded by the script, which
+   * sets the measured height so the transition is exact whatever the answer's
+   * length. There was previously no rule that opened it at all, and the
+   * padding was written against `.faq-a-inner` — a class the markup has never
+   * contained — so clicking a question did nothing and the answer carried no
+   * styling even when forced open.
+   */
+  .faq-a{ overflow:hidden; transition:max-height var(--dur-m) var(--ease); }
+  /* Collapsed only where a script exists to open it again: with JavaScript off
+     the answers stay visible instead of being hidden with no way back. */
+  .js .faq-a{ max-height:0; }
+  .faq-a > p{ padding:0 4px 24px; font-size:15.5px; line-height:1.78; color:#5B665A; max-width:68ch; }
+  .faq-q{ cursor:pointer; }
+  .faq-q:hover{ color:var(--pine); }
 
   /* ============ APPOINTMENT ============ */
   .appt-wrap{ display:grid; grid-template-columns:0.85fr 1.15fr; gap:56px; }

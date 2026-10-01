@@ -30,6 +30,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/site.css">
+<%# Marks the document as scripted before first paint, so the FAQ answers can
+    be collapsed only where a script exists to reopen them. Without this the
+    accordion would hide its own content from anyone browsing without
+    JavaScript, and setting the class from site.js (deferred) would flash the
+    answers open on every load. %>
+<script>document.documentElement.classList.add('js');</script>
 <% (typeof schemas !== 'undefined' ? schemas : []).filter(Boolean).forEach(function (s) { %>
 <script type="application/ld+json"><%- jsonForScript(s) %></script>
 <% }) %>

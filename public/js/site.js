@@ -33,21 +33,47 @@
     });
   }
 
-  /* ---------- FAQ accordion ---------- */
-  document.querySelectorAll('.faq-q').forEach(function (btn) {
+  /* ---------- FAQ accordion ----------
+     The panel is collapsed by CSS to max-height:0; opening it sets the
+     measured height, so the transition is exact for an answer of any length
+     and nothing is clipped. A fixed max-height would either cut long answers
+     off or make short ones animate with a visible lag. */
+  function closeAnswer(item) {
+    var panel = item.querySelector('.faq-a');
+    item.classList.remove('open');
+    item.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
+    if (panel) panel.style.maxHeight = '';
+  }
+  function openAnswer(item) {
+    var panel = item.querySelector('.faq-a');
+    item.classList.add('open');
+    item.querySelector('.faq-q').setAttribute('aria-expanded', 'true');
+    if (panel) panel.style.maxHeight = panel.scrollHeight + 'px';
+  }
+
+  var faqItems = Array.prototype.slice.call(document.querySelectorAll('.faq-item'));
+  faqItems.forEach(function (item) {
+    var btn = item.querySelector('.faq-q');
+    if (!btn) return;
     btn.addEventListener('click', function () {
-      var item = btn.closest('.faq-item');
-      var isOpen = item.classList.contains('open');
-      document.querySelectorAll('.faq-item.open').forEach(function (o) {
-        o.classList.remove('open');
-        o.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
-      });
-      if (!isOpen) {
-        item.classList.add('open');
-        btn.setAttribute('aria-expanded', 'true');
-      }
+      var wasOpen = item.classList.contains('open');
+      faqItems.forEach(closeAnswer);
+      if (!wasOpen) openAnswer(item);
     });
   });
+
+  /* Re-measure on resize: an answer that reflowed to more lines would stay
+     clipped at the height it had when it was opened. */
+  if (faqItems.length) {
+    var faqResize = null;
+    window.addEventListener('resize', function () {
+      clearTimeout(faqResize);
+      faqResize = setTimeout(function () {
+        var open = document.querySelector('.faq-item.open .faq-a');
+        if (open) open.style.maxHeight = open.scrollHeight + 'px';
+      }, 150);
+    });
+  }
 
   /* ---------- Gallery filter + lightbox ---------- */
   var items = Array.prototype.slice.call(document.querySelectorAll('.gallery-item'));
