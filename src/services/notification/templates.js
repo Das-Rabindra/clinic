@@ -101,11 +101,12 @@ Ref: ${a.ref}`,
   }),
 
   new_enquiry_admin: (e, c) => ({
-    subject: 'New website enquiry',
+    subject: e.service_name ? `Call back requested — ${e.service_name}` : 'New website enquiry',
     text: `New enquiry from the website
 Name: ${e.name}
 Phone: ${localPhone(e.phone)}
 Prefers: ${e.preferred_contact}
+Treatment: ${e.service_name || '(not specified)'}
 Message: ${e.message || '(none)'}`,
     vars: [e.name, localPhone(e.phone), e.message || '-'],
   }),

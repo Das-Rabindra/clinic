@@ -1070,3 +1070,58 @@
     .gi-caption{ font-size:12.5px; }
     .social-link{ width:42px; height:42px; }
   }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     GOOGLE REVIEW QR
+     ══════════════════════════════════════════════════════════════════════ */
+  .qr-panel{
+    display:grid; grid-template-columns:auto minmax(0, 1fr); gap:28px; align-items:center;
+    max-width:720px; margin:46px auto 0; padding:26px 30px;
+    background:var(--white); border:1px solid var(--line); border-radius:var(--radius-l);
+    box-shadow:var(--shadow-s);
+  }
+  @media (max-width:620px){
+    .qr-panel{ grid-template-columns:1fr; justify-items:center; text-align:center; gap:20px; padding:24px 20px; }
+  }
+  .qr-code{
+    /* Sized by width with the height left to follow, so the code keeps its own
+       proportions. Forcing it into a square would letterbox Google's card and
+       shrink the pattern itself, and a squeezed QR stops scanning. No frame or
+       padding either: the supplied card already has both. */
+    width:168px; flex-shrink:0;
+  }
+  .qr-code a{ display:block; }
+  .qr-code img{ width:100%; height:auto; display:block; }
+  @media (max-width:620px){ .qr-code{ width:200px; } }
+  .qr-text h3{ font-size:21px; margin-top:8px; }
+  .qr-text p{ margin-top:10px; font-size:14.5px; line-height:1.7; color:#5B665A; }
+  .qr-text .btn{ margin-top:16px; }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     SECOND CONTACT LINE, TREATMENT CALL-BACK
+     ══════════════════════════════════════════════════════════════════════ */
+  .contact-alt{
+    font-family:'Inter',sans-serif; font-size:11.5px; font-weight:500;
+    letter-spacing:0.04em; color:var(--sage); margin-left:auto;
+  }
+  .foot-alt{ color:rgba(250,248,243,0.45); font-size:12px; }
+
+  .tx-actions{ display:flex; align-items:center; gap:8px; }
+  .tx-callback{
+    position:relative; z-index:2; flex-shrink:0;
+    width:34px; height:34px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--white); border:1px solid var(--line); color:var(--pine);
+    transition:background var(--dur-s) var(--ease), border-color var(--dur-s) var(--ease), color var(--dur-s) var(--ease);
+  }
+  .tx-callback svg{ width:16px; height:16px; }
+  .tx-callback:hover{ background:var(--pine); border-color:var(--pine); color:var(--white); }
+
+  .modal-treatment{
+    display:flex; align-items:center; gap:8px; margin-bottom:16px;
+    padding:10px 13px; border-radius:var(--radius-m);
+    background:var(--paper-dim); border:1px solid var(--line);
+    font-size:13.5px; color:#4B564F;
+  }
+  .modal-treatment svg{ color:var(--sage); flex-shrink:0; }
+  .modal-treatment strong{ color:var(--pine-700); }

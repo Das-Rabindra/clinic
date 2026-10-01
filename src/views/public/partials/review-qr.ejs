@@ -1,0 +1,33 @@
+<%#
+  Google review scan code.
+
+  Rendered only when the clinic has uploaded one, so the section never shows an
+  empty frame. The code is also a link: on a desktop there is no camera to scan
+  with, and a patient reading this on a laptop should still be able to click
+  through.
+%>
+<% if (reviewQr) { %>
+<aside class="qr-panel reveal">
+  <div class="qr-code">
+    <% if (clinic.reviews_url) { %>
+    <a href="<%= clinic.reviews_url %>" target="_blank" rel="noopener"
+       aria-label="Open the Google review page for <%= clinic.name %>">
+    <% } %>
+      <img src="<%= reviewQr.url %>"
+           alt="QR code linking to the Google review page for <%= clinic.name %>, <%= shortAddress %>"
+           width="<%= reviewQr.width || 320 %>" height="<%= reviewQr.height || 320 %>"
+           loading="lazy" decoding="async">
+    <% if (clinic.reviews_url) { %></a><% } %>
+  </div>
+  <div class="qr-text">
+    <span class="eyebrow">Google</span>
+    <h3><%= settings.review_qr_title || 'Leave a review on Google' %></h3>
+    <% if (settings.review_qr_body) { %><p><%= settings.review_qr_body %></p><% } %>
+    <% if (clinic.reviews_url) { %>
+    <a class="btn btn-outline-dark btn-sm" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener">
+      Open the review page
+    </a>
+    <% } %>
+  </div>
+</aside>
+<% } %>

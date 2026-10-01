@@ -211,6 +211,10 @@ async function placeImage(mediaId, reload) {
         <strong>Dentist's portrait</strong>
         <span>Shown in the About section${doctor ? ` for ${esc(doctor.name)}` : ''}.</span>
       </button>
+      <button type="button" class="place-option" data-place="reviewqr">
+        <strong>Google review code</strong>
+        <span>The scan code shown beside the patient testimonials.</span>
+      </button>
       <button type="button" class="place-option" data-place="treatment">
         <strong>Treatment card</strong>
         <span>The photo on one of the treatment cards, and at the top of that treatment's page.</span>
@@ -247,6 +251,10 @@ async function placeImage(mediaId, reload) {
           if (!doctor) { toastErr('No dentist record exists yet.'); return; }
           await api(`/api/admin/doctors/${doctor.id}`, { method: 'PUT', body: { photo_media_id: mediaId } });
           toastOk(`Set as ${doctor.name}'s photo`);
+          closeModal(); reload();
+        } else if (where === 'reviewqr') {
+          await api('/api/admin/clinic', { method: 'PUT', body: { review_qr_media_id: mediaId } });
+          toastOk('Set as the Google review code');
           closeModal(); reload();
         } else if (where === 'treatment') {
           const { services } = await api('/api/admin/services');

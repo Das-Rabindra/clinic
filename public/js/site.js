@@ -244,7 +244,25 @@
       });
     }
 
-    function openCb() {
+    /*
+     * Opened from a treatment card or page, the dialog carries that treatment
+     * through to the clinic: the id goes with the request so it shows in the
+     * admin list, and the name is shown back to the patient so they can see
+     * what they are asking about.
+     */
+    function setTreatment(trigger) {
+      var idField = document.getElementById('cbServiceId');
+      var note = document.getElementById('cbTreatmentNote');
+      var nameEl = document.getElementById('cbTreatmentName');
+      var id = trigger && trigger.dataset.service;
+      var name = trigger && trigger.dataset.serviceName;
+      if (idField) idField.value = id || '';
+      if (note) note.hidden = !name;
+      if (nameEl) nameEl.textContent = name || '';
+    }
+
+    function openCb(trigger) {
+      setTreatment(trigger);
       cbLastFocus = document.activeElement;
       cbModal.hidden = false;
       document.body.style.overflow = 'hidden';
@@ -253,6 +271,11 @@
       if (first) first.focus();
     }
     function closeCb() {
+      /* Restore the form so a second request in the same visit is possible —
+         otherwise the dialog reopens showing only the previous confirmation. */
+      cbForm.hidden = false;
+      cbDone.hidden = true;
+      clearErrors();
       cbModal.classList.remove('show');
       document.body.style.overflow = '';
       cbModal.hidden = true;
@@ -260,7 +283,7 @@
     }
 
     document.querySelectorAll('[data-callback-open]').forEach(function (b) {
-      b.addEventListener('click', openCb);
+      b.addEventListener('click', function () { openCb(b); });
     });
     cbCard.querySelectorAll('[data-callback-close]').forEach(function (b) {
       b.addEventListener('click', closeCb);
@@ -301,6 +324,7 @@
             phone: phone,
             message: cbForm.message.value.trim(),
             preferred_contact: cbForm.preferred_contact.value,
+            service_id: cbForm.service_id.value ? Number(cbForm.service_id.value) : undefined,
           }),
         });
         var data = {};
@@ -316,6 +340,7 @@
         }
         cbForm.hidden = true;
         cbDone.hidden = false;
+        cbForm.reset();
         track('callback_requested');
       } catch (err) {
         setError('phone', 'No connection. Please call the clinic instead.');

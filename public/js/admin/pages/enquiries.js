@@ -22,12 +22,13 @@ export async function renderEnquiries(view) {
     const data = await api('/api/admin/enquiries' + (filter ? '?status=' + filter : ''));
     box.innerHTML = data.rows.length ? `
       <div class="table-wrap"><table class="data">
-        <thead><tr><th>Received</th><th>Name</th><th>Phone</th><th>Prefers</th><th>Message</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Received</th><th>Name</th><th>Phone</th><th>Treatment</th><th>Prefers</th><th>Message</th><th>Status</th><th></th></tr></thead>
         <tbody>${data.rows.map((e) => `
           <tr>
             <td class="t-muted">${fmtDateTime(e.created_at)}</td>
             <td class="t-strong">${esc(e.name)}</td>
             <td class="mono" style="font-size:12px;">${esc(localPhone(e.phone))}</td>
+            <td>${e.service_name ? esc(e.service_name) : '<span class="t-muted">—</span>'}</td>
             <td>${esc(e.preferred_contact)}</td>
             <td style="max-width:260px;">${esc(String(e.message || '—').slice(0, 90))}${(e.message || '').length > 90 ? '…' : ''}</td>
             <td>${pill(e.status)}</td>
@@ -57,6 +58,7 @@ function manage(e, reload) {
       <dt>Name</dt><dd class="t-strong">${esc(e.name)}</dd>
       <dt>Phone</dt><dd>${esc(localPhone(e.phone))}</dd>
       ${e.email ? `<dt>Email</dt><dd>${esc(e.email)}</dd>` : ''}
+      ${e.service_name ? `<dt>Treatment</dt><dd class="t-strong">${esc(e.service_name)}</dd>` : ''}
       <dt>Prefers</dt><dd>${esc(e.preferred_contact)}</dd>
       <dt>Received</dt><dd>${fmtDateTime(e.created_at)}</dd>
       <dt>Status</dt><dd>${pill(e.status)}</dd>

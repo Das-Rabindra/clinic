@@ -32,11 +32,15 @@ export async function renderClinic(view) {
 
       <fieldset><legend>Contact</legend>
         <div class="frow">
-          ${text('phone', 'Phone (display)', 'Shown on the website, e.g. 9124839288')}
-          ${text('phone_intl', 'Phone (dialling)', 'Used in tel: links, e.g. +919124839288')}
+          ${text('phone', 'Primary phone (display)', 'The main number, shown everywhere, e.g. 8847879686')}
+          ${text('phone_intl', 'Primary phone (dialling)', 'Used in tel: links, e.g. +918847879686')}
         </div>
         <div class="frow">
-          ${text('whatsapp', 'WhatsApp number', 'Digits with country code, e.g. 919124839288')}
+          ${text('whatsapp', 'WhatsApp number', 'Digits with country code, e.g. 918847879686. Use a number that is actually on WhatsApp.')}
+        </div>
+        <div class="frow">
+          ${text('phone_secondary', 'Second phone (display)', 'Optional alternative line, shown after the main number')}
+          ${text('phone_secondary_intl', 'Second phone (dialling)', 'e.g. +919124839288')}
           ${text('email', 'Email', '', 'email')}
         </div>
         ${text('site_url', 'Website URL', 'Used for canonical and Open Graph tags, e.g. https://samaldentalcare.com', 'url')}
@@ -83,6 +87,16 @@ export async function renderClinic(view) {
         <div class="hint">Each link that is filled in adds an icon to the footer and the location
         section, and tells Google these profiles belong to the clinic. An empty box shows nothing,
         so there is never a dead link.</div>
+      </fieldset>
+
+      <fieldset><legend>Google review code</legend>
+        ${text('review_qr_title', 'Heading', 'e.g. Leave a review on Google')}
+        <div class="field"><label>Wording beneath it</label>
+          <textarea data-field="review_qr_body" rows="2">${esc(settings.review_qr_body || '')}</textarea>
+        </div>
+        <div class="hint">Upload the scan code in <strong>Gallery &rarr; Media library</strong>,
+        then press <em>Use this photo</em> and choose <em>Google review code</em>. The panel only
+        appears on the website once a code has been uploaded.</div>
       </fieldset>
 
       <fieldset><legend>Website wording</legend>
@@ -163,8 +177,8 @@ export async function renderHours(view) {
       <div class="bulk-bar">
         <strong>Set every day at once</strong>
         <div class="bulk-fields">
-          <label>Opens<input type="time" id="bulkOpen" value="08:00"></label>
-          <label>Closes<input type="time" id="bulkClose" value="21:00"></label>
+          <label>Opens<input type="time" id="bulkOpen" value="09:00"></label>
+          <label>Closes<input type="time" id="bulkClose" value="22:00"></label>
           <label class="check" style="margin:0;"><input type="checkbox" id="bulkBreak" checked><span>with break</span></label>
           <label>From<input type="time" id="bulkBs" value="13:00"></label>
           <label>To<input type="time" id="bulkBe" value="15:00"></label>

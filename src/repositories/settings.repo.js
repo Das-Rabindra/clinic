@@ -2,7 +2,7 @@ import { one, all, run, buildUpdate } from './base.js';
 
 const FIELDS = [
   'name','doctor_name','qualification','registration','institution','tagline','description',
-  'phone','phone_intl','whatsapp','email','site_url',
+  'phone','phone_intl','phone_secondary','phone_secondary_intl','whatsapp','email','site_url',
   'address_line1','address_line2','area','city','state','postal_code','country',
   'maps_url','place_id','latitude','longitude','timezone',
   'slot_interval_min','booking_lead_hours','booking_horizon_days','auto_confirm',
@@ -14,6 +14,7 @@ const FIELDS = [
   'services_title','services_lede','gallery_title','gallery_lede',
   'reviews_title','cta_title','cta_body',
   'location_title','location_body','treatments_eyebrow',
+  'review_qr_media_id','review_qr_title','review_qr_body',
 ];
 export const SETTINGS_FIELDS = FIELDS;
 

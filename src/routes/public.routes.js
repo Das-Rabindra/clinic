@@ -71,13 +71,46 @@ function saysSomethingNew(bio, about) {
   return covered / bioWords.length < 0.9;
 }
 
+/**
+ * The clinic's opening hours as a sentence, built from the live weekly grid.
+ *
+ * FAQ answers used to state the timings as fixed text, so changing the hours
+ * in the admin panel left the FAQ contradicting the table directly above it.
+ * Collapsing identical days keeps it readable whether the clinic opens the
+ * same hours all week or varies them.
+ */
+function hoursSentence(clinic) {
+  const open = clinic.hours.filter(h => h.is_open);
+  if (!open.length) return 'Please call the clinic for current timings';
+
+  const shape = (h) => `${h.open_label} to ${h.close_label}` +
+    (h.break_start && h.break_end
+      ? `, with a break between ${h.break_start_label} and ${h.break_end_label}`
+      : '');
+  const same = open.length === 7 && open.every(h => shape(h) === shape(open[0]));
+  if (same) return `every day from ${shape(open[0])}`;
+
+  /* Mixed week: list each open day so nothing is implied that is not true. */
+  return open
+    .sort((a, b) => ((a.weekday + 6) % 7) - ((b.weekday + 6) % 7))
+    .map(h => `${h.day} ${shape(h)}`)
+    .join('; ');
+}
+
 /** Resolve FAQ placeholders so answers track the clinic's real details. */
 function resolveFaq(text, clinic) {
   return String(text || '')
     .replaceAll('{{phone}}', clinic.phone || '')
-    .replaceAll('{{whatsapp}}', clinic.whatsapp || '')
+    .replaceAll('{{phone2}}', clinic.phone_secondary || '')
+    .replaceAll('{{whatsapp}}', clinic.phone || '')
+    .replaceAll('{{hours}}', hoursSentence(clinic))
     .replaceAll('{{address}}', clinic.address || '')
-    .replaceAll('{{clinic}}', clinic.name || '');
+    .replaceAll('{{clinic}}', clinic.name || '')
+    /* A clinic with only one line should not read "or 
+". */
+    .replace(/\s*(?:,|\bor\b|\band\b)?\s*\(\s*\)/g, '')
+    .replace(/ {2,}/g, ' ')
+    .trim();
 }
 
 /**
@@ -94,6 +127,8 @@ async function baseLocals({ navBase = '/' } = {}) {
 
   const logo = settings.logo_media_id ? await mediaRepo.findById(settings.logo_media_id) : null;
   const favicon = settings.favicon_media_id ? await mediaRepo.findById(settings.favicon_media_id) : null;
+  const reviewQr = settings.review_qr_media_id
+    ? await mediaRepo.findById(settings.review_qr_media_id) : null;
 
   /* A short list for the footer: the treatments patients most often look for,
      taken from the clinic's own ordering rather than hardcoded. */
@@ -105,6 +140,7 @@ async function baseLocals({ navBase = '/' } = {}) {
     clinic: { ...clinic, youtube_url: settings.youtube_url, today: { ...clinic.today, weekdayIndex: todayIdx } },
     navBase,
     logoUrl: logo?.url || '/img/logo-96.png',
+    reviewQr,
     faviconUrl: favicon?.url || '/img/logo-64.png',
     whatsappUrl: await whatsappLink(),
     footerServices,

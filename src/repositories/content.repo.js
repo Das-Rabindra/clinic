@@ -28,22 +28,27 @@ export async function reorderFaqs(ids) {
 
 /* Enquiries */
 export const listEnquiries = async ({ status, limit = 100, offset = 0 } = {}) =>
-  await all(`SELECT e.*, u.name AS assigned_name, p.code AS patient_code
+  await all(`SELECT e.*, u.name AS assigned_name, p.code AS patient_code,
+         s.name AS service_name
        FROM enquiries e
        LEFT JOIN users u ON u.id = e.assigned_to
        LEFT JOIN patients p ON p.id = e.converted_patient_id
+       LEFT JOIN services s ON s.id = e.service_id
        WHERE e.deleted_at IS NULL AND (?::text IS NULL OR e.status = ?)
        ORDER BY e.created_at DESC LIMIT ? OFFSET ?`,
     status ?? null, status ?? null, limit, offset);
 
-export const findEnquiry = async (id) => await one('SELECT * FROM enquiries WHERE id = ? AND deleted_at IS NULL', id);
+export const findEnquiry = async (id) => await one(
+  `SELECT e.*, s.name AS service_name FROM enquiries e
+     LEFT JOIN services s ON s.id = e.service_id
+   WHERE e.id = ? AND e.deleted_at IS NULL`, id);
 
 export async function createEnquiry(e) {
   const info = await run(
-    `INSERT INTO enquiries (name, phone, email, message, preferred_contact, source)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO enquiries (name, phone, email, message, preferred_contact, source, service_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
     e.name, e.phone, e.email ?? null, e.message ?? null,
-    e.preferred_contact || 'phone', e.source || 'website'
+    e.preferred_contact || 'phone', e.source || 'website', e.service_id ?? null
   );
   return await findEnquiry(info.lastInsertRowid);
 }

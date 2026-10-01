@@ -35,6 +35,7 @@ const settingsSchema = z.object({
   registration: nullableStr(120), institution: nullableStr(200),
   tagline: nullableStr(300), description: nullableStr(2000),
   phone: nullableStr(20), phone_intl: nullableStr(20), whatsapp: nullableStr(20),
+  phone_secondary: nullableStr(20), phone_secondary_intl: nullableStr(20),
   email: z.union([z.string().trim().email().max(200), z.literal(''), z.null()]).optional()
     .transform(v => (v === undefined ? undefined : (v === '' ? null : v))),
   site_url: nullableStr(300),
@@ -63,6 +64,8 @@ const settingsSchema = z.object({
   gallery_title: nullableStr(200), gallery_lede: nullableStr(600),
   reviews_title: nullableStr(200), cta_title: nullableStr(200), cta_body: nullableStr(600),
   treatments_eyebrow: nullableStr(120),
+  review_qr_media_id: zId.nullish(),
+  review_qr_title: nullableStr(200), review_qr_body: nullableStr(600),
   location_title: nullableStr(200), location_body: nullableStr(1500),
 }).strict();
 

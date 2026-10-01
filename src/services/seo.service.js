@@ -80,6 +80,14 @@ export async function structuredData() {
     url,
     description: s.description || undefined,
     telephone: s.phone_intl || undefined,
+    /* A second published line. Google accepts an array, and listing it keeps
+       the markup consistent with what the page itself shows. */
+    ...(s.phone_secondary_intl
+      ? { contactPoint: {
+            '@type': 'ContactPoint', contactType: 'reservations',
+            telephone: s.phone_secondary_intl, areaServed: 'IN',
+          } }
+      : {}),
     email: s.email || undefined,
     image: s.og_image_url || undefined,
     address,

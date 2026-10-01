@@ -52,9 +52,16 @@
     </button>
     <span class="eyebrow">No obligation</span>
     <h3 id="cbTitle">Request a call back</h3>
-    <p class="modal-lede">Leave your number and the clinic will call you back during opening hours. If it is urgent, calling <a class="mono" href="tel:<%= clinic.phone_intl || clinic.phone %>"><%= clinic.phone %></a> is quicker.</p>
+    <p class="modal-lede">Leave your number and the clinic will call you back during opening hours. If it is urgent, calling <a class="mono" href="tel:<%= clinic.phone_intl || clinic.phone %>" data-track="call_clicked"><%= clinic.phone %></a> is quicker.</p>
 
     <form id="callbackForm" novalidate>
+      <%# Set by the script when the dialog is opened from a treatment, so the
+          clinic knows what the call is about before they dial back. %>
+      <p class="modal-treatment" id="cbTreatmentNote" hidden>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+        <span>About <strong id="cbTreatmentName"></strong></span>
+      </p>
+      <input type="hidden" name="service_id" id="cbServiceId" value="">
       <div class="field">
         <label for="cbName">Your name</label>
         <input id="cbName" name="name" type="text" autocomplete="name" required maxlength="120">

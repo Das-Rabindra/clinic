@@ -126,7 +126,8 @@ export async function enquiryCreated(enquiry) {
     });
   }
   await notifRepo.pushAdmin({
-    type: 'enquiry.new', title: 'New enquiry',
+    type: 'enquiry.new',
+    title: enquiry.service_name ? `Call back — ${enquiry.service_name}` : 'New enquiry',
     body: `${enquiry.name} · ${localPhone(enquiry.phone)}`,
     link: '/admin/enquiries', severity: 'info',
   });

@@ -345,3 +345,95 @@ describe('mobile menu', () => {
     }
   });
 });
+
+describe('contact details', () => {
+  test('publishes the primary number and keeps the old one as a second line', async () => {
+    const s = await settingsRepo.get();
+    assert.equal(s.phone, '8847879686');
+    assert.equal(s.phone_intl, '+918847879686');
+    assert.equal(s.phone_secondary, '9124839288');
+
+    const r = await srv.call('/');
+    // Every tel: link must dial the primary except the ones that deliberately
+    // offer the alternative.
+    const tels = [...r.body.matchAll(/href="tel:([^"]+)"/g)].map((m) => m[1]);
+    assert.ok(tels.length >= 4);
+    assert.ok(tels.filter((t) => t === '+918847879686').length >= tels.length - 2,
+      `primary should dominate: ${JSON.stringify(tels)}`);
+    assert.ok(tels.includes('+919124839288'), 'the second line is published too');
+  });
+
+  test('WhatsApp always uses the primary number', async () => {
+    const r = await srv.call('/');
+    const was = [...r.body.matchAll(/wa\.me\/(\d+)/g)].map((m) => m[1]);
+    assert.ok(was.length > 0);
+    // Messaging a number that is not on WhatsApp fails silently for the patient.
+    assert.deepEqual([...new Set(was)], ['918847879686']);
+    assert.match(decodeURIComponent(r.body.match(/wa\.me\/\d+\?text=([^"]+)/)[1]),
+      /I would like to book an appointment at Samal Dental Care/);
+  });
+
+  test('carries the clinic coordinates so directions reach the door', async () => {
+    const s = await settingsRepo.get();
+    assert.ok(Math.abs(s.latitude - 20.9033969) < 0.0001);
+    assert.ok(Math.abs(s.longitude - 85.1743727) < 0.0001);
+    const r = await srv.call('/api/clinic');
+    assert.match(r.body.directions_url, /destination=20\.903/);
+  });
+});
+
+describe('opening hours', () => {
+  test('are 9:00 AM to 10:00 PM every day', async () => {
+    const hours = await settingsRepo.getHours();
+    assert.equal(hours.length, 7);
+    for (const h of hours) {
+      assert.equal(h.is_open, 1, `weekday ${h.weekday}`);
+      assert.equal(h.open_min, 540);
+      assert.equal(h.close_min, 1320);
+    }
+  });
+
+  test('the FAQ states the hours the grid actually holds', async () => {
+    const r = await srv.call('/');
+    // The answer is a placeholder resolved at render, so it cannot drift from
+    // the table above it the way fixed text did.
+    assert.match(r.body, /open every day from 9:00 AM to 10:00 PM/);
+    assert.ok(!r.body.includes('8:00 AM to 9:00 PM'), 'no stale timings anywhere');
+  });
+
+  test('no two published FAQs ask the same thing', async () => {
+    const faqs = (await (await import('../src/repositories/content.repo.js'))
+      .listFaqs({ publishedOnly: true }));
+    const qs = faqs.map((f) => f.question.toLowerCase());
+    assert.equal(new Set(qs).size, qs.length);
+    // The thin seeded location/contact questions were superseded.
+    assert.ok(!qs.includes('where is samal dental care located?'));
+    assert.ok(!qs.includes('how can i contact the clinic?'));
+  });
+});
+
+describe('call back about a treatment', () => {
+  test('records which treatment the request was about', async () => {
+    const svc = await servicesRepo.findPublicBySlug('root-canal-treatment');
+    await srv.call('/api/csrf');
+    const r = await srv.call('/api/enquiries', {
+      headers: { 'X-CSRF-Token': srv.csrf() },
+      json: { name: 'Anita Sahoo', phone: '9876500011', preferred_contact: 'phone', service_id: svc.id },
+    });
+    assert.equal(r.status, 201);
+    const repo = await import('../src/repositories/content.repo.js');
+    const e = await repo.findEnquiry(r.body.id);
+    assert.equal(e.service_id, svc.id);
+    assert.equal(e.service_name, 'Root Canal Treatment');
+  });
+
+  test('an unknown treatment is dropped, not a reason to lose the request', async () => {
+    const r = await srv.call('/api/enquiries', {
+      headers: { 'X-CSRF-Token': srv.csrf() },
+      json: { name: 'Anita Sahoo', phone: '9876500012', service_id: 999999 },
+    });
+    assert.equal(r.status, 201, 'the patient still gets their call back');
+    const repo = await import('../src/repositories/content.repo.js');
+    assert.equal((await repo.findEnquiry(r.body.id)).service_id, null);
+  });
+});

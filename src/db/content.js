@@ -60,11 +60,43 @@ const COPY_UPGRADES = [
   },
 ];
 
+/*
+ * Contact details and map position.
+ *
+ * 8847879686 is the primary line: every tel: link, the header, the sticky bar,
+ * WhatsApp and the structured data read from it. The older 9124839288 is kept
+ * and published as an alternative rather than dropped — it has been on cards,
+ * signage and Google for months, and patients still dial it.
+ *
+ * The coordinates come from the clinic's own Google Maps listing, so the map
+ * drops an exact pin and "Get Directions" routes to the door instead of to a
+ * geocoded guess at the street name.
+ */
+const CONTACT = {
+  phone: '8847879686',
+  phone_intl: '+918847879686',
+  whatsapp: '918847879686',
+  phone_secondary: '9124839288',
+  phone_secondary_intl: '+919124839288',
+  latitude: 20.9033969,
+  longitude: 85.1743727,
+  maps_url: 'https://maps.app.goo.gl/9SURk8sfiWBojto18',
+};
+
+/* Open 9:00 AM to 10:00 PM every day, with the clinic's 1:00-3:00 PM break.
+   The break is held separately from opening hours: the clinic asked for it
+   explicitly, and it only removes those slots from the booking grid. */
+const HOURS = { open_min: 540, close_min: 1320, break_start_min: 780, break_end_min: 900 };
+
 /* Fields added after the first release: filled in only while still empty. */
 const COPY_DEFAULTS = {
   treatments_eyebrow: 'Our Treatments',
   location_title: 'Finding the clinic',
-  location_body: 'Samal Dental Care is in the Annapurna Market Complex at Bikrampur, inside the FCI township at Talcher. If you are coming from elsewhere in Talcher, open the directions below — or call the clinic and we will guide you in.',
+  location_body: 'Samal Dental Care is in the Annapurna Market Complex at Bikrampur, inside the FCI township at Talcher. The map below carries the clinic\u2019s exact position, so "Get Directions" will route you to the door. If you would rather be talked in, call and we will guide you.',
+  /* The supplied card already carries "Check us out on Google" and the clinic
+     name, so the heading beside it must not say the same thing twice. */
+  review_qr_title: 'Found the clinic helpful?',
+  review_qr_body: 'A review helps the next person in Talcher decide where to go. Point your phone camera at the code and it opens the review page \u2014 it takes a minute, and you do not need an appointment to leave one.',
   instagram_url: 'https://www.instagram.com/samaldentalcare',
 };
 
@@ -257,13 +289,21 @@ const TREATMENTS = {
    question the clinic has deleted stays deleted. */
 const LOCAL_FAQS = [
   ['Where exactly is the clinic in Talcher?',
-    'Samal Dental Care is at the Annapurna Market Complex, Bikrampur, inside the FCI township at Talcher, Odisha 759106. The "Get Directions" button on this page opens the exact location in Google Maps.'],
+    'Samal Dental Care is at the Annapurna Market Complex, Bikrampur, inside the FCI township at Talcher, Odisha 759106. The "Get Directions" button on this page opens the clinic\u2019s exact position in Google Maps, so it routes you to the door rather than to the street.'],
   ['What are the clinic timings?',
-    'The clinic is open every day from 8:00 AM to 9:00 PM, with a break between 1:00 PM and 3:00 PM. The weekly table on this page always shows the current hours, and any holiday closure appears there too.'],
+    'The clinic is open {{hours}}. The weekly table on this page always shows the current hours, and any holiday closure appears there too.'],
+  ['Which number should I call?',
+    'Call {{phone}} \u2014 that is the main line, and it is also the number on WhatsApp. {{phone2}} still works as a second line if the first is engaged.'],
+  ['Can I message the clinic on WhatsApp?',
+    'Yes. WhatsApp {{phone}} and the clinic will reply during opening hours. It is the easiest way to ask a question before committing to an appointment. Please do not send anything urgent by message \u2014 call instead.'],
   ['Do you treat children?',
     "Yes. Children's dentistry is one of the treatments offered, covering check-ups, cleaning and fillings for younger patients. An appointment earlier in the day usually suits children better."],
   ['How long does a first consultation take?',
-    'A consultation is normally booked for 30 minutes — enough time to examine your teeth and gums, discuss what you have noticed, and explain what treatment, if any, would help. Longer treatments are booked as separate appointments.'],
+    'A consultation is normally booked for 30 minutes \u2014 enough time to examine your teeth and gums, discuss what you have noticed, and explain what treatment, if any, would help. Longer treatments are booked as separate appointments.'],
+  ['What if I would rather the clinic called me?',
+    'Use "Request a call back" on this page. Leave your name and number, and say which treatment you are asking about if you know. The clinic will ring you back during opening hours \u2014 there is nothing to pay and no obligation.'],
+  ['Which treatments can I book online?',
+    'Every treatment listed on this page can be booked online, from a routine check-up and cleaning through fillings, root canals, crowns, extractions and dentures to implants, braces, whitening and gum treatment. Implants, braces and aesthetic work start with an assessment rather than the procedure itself.'],
   ['Can I reschedule or cancel an appointment?',
     'Yes. Your confirmation carries a booking reference; use it with your mobile number to cancel online, or simply call or message the clinic on WhatsApp. Letting us know early frees the slot for another patient.'],
 ];
@@ -298,7 +338,47 @@ export async function applyContent({ log = console.log } = {}) {
          city = @city, state = @state, updated_at = NOW() WHERE id = 1`, ADDRESS);
     copyChanged++;
   }
+
+  /* Contact details and map position, likewise supplied directly. Applied only
+     while the old number is still the primary, so a later change made in the
+     admin panel is not reverted on the next boot. */
+  if (settings.phone === '9124839288') {
+    await run(
+      `UPDATE clinic_settings SET phone = @phone, phone_intl = @phone_intl,
+         whatsapp = @whatsapp, phone_secondary = @phone_secondary,
+         phone_secondary_intl = @phone_secondary_intl, updated_at = NOW()
+       WHERE id = 1`, CONTACT);
+    log('[content] primary number set to 8847879686, previous number kept as secondary');
+    copyChanged++;
+  }
+  if (settings.latitude == null || settings.longitude == null) {
+    await run(
+      `UPDATE clinic_settings SET latitude = @latitude, longitude = @longitude,
+         maps_url = COALESCE(NULLIF(maps_url, ''), @maps_url), updated_at = NOW()
+       WHERE id = 1`, CONTACT);
+    log('[content] map coordinates set from the clinic\u2019s Google listing');
+    copyChanged++;
+  }
   if (copyChanged) log(`[content] ${copyChanged} copy field group(s) updated`);
+
+  /*
+   * Opening hours. Rewritten only while every day still matches the previous
+   * 8:00-9:00 default, so a clinic that has since edited one day in the admin
+   * panel keeps its own grid.
+   */
+  const hours = await all('SELECT * FROM clinic_hours ORDER BY weekday');
+  const allOldDefault = hours.length === 7
+    && hours.every(h => h.open_min === 480 && h.close_min === 1260 && h.is_open === 1);
+  if (allOldDefault) {
+    for (const h of hours) {
+      await run(
+        `UPDATE clinic_hours SET open_min = @open_min, close_min = @close_min,
+           break_start_min = @break_start_min, break_end_min = @break_end_min,
+           updated_at = NOW() WHERE weekday = @weekday`,
+        { ...HOURS, weekday: h.weekday });
+    }
+    log('[content] opening hours set to 9:00 AM - 10:00 PM every day (1:00-3:00 PM break)');
+  }
 
   /* Create the treatments the original site never listed. The existence check
      deliberately ignores deleted_at: a soft-deleted service still holds the
@@ -336,6 +416,49 @@ export async function applyContent({ log = console.log } = {}) {
     if (fields.length) treatments++;
   }
   if (treatments) log(`[content] detail content added to ${treatments} treatment(s)`);
+
+  /*
+   * Answers that stated the timings or the phone number as fixed text now use
+   * {{hours}} and {{phone}}, which resolve at render. Rewritten only while the
+   * answer is still the one shipped, so an edited FAQ is left alone.
+   */
+  const FAQ_REWRITES = [
+    ['What are the clinic timings?',
+      'The clinic is open every day from 8:00 AM to 9:00 PM, with a break between 1:00 PM and 3:00 PM. The weekly table on this page always shows the current hours, and any holiday closure appears there too.',
+      'The clinic is open {{hours}}. The weekly table on this page always shows the current hours, and any holiday closure appears there too.'],
+    ['How can I contact the clinic?',
+      'Call or WhatsApp {{phone}}, or use the booking form on this page.',
+      'Call {{phone}}, message the same number on WhatsApp, or use the booking form on this page. {{phone2}} is a second line if the first is engaged.'],
+  ];
+  let rewritten = 0;
+  for (const [question, from, to] of FAQ_REWRITES) {
+    const r = await run(
+      'UPDATE faqs SET answer = ?, updated_at = NOW() WHERE question = ? AND answer = ?',
+      to, question, from);
+    rewritten += r.changes;
+  }
+  if (rewritten) log(`[content] ${rewritten} FAQ answer(s) now track the live hours and numbers`);
+
+  /*
+   * Thin seeded questions superseded by fuller ones. Unpublished rather than
+   * deleted, so the clinic can bring one back from the admin panel, and guarded
+   * on the original answer so an edited version is left alone. Three questions
+   * all answering "how do I contact you" is worse than one that answers it
+   * properly.
+   */
+  const FAQ_RETIRED = [
+    ['Where is Samal Dental Care located?', '{{address}}.'],
+    ['How can I contact the clinic?',
+      'Call {{phone}}, message the same number on WhatsApp, or use the booking form on this page. {{phone2}} is a second line if the first is engaged.'],
+  ];
+  let retired = 0;
+  for (const [question, answer] of FAQ_RETIRED) {
+    const r = await run(
+      'UPDATE faqs SET is_published = 0, updated_at = NOW() WHERE question = ? AND answer = ? AND is_published = 1',
+      question, answer);
+    retired += r.changes;
+  }
+  if (retired) log(`[content] ${retired} duplicate FAQ(s) unpublished`);
 
   const existing = new Set((await all('SELECT question FROM faqs')).map(f => f.question));
   let faqs = 0;

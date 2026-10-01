@@ -42,6 +42,7 @@
         <ul>
           <li class="foot-address"><%= clinic.address %></li>
           <% if (clinic.phone) { %><li><a class="mono" href="tel:<%= clinic.phone_intl || clinic.phone %>" data-track="call_clicked"><%= clinic.phone %></a></li><% } %>
+          <% if (clinic.phone_secondary) { %><li><a class="mono" href="tel:<%= clinic.phone_secondary_intl || clinic.phone_secondary %>" data-track="call_clicked"><%= clinic.phone_secondary %> <span class="foot-alt">(alt)</span></a></li><% } %>
           <% if (whatsappUrl) { %><li><a href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked">WhatsApp the clinic</a></li><% } %>
           <% if (clinic.email) { %><li><a href="mailto:<%= clinic.email %>"><%= clinic.email %></a></li><% } %>
           <li><a href="<%= clinic.directions_url %>" target="_blank" rel="noopener" data-track="directions_clicked">Get directions</a></li>

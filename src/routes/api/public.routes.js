@@ -195,6 +195,9 @@ const enquirySchema = z.object({
   email: z.string().trim().email().max(200).optional().or(z.literal('')),
   message: z.string().trim().max(1500).optional().or(z.literal('')),
   preferred_contact: z.enum(['phone', 'whatsapp', 'email']).default('phone'),
+  /* Set when the request comes from a treatment card or page, so whoever
+     returns the call already knows what it is about. */
+  service_id: zId.optional(),
 });
 
 router.post('/enquiries', enquiryLimiter, requirePublicCsrf, validate(enquirySchema), async (req, res) => {
@@ -205,7 +208,15 @@ router.post('/enquiries', enquiryLimiter, requirePublicCsrf, validate(enquirySch
       fields: { phone: 'Enter a valid 10-digit mobile number.' },
     });
   }
-  const enquiry = await contentRepo.createEnquiry({ ...req.body, phone });
+  /* Only a treatment the clinic actually publishes. An id that does not
+     resolve is dropped rather than rejected — the patient still gets their
+     call back, which matters more than the label on it. */
+  let serviceId = null;
+  if (req.body.service_id) {
+    const svc = await servicesRepo.findById(req.body.service_id);
+    if (svc && svc.is_active === 1 && !svc.deleted_at) serviceId = svc.id;
+  }
+  const enquiry = await contentRepo.createEnquiry({ ...req.body, phone, service_id: serviceId });
   try { await events.enquiryCreated(enquiry); }
   catch (err) { console.error('[enquiry] notification enqueue failed (enquiry saved):', err.message); }
   res.status(201).json({ ok: true, id: enquiry.id });

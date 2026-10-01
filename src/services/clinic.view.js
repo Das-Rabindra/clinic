@@ -29,6 +29,8 @@ export async function publicClinic() {
     description: s.description,
     phone: s.phone,
     phone_intl: s.phone_intl,
+    phone_secondary: s.phone_secondary,
+    phone_secondary_intl: s.phone_secondary_intl,
     whatsapp: s.whatsapp,
     email: s.email,
     address,
@@ -59,6 +61,8 @@ export async function publicClinic() {
       open_label: minTo12h(h.open_min), close_label: minTo12h(h.close_min),
       break_start: h.break_start_min != null ? minToHHMM(h.break_start_min) : null,
       break_end: h.break_end_min != null ? minToHHMM(h.break_end_min) : null,
+      break_start_label: h.break_start_min != null ? minTo12h(h.break_start_min) : null,
+      break_end_label: h.break_end_min != null ? minTo12h(h.break_end_min) : null,
     })),
     today: {
       date: today,
@@ -95,9 +99,18 @@ export function mapEmbedUrl(s, address) {
   return `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
 }
 
+/**
+ * wa.me link for the clinic's WhatsApp line.
+ *
+ * Always the primary number: the secondary is a landline-style alternative the
+ * clinic publishes for calls, and messaging a number that is not on WhatsApp
+ * silently fails for the patient with no explanation.
+ *
+ * wa.me works on a phone and on WhatsApp Web, so one link covers both.
+ */
 export async function whatsappLink(text) {
   const s = await settingsRepo.get();
   if (!s.whatsapp) return null;
-  const msg = text || `Hello ${s.name}, I would like to enquire about booking a dental appointment.`;
+  const msg = text || `Hello, I would like to book an appointment at ${s.name}.`;
   return `https://wa.me/${s.whatsapp}?text=${encodeURIComponent(msg)}`;
 }

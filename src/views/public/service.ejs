@@ -148,7 +148,8 @@
           <div class="tx-aside-actions">
             <a href="/#appointment?treatment=<%= service.slug %>" class="btn btn-primary btn-sm book-service"
                data-service="<%= service.id %>" data-track="appointment_started">Book an appointment</a>
-            <button type="button" class="btn btn-outline-dark btn-sm" data-callback-open>Request a call back</button>
+            <button type="button" class="btn btn-outline-dark btn-sm" data-callback-open
+                    data-service="<%= service.id %>" data-service-name="<%= service.name %>">Request a call back</button>
             <% if (clinic.phone) { %>
             <a href="tel:<%= clinic.phone_intl || clinic.phone %>" class="btn btn-outline-dark btn-sm mono" data-track="call_clicked"><%= clinic.phone %></a>
             <% } %>

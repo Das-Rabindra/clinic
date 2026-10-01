@@ -24,9 +24,13 @@ const CLINIC = {
   qualification: 'BDS, FRCD',
   institution: 'Kalinga Institute of Dental Science, Bhubaneswar',
   registration: 'Regd. No. 3209-A',
-  phone: '9124839288',
-  phone_intl: '+919124839288',
-  whatsapp: '919124839288',
+  /* Primary line. The previous number is published as the secondary by
+     applyContent(); see src/db/content.js. */
+  phone: '8847879686',
+  phone_intl: '+918847879686',
+  whatsapp: '918847879686',
+  phone_secondary: '9124839288',
+  phone_secondary_intl: '+919124839288',
   /* Split so each part lands in the right schema.org slot:
      address_line1 + area -> streetAddress, city -> addressLocality (the town
      patients actually search for), state -> addressRegion. */
@@ -62,9 +66,9 @@ const FAQS = [
     'Use the "Get Directions" button in the location section to open the address in Google Maps.'],
 ];
 
-/** Default weekly hours: open every day 08:00-21:00 with a 13:00-15:00 break. */
+/** Default weekly hours: open every day 09:00-22:00 with a 13:00-15:00 break. */
 const DEFAULT_HOURS = [0, 1, 2, 3, 4, 5, 6].map(weekday => ({
-  weekday, is_open: 1, open_min: 480, close_min: 1260,
+  weekday, is_open: 1, open_min: 540, close_min: 1320,
   break_start_min: 780, break_end_min: 900,
 }));
 
@@ -74,11 +78,12 @@ export async function seed({ log = console.log } = {}) {
     if (!(await settingsRepo.get())) {
       await run(
         `INSERT INTO clinic_settings (id, name, doctor_name, qualification, registration, institution,
-           phone, phone_intl, whatsapp, address_line1, address_line2, area, city, state,
-           postal_code, country,
+           phone, phone_intl, whatsapp, phone_secondary, phone_secondary_intl,
+           address_line1, address_line2, area, city, state, postal_code, country,
            timezone, slot_interval_min, booking_lead_hours, booking_horizon_days)
          VALUES (1, @name, @doctor_name, @qualification, @registration, @institution,
-           @phone, @phone_intl, @whatsapp, @address_line1, @address_line2, @area, @city, @state,
+           @phone, @phone_intl, @whatsapp, @phone_secondary, @phone_secondary_intl,
+           @address_line1, @address_line2, @area, @city, @state,
            @postal_code, @country, 'Asia/Kolkata', 30, 2, 60)`,
         CLINIC
       );
@@ -112,7 +117,7 @@ export async function seed({ log = console.log } = {}) {
     /* Weekly hours */
     if (!(await settingsRepo.getHours()).length) {
       for (const h of DEFAULT_HOURS) await settingsRepo.upsertHours(h.weekday, h);
-      log('[seed] clinic hours created (every day 08:00-21:00, break 13:00-15:00)');
+      log('[seed] clinic hours created (every day 09:00-22:00, break 13:00-15:00)');
     }
 
     /* The clinic's dentist */
