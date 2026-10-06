@@ -613,3 +613,50 @@ describe('fixes from the audit', () => {
     assert.ok(!/\.eyebrow[^}]*color:var\(--sage\)[^-]/.test(css));
   });
 });
+
+describe('image provenance', () => {
+  test('a licensed image is relabelled and disclosed, not captioned as the clinic’s work', async () => {
+    const { run, one } = await import('../src/db/index.js');
+    const { applyContent } = await import('../src/db/content.js');
+    const svc = await servicesRepo.findPublicBySlug('teeth-whitening');
+
+    await run(`INSERT INTO media (storage,key,url,folder,mime,ext,bytes,width,height,alt)
+               VALUES ('local','services/t1','/media/t1.webp','services','image/webp','webp',900,1280,720,?)`,
+      'Before and after a smile makeover, Samal Dental Care, Talcher');
+    const m = await one(`SELECT id FROM media WHERE key = 'services/t1'`);
+    await servicesRepo.update(svc.id, { image_media_id: m.id });
+    try {
+      await applyContent({ log: () => {} });
+      const after = await one('SELECT alt, is_stock FROM media WHERE id = ?', m.id);
+      // Claiming a stock before-and-after as this clinic's result is a claim
+      // about clinical outcomes, not a caption.
+      assert.ok(!/Samal Dental Care/.test(after.alt), `still claims the clinic: "${after.alt}"`);
+      assert.match(after.alt, /^Illustration:/);
+      assert.equal(after.is_stock, 1);
+
+      const page = await srv.call('/services/teeth-whitening');
+      assert.match(page.body, /Illustrative image/, 'said plainly where the photo is largest');
+      assert.ok(!page.body.includes('Before and after a smile makeover, Samal Dental Care'));
+    } finally {
+      await servicesRepo.update(svc.id, { image_media_id: null });
+      await run('DELETE FROM media WHERE id = ?', m.id);
+    }
+  });
+
+  test('a genuine clinic photograph is left alone', async () => {
+    const { run, one } = await import('../src/db/index.js');
+    const { applyContent } = await import('../src/db/content.js');
+    await run(`INSERT INTO media (storage,key,url,folder,mime,ext,bytes,width,height,alt)
+               VALUES ('local','clinic/t2','/media/t2.webp','clinic','image/webp','webp',900,800,800,?)`,
+      'Opening day at the clinic');
+    const m = await one(`SELECT id FROM media WHERE key = 'clinic/t2'`);
+    try {
+      await applyContent({ log: () => {} });
+      const after = await one('SELECT alt, is_stock FROM media WHERE id = ?', m.id);
+      assert.equal(after.alt, 'Opening day at the clinic');
+      assert.equal(after.is_stock, 0);
+    } finally {
+      await run('DELETE FROM media WHERE id = ?', m.id);
+    }
+  });
+});

@@ -581,6 +581,35 @@ export async function applyContent({ log = console.log } = {}) {
   }
   if (added) log(`[content] ${added} treatment(s) added`);
 
+  /*
+   * Image provenance.
+   *
+   * The supplied treatment photographs are licensed stock, but every one was
+   * captioned "...at Samal Dental Care, Talcher" and one as a before-and-after
+   * of a smile makeover at the clinic. For a registered practice that is a
+   * claim about clinical results, and it was true of none of them.
+   *
+   * Matched on the claim itself rather than on a list of ids, so an image the
+   * clinic replaces with a real photograph — and re-captions — is left alone.
+   */
+  const claiming = await all(
+    `SELECT id, alt FROM media
+     WHERE deleted_at IS NULL AND is_stock = 0
+       AND alt IS NOT NULL AND alt LIKE '%Samal Dental Care%'
+       AND folder IN ('services', 'clinic')`);
+  let marked = 0;
+  for (const m of claiming) {
+    /* Strip the clinic from the description and say plainly what it is. */
+    const neutral = m.alt
+      .replace(/,?\s*(at\s+)?Samal Dental Care[^,]*/i, '')
+      .replace(/,\s*(Bikrampur[^,]*,?\s*)?(FCI Township,?\s*)?Talcher[^,]*/i, '')
+      .replace(/\s{2,}/g, ' ').replace(/[,\s]+$/, '').trim();
+    await run(`UPDATE media SET alt = ?, is_stock = 1, updated_at = NOW() WHERE id = ?`,
+      `Illustration: ${neutral.charAt(0).toLowerCase()}${neutral.slice(1)}`, m.id);
+    marked++;
+  }
+  if (marked) log(`[content] ${marked} licensed image(s) relabelled and marked illustrative`);
+
   /* Related treatments. Set only while empty, so a clinic that has chosen its
      own pairings keeps them. */
   let paired = 0;
