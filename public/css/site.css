@@ -22,6 +22,13 @@
     --pine:#1F3D3A;
     --pine-700:#16302D;
     --sage:#7C9885;
+    /* #7C9885 is 2.69-3.14:1 against the three page grounds — below the 4.5:1
+       AA needs for small text, and it was carrying every eyebrow, category
+       label and the header location line. --sage stays for strokes and
+       decoration; text uses the darkened value, which is the lightest point on
+       the same hue and saturation that clears 4.5:1 on paper, paper-dim and
+       white (5.00 / 4.54 / 5.30). */
+    --sage-text:#597161;
     --honey:#C79A4B;
     --honey-700:#AD8138;
     --paper:#FAF8F3;
@@ -84,7 +91,7 @@
     text-transform:uppercase;
     letter-spacing:0.14em;
     font-size:12px;
-    color:var(--sage);
+    color:var(--sage-text);
     font-weight:500;
     display:inline-flex;
     align-items:center;
@@ -130,7 +137,7 @@
   .brand-mark{ width:38px; height:38px; border-radius:10px; background:var(--white); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; padding:3px; }
   .brand-mark img{ width:100%; height:100%; object-fit:contain; }
   .brand-name{ font-family:'Fraunces',serif; font-weight:600; font-size:18.5px; color:var(--pine-700); line-height:1.1;}
-  .brand-sub{ display:block; font-family:'Inter',sans-serif; font-size:11.5px; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; color:var(--sage); margin-top:2px;}
+  .brand-sub{ display:block; font-family:'Inter',sans-serif; font-size:11.5px; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; color:var(--sage-text); margin-top:2px;}
   /*
    * The brand block must yield rather than push. A flex item defaults to
    * min-width:auto, so a nowrap line inside it widens the whole header instead
@@ -239,7 +246,7 @@
   .cred-list strong, .doctor-cred-list b{
     font-family:'IBM Plex Mono',monospace; font-weight:500;
     font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
-    color:var(--sage);
+    color:var(--sage-text);
   }
   .cred-list span{ color:#3E4A44; line-height:1.6; }
   .doctor-cred-list svg{ width:18px; height:18px; color:var(--honey-700); flex-shrink:0; margin-top:2px; }
@@ -255,7 +262,7 @@
   .why-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:2px; background:var(--line); border-radius:var(--radius-l); overflow:hidden; }
   @media (max-width:760px){ .why-grid{ grid-template-columns:1fr; } }
   .why-card{ background:var(--paper); padding:36px 30px; }
-  .why-card .num{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--sage); font-weight:500; }
+  .why-card .num{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--sage-text); font-weight:500; }
   .why-card h3{ font-size:19px; margin-top:14px; }
   .why-card p{ margin-top:10px; font-size:14.5px; color:#5B665A; }
 
@@ -269,7 +276,7 @@
   @media (max-width:760px){ .service-row{ grid-template-columns:1fr; gap:8px; padding:22px 4px; } }
   .service-name{ font-family:'Fraunces',serif; font-size:21px; color:var(--pine-700); font-weight:500; }
   .service-desc{ font-size:14.5px; color:#5B665A; }
-  .service-tag{ font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--sage); border:1px solid var(--line); padding:6px 12px; border-radius:999px; white-space:nowrap; justify-self:start; }
+  .service-tag{ font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--sage-text); border:1px solid var(--line); padding:6px 12px; border-radius:999px; white-space:nowrap; justify-self:start; }
   @media (max-width:760px){ .service-tag{ justify-self:start; margin-top:4px; } }
   .services-note{ margin-top:30px; font-size:13px; color:#7C8A78; display:flex; gap:9px; align-items:flex-start; }
   .services-note svg{ width:16px; height:16px; flex-shrink:0; margin-top:2px; }
@@ -466,9 +473,11 @@
   }
   .lb-pair{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   @media (max-width:600px){ .lb-pair{ grid-template-columns:1fr; } }
+  .lb-title{ font-family:'Fraunces',Georgia,serif; font-size:19px; font-weight:600;
+             color:var(--pine-700); margin-top:16px; }
   .lb-pair figcaption{
     font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase;
-    letter-spacing:0.1em; color:var(--sage); margin-top:7px;
+    letter-spacing:0.1em; color:var(--sage-text); margin-top:7px;
   }
 
   /* ---------- Google reviews ---------- */
@@ -518,11 +527,11 @@
   .bstep{
     flex:1; min-width:104px; padding:15px 10px; text-align:center;
     font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase;
-    letter-spacing:0.09em; color:#8A948A; position:relative; white-space:nowrap;
+    letter-spacing:0.09em; color:#5B665A; position:relative; white-space:nowrap;
   }
-  .bstep span{ display:block; font-size:11.5px; opacity:0.8; margin-top:3px; letter-spacing:0.04em; }
+  .bstep span{ display:block; font-size:11.5px; margin-top:3px; letter-spacing:0.04em; color:var(--sage-text); }
   .bstep.active{ color:var(--pine-700); background:var(--white); font-weight:500; }
-  .bstep.done{ color:var(--sage); }
+  .bstep.done{ color:var(--sage-text); }
   .bstep.active::after{
     content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--honey);
   }
@@ -583,7 +592,7 @@
   .slot-group{ margin-bottom:20px; }
   .slot-group h4{
     font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase;
-    letter-spacing:0.1em; color:var(--sage); margin-bottom:9px; font-weight:500;
+    letter-spacing:0.1em; color:var(--sage-text); margin-bottom:9px; font-weight:500;
   }
 
   .summary-card{ background:var(--paper-dim); border:1px solid var(--line); border-radius:var(--radius-m); padding:22px; }
@@ -639,6 +648,7 @@
     padding:6px 13px; border-radius:999px; margin-bottom:16px;
   }
   .open-pill.open{ background:rgba(124,152,133,0.16); color:#3D5A48; }
+  .open-pill.break{ background:rgba(199,154,75,0.14); color:#8A6520; }
   .open-pill.closed{ background:var(--paper-dim); color:#7C8A78; }
   .open-dot{ width:7px; height:7px; border-radius:50%; background:currentColor; }
 
@@ -778,7 +788,7 @@
   .tx-body{ display:flex; flex-direction:column; flex:1; padding:22px 22px 18px; min-width:0; }
   .tx-cat{
     font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:0.12em;
-    text-transform:uppercase; color:var(--sage); font-weight:500; margin-bottom:9px;
+    text-transform:uppercase; color:var(--sage-text); font-weight:500; margin-bottom:9px;
   }
   .tx-name{ font-size:19px; line-height:1.25; letter-spacing:-0.01em; }
   .tx-name a{ text-decoration:none; }
@@ -816,9 +826,9 @@
 
   .crumbs{
     display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:22px;
-    font-size:13px; color:#6B7669;
+    font-size:13px; color:#5B665A;
   }
-  .crumbs a{ color:#6B7669; text-decoration:none; border-bottom:1px solid transparent; }
+  .crumbs a{ color:#4B564F; text-decoration:none; border-bottom:1px solid transparent; }
   .crumbs a:hover{ color:var(--pine); border-bottom-color:var(--sage); }
   .crumbs span[aria-hidden]{ opacity:0.45; }
   .crumbs [aria-current]{ color:var(--pine-700); font-weight:600; }
@@ -846,6 +856,13 @@
   }
   .tx-hero-visual.has-photo{ background:var(--white); }
   .tx-hero-visual img{ width:100%; height:100%; object-fit:cover; }
+  .tx-hero-visual{ position:relative; }
+  .img-credit{
+    position:absolute; right:10px; bottom:10px;
+    background:rgba(22,48,45,0.72); color:var(--paper);
+    font-family:'Inter',sans-serif; font-size:11px; letter-spacing:0.04em;
+    padding:4px 9px; border-radius:999px; backdrop-filter:blur(3px);
+  }
   .tx-hero-visual .tx-art{ width:auto; height:88%; max-height:280px; }
 
   /* ── Treatment detail body ────────────────────────────────────────────── */
@@ -876,8 +893,9 @@
   .tx-aside-doctor img, .tx-aside-initials{
     width:52px; height:52px; border-radius:50%; object-fit:cover; flex-shrink:0;
   }
-  .tx-aside-initials{
-    display:flex; align-items:center; justify-content:center; background:var(--pine); color:var(--white);
+  .tx-aside-doctor .tx-aside-initials{
+    display:flex; align-items:center; justify-content:center;
+    background:var(--pine); color:var(--white);
     font-family:'Fraunces',serif; font-size:18px; font-weight:600;
   }
   .tx-aside-doctor strong{ display:block; font-size:15px; color:var(--pine-700); }
@@ -886,7 +904,7 @@
   .tx-aside-meta{ margin:18px 0 20px; display:grid; gap:13px; }
   .tx-aside-meta dt{
     font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.12em;
-    text-transform:uppercase; color:var(--sage);
+    text-transform:uppercase; color:var(--sage-text);
   }
   .tx-aside-meta dd{ margin:3px 0 0; font-size:14px; line-height:1.6; color:#4B564F; }
   .tx-aside-actions{ display:grid; gap:9px; }
@@ -932,7 +950,7 @@
   .tm-avatar img{ width:100%; height:100%; object-fit:cover; }
   .tm-who{ min-width:0; }
   .tm-name{ display:block; font-size:14.5px; font-weight:600; color:var(--pine-700); }
-  .tm-meta{ display:block; font-size:12px; color:#7C8A78; margin-top:2px; }
+  .tm-meta{ display:block; font-size:12px; color:#5F6E5C; margin-top:2px; }
 
   .tm-controls{ display:flex; align-items:center; justify-content:center; gap:16px; margin-top:8px; }
   .tm-arrow{
@@ -1003,7 +1021,7 @@
   .modal-backdrop.show .modal-card{ transform:translateY(0); }
   .modal-card h3{ font-size:24px; margin-top:10px; }
   .modal-lede{ margin-top:10px; font-size:14.5px; line-height:1.7; color:#5B665A; }
-  .modal-lede a{ color:var(--pine); }
+  .modal-lede a{ color:var(--pine); text-decoration:underline; text-underline-offset:2px; }
   .modal-card form{ margin-top:22px; }
   .modal-close{
     position:absolute; top:14px; right:14px; width:34px; height:34px; border-radius:50%;
@@ -1012,7 +1030,7 @@
   }
   .modal-close:hover{ background:var(--line); }
   .modal-submit{ width:100%; justify-content:center; margin-top:6px; }
-  .field-optional{ font-weight:400; color:#8A948A; font-size:12px; }
+  .field-optional{ font-weight:400; color:#5B665A; font-size:12px; }
   .modal-done{ text-align:center; padding:12px 0 4px; }
   .modal-done .tick{
     width:56px; height:56px; border-radius:50%; margin:0 auto 18px;
@@ -1051,8 +1069,12 @@
   .foot-hours .open-dot{ position:static; width:7px; height:7px; border-radius:50%; flex-shrink:0; }
   .foot-hours .open-dot.is-open{ background:#6FBF8B; }
   .foot-hours .open-dot.is-closed{ background:#C98A7A; }
+  .foot-hours .open-dot.is-break{ background:#D2A85C; }
 
-  .location-note{ margin-top:16px; font-size:15px; line-height:1.78; color:#4B564F; max-width:52ch; }
+  /* The panel this sits on is pine, not paper. At #4B564F the paragraph was
+     1.54:1 against it — effectively invisible — while the address directly
+     above it, which takes its colour from the panel's own scale, was fine. */
+  .location-note{ margin-top:16px; font-size:15px; line-height:1.78; color:rgba(250,248,243,0.78); max-width:52ch; }
 
   .prose{ max-width:720px; }
   .prose h2{ font-size:clamp(20px,2.3vw,25px); margin-top:38px; }
@@ -1066,14 +1088,16 @@
   }
   .prose a{ color:var(--pine); text-underline-offset:3px; }
   .prose a.mono{ display:inline-block; padding:4px 0; }
-  .prose-note{ margin-top:42px; font-size:13px; color:#8A948A; }
+  .prose-note{ margin-top:42px; font-size:13px; color:#6B7669; }
 
   /*
    * Touch targets. On a phone the footer links measured 17px tall and the
    * breadcrumbs 22px — tappable only if you aim. Padding the link itself keeps
    * the visual rhythm while giving each one a target you can hit at a glance.
    */
-  @media (max-width:900px){
+  /* Applied at every width: a 17px link is a poor target with a mouse too,
+     and touch-screen laptops are common. */
+  @media (min-width:0px){
     .foot-col ul{ gap:0; }
     .foot-col li{ display:flex; }
     .foot-col a{ display:block; padding:9px 0; min-height:38px; }
@@ -1115,7 +1139,7 @@
      ══════════════════════════════════════════════════════════════════════ */
   .contact-alt{
     font-family:'Inter',sans-serif; font-size:11.5px; font-weight:500;
-    letter-spacing:0.04em; color:var(--sage); margin-left:auto;
+    letter-spacing:0.04em; color:var(--sage-text); margin-left:auto;
   }
   .foot-alt{ color:rgba(250,248,243,0.45); font-size:12px; }
 
@@ -1138,3 +1162,52 @@
   }
   .modal-treatment svg{ color:var(--sage); flex-shrink:0; }
   .modal-treatment strong{ color:var(--pine-700); }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     URGENT CARE BAND
+     One red on the whole site, reserved for this. Using it anywhere else
+     destroys the signal.
+     ══════════════════════════════════════════════════════════════════════ */
+  .urgent-band{ background:#8C2A1C; color:#FFF3F0; }
+  .urgent-row{
+    display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between;
+    gap:16px 28px; padding-block:16px;
+  }
+  .urgent-text{ display:flex; align-items:center; gap:12px; min-width:0; }
+  .urgent-text svg{ width:22px; height:22px; flex-shrink:0; opacity:0.9; }
+  .urgent-text p{ font-size:15px; line-height:1.55; min-width:0; }
+  .urgent-text strong{ color:#FFFFFF; }
+  .urgent-actions{ display:flex; flex-wrap:wrap; gap:10px; }
+  .btn-urgent{
+    background:#FFF3F0; color:#8C2A1C; border:1px solid #FFF3F0;
+    font-family:'IBM Plex Mono',monospace; letter-spacing:0.02em;
+  }
+  .btn-urgent:hover{ background:#FFFFFF; border-color:#FFFFFF; }
+  .btn-urgent-ghost{ background:transparent; color:#FFF3F0; border:1px solid rgba(255,243,240,0.45); }
+  .btn-urgent-ghost:hover{ background:rgba(255,255,255,0.12); border-color:rgba(255,243,240,0.8); }
+  @media (max-width:760px){
+    .urgent-row{ flex-direction:column; align-items:stretch; }
+    .urgent-actions .btn{ flex:1; justify-content:center; }
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     SECONDARY TREATMENT LIST
+     The treatments that do not lead the grid, as a quiet two-column list.
+     ══════════════════════════════════════════════════════════════════════ */
+  .tx-more-list{ margin-top:34px; padding-top:28px; border-top:1px solid var(--line); }
+  .tx-more-head{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:500;
+    letter-spacing:0.12em; text-transform:uppercase; color:var(--sage-text); margin-bottom:12px;
+  }
+  .tx-more-list ul{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:0 28px; }
+  .tx-more-list li{ border-bottom:1px solid var(--line); min-width:0; }
+  .tx-more-list a{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:13px 2px; min-height:44px; text-decoration:none;
+    font-size:15.5px; color:var(--pine-700);
+    transition:color var(--dur-s) var(--ease);
+  }
+  .tx-more-list a svg{ width:16px; height:16px; color:var(--sage-text); flex-shrink:0;
+                       transition:transform var(--dur-s) var(--ease); }
+  .tx-more-list a:hover{ color:var(--pine); }
+  .tx-more-list a:hover svg{ transform:translateX(3px); }

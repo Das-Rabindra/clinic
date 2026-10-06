@@ -5,7 +5,7 @@
 import * as settingsRepo from '../repositories/settings.repo.js';
 import * as mediaRepo from '../repositories/media.repo.js';
 import { WEEKDAYS } from '../config/constants.js';
-import { minToHHMM, minTo12h, todayIn, weekdayOf } from '../utils/time.js';
+import { minToHHMM, minTo12h, todayIn, weekdayOf, utcToLocal } from '../utils/time.js';
 
 const mediaUrl = async (id, fallback = null) =>
   (id ? ((await mediaRepo.findById(id))?.url ?? fallback) : fallback);
@@ -71,11 +71,38 @@ export async function publicClinic() {
       closure_reason: holidayToday?.reason || null,
       open: todayHours?.is_open ? minTo12h(todayHours.open_min) : null,
       close: todayHours?.is_open ? minTo12h(todayHours.close_min) : null,
+      /* Whether the clinic is open *now*, which is a different question from
+         whether it trades today — the badge used the day flag and so read
+         "Open today" at 2 PM during the break, and at 11 PM. */
+      now: openNow(todayHours, holidayToday, tz),
     },
   };
 }
 
-/** Prefer the admin's verified place link; fall back to an address query. */
+/**
+ * Live open/closed state in the clinic's own timezone.
+ *
+ * Four readings, because "open" and "closed" alone cannot express a midday
+ * break: a patient told "Open" at 2 PM travels to a locked door, and one told
+ * "Closed" gives up on a clinic that reopens in forty minutes.
+ */
+function openNow(hours, holiday, tz) {
+  if (holiday) return { state: 'closed', label: holiday.reason || 'Closed today' };
+  if (!hours?.is_open) return { state: 'closed', label: 'Closed today' };
+
+  const { minutes } = utcToLocal(new Date(), tz);
+  const { open_min: open, close_min: close, break_start_min: bs, break_end_min: be } = hours;
+  const hasBreak = bs != null && be != null && bs > open && be < close;
+
+  if (minutes < open) return { state: 'closed', label: `Opens at ${minTo12h(open)}` };
+  if (minutes >= close) return { state: 'closed', label: 'Closed for the day' };
+  if (hasBreak && minutes >= bs && minutes < be) {
+    return { state: 'break', label: `On a break \u00b7 back at ${minTo12h(be)}` };
+  }
+  const until = hasBreak && minutes < bs ? bs : close;
+  return { state: 'open', label: `Open now \u00b7 until ${minTo12h(until)}` };
+}
+
 /** Prefer the admin's verified place link; fall back to an address query.
  *  Settings must be passed in — an async default parameter would resolve to a
  *  Promise rather than the row. */
@@ -89,12 +116,21 @@ export function directionsUrl(s, address) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
 }
 
+/**
+ * The embedded map.
+ *
+ * Google's keyless embed, not OpenStreetMap's. OSM's embed now renders through
+ * WebGL, and on a device without it — an older budget Android, hardware
+ * acceleration switched off, some privacy browsers — the frame shows
+ * "your browser does not support WebGL" where the map should be. Google's is
+ * raster-tiled, needs no key, and carries the branding patients recognise.
+ *
+ * Coordinates are used when the clinic has set them, so the pin lands on the
+ * building rather than on a geocoded guess at the street.
+ */
 export function mapEmbedUrl(s, address) {
   if (s.latitude && s.longitude) {
-    const d = 0.004;
-    const bbox = `${s.longitude - d}%2C${s.latitude - d}%2C${s.longitude + d}%2C${s.latitude + d}`;
-    // OpenStreetMap embed needs no API key and shows an exact pin.
-    return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${s.latitude}%2C${s.longitude}`;
+    return `https://www.google.com/maps?q=${s.latitude},${s.longitude}&z=17&output=embed`;
   }
   return `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
 }

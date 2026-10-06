@@ -1,11 +1,36 @@
 /** Central error handling. Never leaks stack traces or SQL to clients. */
 import { config } from '../config/env.js';
 
-export function notFound(req, res) {
+/**
+ * 404.
+ *
+ * Rendered through the site's own layout rather than as a bare page. Someone
+ * who mistypes a URL or follows a stale link previously landed on a dead end
+ * with one link back to the homepage — no navigation, no phone number, no way
+ * to reach the clinic from the page they are actually on.
+ */
+export async function notFound(req, res, next) {
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: 'Not found.', code: 'NOT_FOUND' });
   }
-  res.status(404).render('public/404', { title: 'Page not found' });
+  try {
+    const { publicLocals } = await import('../routes/public.routes.js');
+    const base = await publicLocals();
+    return res.status(404).render('public/404', {
+      ...base,
+      noindex: true,
+      meta: {
+        title: `Page not found | ${base.settings.name}`,
+        description: '', canonical: '', ogTitle: '', ogDescription: '', ogUrl: '', ogImage: null,
+      },
+      schemas: [],
+    });
+  } catch (err) {
+    /* The layout needs the database. If that is what is broken, still answer
+       with a 404 rather than turning it into a 500. */
+    console.error('[404] could not render the full layout:', err.message);
+    return next ? next(err) : res.status(404).type('text/plain').send('Page not found');
+  }
 }
 
 export function errorHandler(err, req, res, _next) {

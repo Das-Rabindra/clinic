@@ -223,6 +223,20 @@
         <rect x="24" y="54" width="12" height="2.4" rx="1.2"/>
       </g>
 
+    <% } else if (slug === 'dental-emergency') { %>
+      <%# A crack running through the crown, and the throb around it. The one
+          card where the subject is a problem rather than a procedure. %>
+      <g clip-path="url(#<%= id('clip') %>)" transform="translate(-8 -2)">
+        <path d="M62 18 L54 44 L66 50 L56 78 L60 104 L52 104 L48 76 L58 48 L46 42 L54 18z"
+              fill="#8C2A1C" opacity="0.82"/>
+      </g>
+      <g fill="none" stroke="#8C2A1C" stroke-linecap="round" opacity="0.5">
+        <path d="M18 28 Q10 36 12 48" stroke-width="2.4"/>
+        <path d="M86 28 Q94 36 92 48" stroke-width="2.4"/>
+        <path d="M8 20 Q-2 34 2 52" stroke-width="2" opacity="0.5"/>
+        <path d="M96 20 Q106 34 102 52" stroke-width="2" opacity="0.5"/>
+      </g>
+
     <% } else if (slug === 'pediatric-dentistry') { %>
       <%# A child's tooth beside the adult one. %>
       <g transform="translate(84 76) scale(0.44) translate(-52 -58)">

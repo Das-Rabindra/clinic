@@ -13,9 +13,13 @@
         <%# image_url, not the thumb: the thumb is a square crop and this frame
             is 16:9, so the sides would be cut off. %>
         <img src="<%= s.image_url %>"
-             alt="<%= s.image_alt || (s.name + ' at ' + clinic.name) %>"
+             alt="<%= s.image_alt || (s.name + ' — illustration') %>"
              width="<%= s.image_width || 1280 %>" height="<%= s.image_height || 720 %>"
-             loading="<%= i < 3 ? 'eager' : 'lazy' %>" decoding="async">
+             <%# Eager only where the grid really is the first thing on the page.
+                 On the homepage it is the fifth section down, so eager-loading
+                 the first three fetched ~300KB before anything visible. %>
+             loading="<%= (typeof gridIsLead !== 'undefined' && gridIsLead && i < 3) ? 'eager' : 'lazy' %>"
+             decoding="async">
       <% } else { %>
         <%- include('treatment-art', { slug: s.slug, name: s.name }) %>
       <% } %>

@@ -120,6 +120,8 @@ function resolveFaq(text, clinic) {
  * or a missing WhatsApp link, and so the header/footer partials can assume
  * these are always present.
  */
+export async function publicLocals(opts) { return baseLocals(opts); }
+
 async function baseLocals({ navBase = '/' } = {}) {
   const settings = await settingsRepo.get();
   const clinic = await publicClinic();
@@ -144,9 +146,7 @@ async function baseLocals({ navBase = '/' } = {}) {
     faviconUrl: favicon?.url || '/img/logo-64.png',
     whatsappUrl: await whatsappLink(),
     footerServices,
-    todayHours: clinic.today.is_open
-      ? `Open today · ${clinic.today.open} – ${clinic.today.close}`
-      : `Closed today${clinic.today.closure_reason ? ` · ${clinic.today.closure_reason}` : ''}`,
+    todayHours: clinic.today.now.label,
     shortAddress: [settings.area, settings.city].filter(Boolean).join(', ')
       || [settings.address_line1, settings.city].filter(Boolean).join(', ')
       || clinic.address,
@@ -195,6 +195,17 @@ router.get('/', async (req, res) => {
 
   res.render('public/index', {
     ...base,
+    preloadImage: heroMedia?.url || null,
+    emergency: services.find(s => s.slug === 'dental-emergency') || null,
+    ...(() => {
+      /* The homepage leads with six treatments and lists the rest. Emergency
+         care is excluded from both: it has its own band at the top, and
+         repeating it as a card would dilute that. */
+      const grid = services.filter(s => s.slug !== 'dental-emergency');
+      const lead = grid.filter(s => s.is_featured).slice(0, 6);
+      const leadIds = new Set(lead.map(s => s.id));
+      return { featuredServices: lead, otherServices: grid.filter(s => !leadIds.has(s.id)) };
+    })(),
     services, doctor, gallery, faqs, reviews, orderedHours,
     galleryCategories: categoryKeys.map(k => ({ key: k, label: CATEGORY_LABELS[k] || k })),
     meta: metaTags,
@@ -259,18 +270,26 @@ router.get('/services/:slug', async (req, res, next) => {
   const doctor = await doctorsRepo.primary();
   const doctorPhoto = doctor?.photo_media_id ? await mediaRepo.findById(doctor.photo_media_id) : null;
 
-  const related = (await servicesRepo.list({ activeOnly: true, featuredFirst: true }))
-    .filter(s => s.id !== service.id && s.has_detail_page).slice(0, 3);
+  const related = await servicesRepo.relatedFor(service, 3);
 
-  const faqs = (await contentRepo.listFaqs({ publishedOnly: true }))
-    .map(f => ({ question: resolveFaq(f.question, clinic), answer: resolveFaq(f.answer, clinic) }))
-    .slice(0, 5);
+  /*
+   * The treatment's own questions. Every page used to carry the same five
+   * site-wide ones, which answered nothing about the treatment and duplicated
+   * the identical block — and its FAQPage markup — across fourteen URLs. The
+   * site-wide set is the fallback only where a treatment has none of its own.
+   */
+  const ownFaqs = await servicesRepo.faqsFor(service.id);
+  const faqs = (ownFaqs.length
+    ? ownFaqs
+    : (await contentRepo.listFaqs({ publishedOnly: true })).slice(0, 5)
+  ).map(f => ({ question: resolveFaq(f.question, clinic), answer: resolveFaq(f.answer, clinic) }));
 
   issuePublicToken(req, res);
 
   res.render('public/service', {
     ...base,
     service,
+    preloadImage: service.image_url || null,
     benefits: String(service.benefits || '').split('\n').map(s => s.trim()).filter(Boolean),
     related, faqs, doctorPhoto,
     meta: seo.serviceMeta(service, settings),

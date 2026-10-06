@@ -224,10 +224,13 @@ describe('content security policy', () => {
     assert.ok(img.includes("'self'"));
     // Google review author avatars.
     assert.ok(img.includes('googleusercontent.com'));
+    /* Fonts are self-hosted: loading them from Google was the entire cause of
+       the site's CLS, so neither font host should be permitted any more. */
     const style = directive('style-src');
-    assert.ok(style.includes('https://fonts.googleapis.com'), 'the page loads Google Fonts');
+    assert.ok(!style.includes('fonts.googleapis.com'), 'fonts are served from this origin');
     const font = directive('font-src');
-    assert.ok(font.includes('https://fonts.gstatic.com'));
+    assert.ok(font.includes("'self'"));
+    assert.ok(!font.includes('fonts.gstatic.com'));
     // The map is an iframe, and both embeds the app can emit must be allowed.
     const frame = directive('frame-src');
     assert.ok(frame.includes('https://www.google.com'));
@@ -496,5 +499,117 @@ describe('FAQ accordion', () => {
     const page = (await srv.call('/')).body;
     assert.match(page, /classList\.add\('js'\)/,
       'the js class must be set before paint, or the answers flash open on load');
+  });
+});
+
+describe('fixes from the audit', () => {
+  test('opening hours markup splits around the midday break', async () => {
+    const r = await srv.call('/');
+    const dentist = [...r.body.matchAll(/application\/ld\+json">(.*?)<\/script>/gs)]
+      .map((m) => JSON.parse(m[1])).find((d) => d['@type'] === 'Dentist');
+    const spec = dentist.openingHoursSpecification;
+    // A single 09:00-22:00 block told Google the clinic was open at 2 PM.
+    assert.equal(spec.length, 14, 'two blocks per open day');
+    assert.ok(spec.some((s) => s.opens === '09:00' && s.closes === '13:00'));
+    assert.ok(spec.some((s) => s.opens === '15:00' && s.closes === '22:00'));
+    assert.ok(!spec.some((s) => s.opens === '09:00' && s.closes === '22:00'));
+  });
+
+  test('the clinic node carries an image and no price claim', async () => {
+    const r = await srv.call('/');
+    const dentist = [...r.body.matchAll(/application\/ld\+json">(.*?)<\/script>/gs)]
+      .map((m) => JSON.parse(m[1])).find((d) => d['@type'] === 'Dentist');
+    assert.ok(dentist.image, 'image is expected on a LocalBusiness');
+    assert.match(dentist.image, /^https?:\/\//, 'must be absolute');
+    assert.ok(!('priceRange' in dentist), 'the clinic does not publish prices');
+    assert.ok(Array.isArray(dentist.areaServed) && dentist.areaServed.length);
+  });
+
+  test('no price is shown anywhere on a treatment page', async () => {
+    const svc = await servicesRepo.findPublicBySlug('root-canal-treatment');
+    await servicesRepo.update(svc.id, { price_from: 4500, show_price: 1 });
+    try {
+      const r = await srv.call('/services/root-canal-treatment');
+      assert.ok(!r.body.includes('4500'), 'a price must not render even when one is stored');
+      assert.ok(!r.body.includes('₹'));
+    } finally {
+      await servicesRepo.update(svc.id, { price_from: null, show_price: 0 });
+    }
+  });
+
+  test('each treatment page carries its own questions', async () => {
+    const a = await srv.call('/services/root-canal-treatment');
+    const b = await srv.call('/services/dentures');
+    assert.match(a.body, /Does a root canal hurt\?/);
+    assert.match(b.body, /How long do dentures last\?/);
+    // The identical generic block used to repeat across all 14 URLs.
+    assert.ok(!a.body.includes('Do I need to book before visiting?'));
+  });
+
+  test('related treatments differ by page and make clinical sense', async () => {
+    const pick = async (slug) => {
+      const r = await srv.call(`/services/${slug}`);
+      return [...r.body.matchAll(/<a href="\/services\/([a-z-]+)" class="tx-link"/g)].map((m) => m[1]);
+    };
+    const rct = await pick('root-canal-treatment');
+    const dent = await pick('dentures');
+    assert.notDeepEqual(rct, dent, 'every page used to suggest the same three');
+    assert.ok(rct.includes('crowns-bridges'), 'a root-treated tooth usually needs a crown');
+    assert.ok(dent.includes('dental-implants'));
+  });
+
+  test('an urgent-care route exists and the homepage points at it', async () => {
+    assert.equal((await srv.call('/services/dental-emergency')).status, 200);
+    const home = await srv.call('/');
+    assert.match(home.body, /In pain today\?/);
+    assert.ok(home.body.includes('/services/dental-emergency'));
+  });
+
+  test('the homepage leads with six treatments, not fourteen', async () => {
+    const r = await srv.call('/');
+    const cards = (r.body.match(/class="tx-card"/g) || []).length;
+    assert.equal(cards, 6, 'fourteen near-identical cards buried the section');
+    assert.match(r.body, /Also treated at the clinic/);
+  });
+
+  test('the map embed does not depend on WebGL', async () => {
+    const r = await srv.call('/api/clinic');
+    // OpenStreetMap's embed renders through WebGL and shows an error without it.
+    assert.ok(!r.body.map_embed_url.includes('openstreetmap'));
+    assert.match(r.body.map_embed_url, /google\.com\/maps/);
+    assert.match(r.body.map_embed_url, /20\.903/);
+  });
+
+  test('the 404 page carries the site layout and a way to reach the clinic', async () => {
+    const r = await srv.call('/no-such-page');
+    assert.equal(r.status, 404);
+    assert.ok(r.body.includes('id="mobilePanel"'), 'navigation');
+    assert.ok(r.body.includes('tel:'), 'a phone number');
+    assert.ok(r.body.includes('footer'), 'the footer');
+    assert.match(r.body, /noindex/);
+  });
+
+  test('the lightbox no longer ships an empty heading', async () => {
+    const r = await srv.call('/');
+    const empties = [...r.body.matchAll(/<h([1-6])[^>]*>\s*<\/h\1>/g)];
+    assert.equal(empties.length, 0, `empty headings: ${empties.map((m) => m[0]).join(', ')}`);
+  });
+
+  test('label colours clear WCAG AA on every page ground', async () => {
+    const css = (await srv.call('/css/site.css')).body;
+    const sage = css.match(/--sage-text:\s*(#[0-9A-Fa-f]{6})/);
+    assert.ok(sage, 'a text-safe sage token must exist');
+    const lum = (hex) => {
+      const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+        .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+      return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    };
+    const ratio = (a, b) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05);
+    for (const ground of ['#FAF8F3', '#F1EDE4', '#FFFFFF']) {
+      assert.ok(ratio(sage[1], ground) >= 4.5,
+        `${sage[1]} on ${ground} is ${ratio(sage[1], ground).toFixed(2)}:1`);
+    }
+    // The raw sage stays for strokes but must not be used for small text.
+    assert.ok(!/\.eyebrow[^}]*color:var\(--sage\)[^-]/.test(css));
   });
 });

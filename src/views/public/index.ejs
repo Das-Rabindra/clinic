@@ -54,7 +54,9 @@
       <div class="hero-visual reveal in">
         <div class="hero-visual-frame<%= heroImage ? ' has-image' : '' %>">
           <% if (heroImage) { %>
-            <img src="<%= heroImage.url %>" alt="<%= heroImage.alt || (clinic.name + ' clinic') %>" width="<%= heroImage.width %>" height="<%= heroImage.height %>">
+            <img src="<%= heroImage.url %>" alt="<%= heroImage.alt || (clinic.name + ' clinic') %>"
+                 width="<%= heroImage.width %>" height="<%= heroImage.height %>"
+                 fetchpriority="high" decoding="async">
           <% } else { %>
             <svg class="arc-deco" viewBox="0 0 400 460" xmlns="http://www.w3.org/2000/svg">
               <path d="M40 340 Q200 420 360 340" stroke="#C79A4B" stroke-width="2" fill="none" opacity="0.5"/>
@@ -77,6 +79,29 @@
       </div>
     </div>
   </section>
+
+  <!-- ============ URGENT CARE ============ -->
+  <%# Nothing on the site addressed pain, which is what the highest-intent
+      local searches are about. The 10 PM closing time is a real advantage and
+      was never stated where someone in trouble would see it. %>
+  <% if (emergency) { %>
+  <aside class="urgent-band">
+    <div class="wrap urgent-row">
+      <div class="urgent-text">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+        <p><strong>In pain today?</strong> The clinic is open until <%= clinic.today.close || '10:00 PM' %> every day, and keeps time free for urgent problems.</p>
+      </div>
+      <div class="urgent-actions">
+        <% if (clinic.phone) { %>
+        <a class="btn btn-urgent" href="tel:<%= clinic.phone_intl || clinic.phone %>" data-track="emergency_call">
+          Call <%= clinic.phone %>
+        </a>
+        <% } %>
+        <a class="btn btn-urgent-ghost" href="/services/<%= emergency.slug %>">What counts as an emergency</a>
+      </div>
+    </div>
+  </aside>
+  <% } %>
 
   <!-- ============ CREDENTIAL STRIP ============ -->
   <div class="cred-strip">
@@ -153,9 +178,27 @@
       </div>
 
       <% if (services.length) { %>
+        <%# Six cards, not fourteen. Fourteen near-identical photographs five
+            rows deep blurred together and added ~1,500px to the page without
+            helping anyone choose. The rest stay one tap away as a plain list. %>
         <div class="reveal">
-          <%- include('partials/treatment-grid', { cards: services }) %>
+          <%- include('partials/treatment-grid', { cards: featuredServices }) %>
         </div>
+        <% if (otherServices.length) { %>
+        <div class="tx-more-list reveal">
+          <h3 class="tx-more-head">Also treated at the clinic</h3>
+          <ul>
+            <% otherServices.forEach(function (s) { %>
+            <li>
+              <a href="/services/<%= s.slug %>">
+                <span><%= s.name %></span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+              </a>
+            </li>
+            <% }) %>
+          </ul>
+        </div>
+        <% } %>
         <div class="tx-index-foot reveal">
           <a class="btn btn-outline-dark" href="/services">See all treatments</a>
         </div>
@@ -216,7 +259,11 @@
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
       <div id="lightboxMedia"></div>
-      <h3 id="lightboxTitle" style="font-size:19px; margin-top:16px;"></h3>
+      <%# Not a heading: it is empty until a photo is opened, and an empty
+          heading is a WCAG 1.3.1 failure that also pollutes the document
+          outline a screen reader announces. aria-live announces the caption
+          when the photo changes. %>
+      <p id="lightboxTitle" class="lb-title" aria-live="polite"></p>
       <p style="margin-top:8px; color:#5B665A; font-size:14px;" id="lightboxDesc"></p>
       <div style="display:flex; justify-content:center; gap:10px; margin-top:22px;">
         <button type="button" class="btn btn-outline-dark btn-sm" id="lightboxPrev" aria-label="Previous photo">&larr; Previous</button>
@@ -383,13 +430,9 @@
         </div>
 
         <div style="margin-top:34px;">
-          <div class="open-pill <%= clinic.today.is_open ? 'open' : 'closed' %>">
+          <div class="open-pill <%= clinic.today.now.state %>">
             <span class="open-dot"></span>
-            <% if (clinic.today.is_open) { %>
-              Open today &middot; <%= clinic.today.open %> &ndash; <%= clinic.today.close %>
-            <% } else { %>
-              Closed today<% if (clinic.today.closure_reason) { %> &middot; <%= clinic.today.closure_reason %><% } %>
-            <% } %>
+            <%= clinic.today.now.label %>
           </div>
           <table class="hours-table">
             <tbody>

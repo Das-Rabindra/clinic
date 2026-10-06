@@ -49,7 +49,7 @@
         </ul>
         <% if (todayHours) { %>
         <p class="foot-hours">
-          <span class="open-dot <%= clinic.today.is_open ? 'is-open' : 'is-closed' %>"></span>
+          <span class="open-dot <%= clinic.today.now.state === 'open' ? 'is-open' : (clinic.today.now.state === 'break' ? 'is-break' : 'is-closed') %>"></span>
           <%= todayHours %>
         </p>
         <% } %>

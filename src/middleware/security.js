@@ -34,11 +34,12 @@ const CSP_PUBLIC = [
   // on every content edit, so the inline allowance is scoped and no remote
   // script origins are permitted beyond the font/maps hosts below.
   "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com data:",
+  /* Fonts are self-hosted now, so neither Google font host is needed. */
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self' data:",
   `img-src ${imageSources(config.storage.driver, config.storage.blobBaseUrl)}`,
-  // Google Maps, and the OpenStreetMap embed used when the clinic has set
-  // exact coordinates.
+  // The keyless Google Maps embed. OpenStreetMap stays listed only so an
+  // older stored map_embed_url keeps working.
   "frame-src https://www.google.com https://maps.google.com https://www.openstreetmap.org",
   "connect-src 'self'",
   "form-action 'self'",

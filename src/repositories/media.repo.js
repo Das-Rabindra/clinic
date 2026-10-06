@@ -36,6 +36,12 @@ export const thumbFor = async (id) =>
 export const setAlt = async (id, alt) =>
   (await run(`UPDATE media SET alt = ?, updated_at = NOW() WHERE id = ?`, alt, id)).changes;
 
+/** Mark an image as a licensed/illustrative photograph rather than the
+    clinic's own, so the page can say so wherever it is shown large. */
+export const setStock = async (id, isStock) =>
+  (await run(`UPDATE media SET is_stock = ?, updated_at = NOW() WHERE id = ?`,
+    isStock ? 1 : 0, id)).changes;
+
 /** Soft-delete the original and its derived variants together. */
 export const softDelete = async (id) =>
   (await run(`UPDATE media SET deleted_at = NOW() WHERE id = ? OR variant_of = ?`, id, id)).changes;

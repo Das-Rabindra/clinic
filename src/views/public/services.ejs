@@ -24,7 +24,7 @@
     <div class="wrap">
       <% if (cards.length) { %>
         <div class="reveal in">
-          <%- include('partials/treatment-grid', { cards: cards }) %>
+          <%- include('partials/treatment-grid', { cards: cards, gridIsLead: true }) %>
         </div>
       <% } else { %>
         <div class="reveal in reviews-empty">

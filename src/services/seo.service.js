@@ -7,6 +7,7 @@ import * as settingsRepo from '../repositories/settings.repo.js';
 import * as reviewsRepo from '../repositories/reviews.repo.js';
 import * as doctorsRepo from '../repositories/doctors.repo.js';
 import * as servicesRepo from '../repositories/services.repo.js';
+import * as mediaRepo from '../repositories/media.repo.js';
 import { config } from '../config/env.js';
 import { minToHHMM } from '../utils/time.js';
 
@@ -31,16 +32,35 @@ export function meta(s) {
   };
 }
 
-/** Opening hours in schema.org form, from the admin-managed weekly grid. */
+/**
+ * Opening hours in schema.org form, from the admin-managed weekly grid.
+ *
+ * A day with a midday break emits two blocks, not one. Flattening 09:00-13:00
+ * and 15:00-22:00 into a single 09:00-22:00 span told Google the clinic was
+ * open through the break — so it would show "Open" at 2 PM and send someone to
+ * a closed door.
+ */
 async function openingHours() {
-  return (await settingsRepo.getHours())
-    .filter(h => h.is_open)
-    .map(h => ({
+  const out = [];
+  for (const h of await settingsRepo.getHours()) {
+    if (!h.is_open) continue;
+    const day = `https://schema.org/${DAY_NAMES[h.weekday]}`;
+    const block = (from, to) => ({
       '@type': 'OpeningHoursSpecification',
-      dayOfWeek: `https://schema.org/${DAY_NAMES[h.weekday]}`,
-      opens: minToHHMM(h.open_min),
-      closes: minToHHMM(h.close_min),
-    }));
+      dayOfWeek: day, opens: minToHHMM(from), closes: minToHHMM(to),
+    });
+
+    const hasBreak = h.break_start_min != null && h.break_end_min != null
+      && h.break_start_min > h.open_min && h.break_end_min < h.close_min;
+
+    if (hasBreak) {
+      out.push(block(h.open_min, h.break_start_min));
+      out.push(block(h.break_end_min, h.close_min));
+    } else {
+      out.push(block(h.open_min, h.close_min));
+    }
+  }
+  return out;
 }
 
 export async function structuredData() {
@@ -54,6 +74,12 @@ export async function structuredData() {
    * on the page — they are simply not claimed as a verified rating.
    */
   const agg = await reviewsRepo.aggregateVerified();
+
+  /* Prefer an explicit social image, then the hero, then the clinic logo —
+     absolute, because a relative URL in JSON-LD is not resolved. */
+  const absolute = (u) => (u ? new URL(u, url).toString() : null);
+  const hero = s.hero_media_id ? await mediaRepo.findById(s.hero_media_id) : null;
+  const node_image = absolute(s.og_image_url) || absolute(hero?.url) || `${url}/img/logo-240.png`;
 
   /*
    * addressLocality must be the town Google matches against a search like
@@ -89,10 +115,15 @@ export async function structuredData() {
           } }
       : {}),
     email: s.email || undefined,
-    image: s.og_image_url || undefined,
+    /* `image` is effectively expected on a LocalBusiness and feeds local rich
+       results; it was absent because og_image_url is only set when an admin
+       picks a social image. Fall back to whatever the page already shows. */
+    image: node_image || undefined,
     address,
     medicalSpecialty: 'Dentistry',
-    priceRange: undefined,
+    /* No priceRange: the clinic does not publish prices, and a band in the
+       markup is a price claim of its own. */
+    availableLanguage: ['English', 'Hindi', 'Odia'],
   };
 
   if (s.latitude && s.longitude) {
@@ -104,6 +135,11 @@ export async function structuredData() {
      Only links the clinic has actually supplied are emitted. */
   const sameAs = [s.instagram_url, s.facebook_url, s.youtube_url].filter(Boolean);
   if (sameAs.length) node.sameAs = sameAs;
+
+  if (s.city) {
+    node.areaServed = [s.city, s.area, 'Angul district']
+      .filter(Boolean).map(name => ({ '@type': 'Place', name }));
+  }
 
   const hours = await openingHours();
   if (hours.length) node.openingHoursSpecification = hours;

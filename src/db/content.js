@@ -152,6 +152,14 @@ const ADDED_TREATMENTS = [
     short_desc: 'Treatment for gums that bleed, recede or feel sore, and for the bone beneath them.',
     duration_min: 45,
   },
+  {
+    /* The clinic trades until 10 PM every day, which is unusual and is exactly
+       what someone in pain at night is searching for. Nothing on the site
+       addressed pain at all. */
+    slug: 'dental-emergency', name: 'Emergency Dental Care', category: 'Urgent',
+    short_desc: 'Toothache, swelling, a broken tooth or a knocked-out tooth — seen the same day where possible.',
+    duration_min: 30, featured: true,
+  },
 ];
 
 /* ── Treatment detail content ────────────────────────────────────────────── */
@@ -273,6 +281,15 @@ const TREATMENTS = {
     seo_description: 'Treatment for bleeding and receding gums at Samal Dental Care, Bikrampur, FCI Township, Talcher. Book a gum assessment with Dr. Sonali S. Samal.',
     is_featured: 1,
   },
+  'dental-emergency': {
+    long_desc: 'Dental problems rarely wait for a convenient moment. The clinic is open until 10 PM every day, including Sunday, and keeps room for urgent cases. If something has broken, swollen or started to throb, call rather than wait for it to settle \u2014 most of what makes a dental emergency worse is time.',
+    who_needs: 'Toothache that will not settle or wakes you at night; facial swelling; a tooth knocked out or broken; a crown or filling that has come out; bleeding that will not stop after an extraction; or an injury to the mouth. Swelling that is spreading towards the eye or the throat, or that makes swallowing or breathing difficult, is a hospital matter \u2014 go to A&E, do not wait for a dental appointment.',
+    what_to_expect: 'Call first so the clinic knows what is coming and can tell you what to do meanwhile. You will be seen the same day where the diagnosis allows it. The first visit is about settling the pain and controlling any infection; the definitive treatment \u2014 a root canal, a crown, an extraction \u2014 is planned once you are comfortable rather than decided while you are in pain.',
+    benefits: 'Open until 10:00 PM every day, Sunday included\nSame-day appointments kept free for urgent problems\nPain and infection dealt with first, treatment decided after\nClear advice on the phone about what to do before you arrive',
+    seo_title: 'Emergency Dentist in Talcher \u2014 Open till 10 PM | Samal Dental Care',
+    seo_description: 'Toothache, swelling or a broken tooth in Talcher? Samal Dental Care is open until 10 PM every day at Bikrampur, FCI Township. Call 8847879686.',
+    is_featured: 1,
+  },
   'pediatric-dentistry': {
     long_desc: 'Dental care for children — from a first check-up through to fillings and preventive treatment — at a pace that lets a child get used to the chair before anything needs doing.',
     who_needs: 'Children from around their first birthday onwards. A first visit when nothing is wrong is by far the easiest introduction; after that a check every six months catches decay in milk teeth before it starts to hurt.',
@@ -282,6 +299,168 @@ const TREATMENTS = {
     seo_description: 'Gentle dental care for children at Samal Dental Care, Bikrampur, FCI Township, Talcher. Check-ups, cleaning and fillings for younger patients.',
     is_featured: 0,
   },
+};
+
+/* ── Related treatments ────────────────────────────────────────────────────
+   Pairs a dentist would actually suggest, rather than the first three featured
+   treatments, which is what every page showed. */
+const RELATED = {
+  'general-dentistry':    'dental-cleaning,dental-fillings,gum-treatment',
+  'dental-cleaning':      'gum-treatment,general-dentistry,teeth-whitening',
+  'dental-fillings':      'root-canal-treatment,crowns-bridges,general-dentistry',
+  'root-canal-treatment': 'crowns-bridges,dental-fillings,tooth-extraction',
+  'crowns-bridges':       'root-canal-treatment,dental-implants,dentures',
+  'tooth-extraction':     'dental-implants,dentures,wisdom-tooth',
+  'wisdom-tooth':         'tooth-extraction,general-dentistry,gum-treatment',
+  'dental-implants':      'crowns-bridges,dentures,tooth-extraction',
+  'dentures':             'dental-implants,crowns-bridges,tooth-extraction',
+  'gum-treatment':        'dental-cleaning,general-dentistry,tooth-extraction',
+  'teeth-whitening':      'aesthetic-dentistry,dental-cleaning,crowns-bridges',
+  'aesthetic-dentistry':  'teeth-whitening,crowns-bridges,braces-aligners',
+  'braces-aligners':      'aesthetic-dentistry,general-dentistry,dental-cleaning',
+  'pediatric-dentistry':  'general-dentistry,dental-cleaning,dental-fillings',
+  'dental-emergency':     'root-canal-treatment,tooth-extraction,dental-fillings',
+};
+
+/* ── Questions patients ask about each treatment ───────────────────────────
+   Every page previously carried the same five site-wide questions, which
+   answered nothing about the treatment and duplicated across fourteen indexed
+   URLs. These are the questions a dentist actually gets asked. */
+const SERVICE_FAQS = {
+  'root-canal-treatment': [
+    ['Does a root canal hurt?',
+      'The tooth is numbed thoroughly first, so the treatment itself should not hurt \u2014 most patients say it felt like having a long filling. What hurts is the infection beforehand, which is what the treatment removes. The tooth can feel tender to bite on for a few days afterwards.'],
+    ['How many visits does it take?',
+      'One or two, depending on the tooth and how infected it is. A front tooth with a single canal is often done in one; a back molar with three or four canals usually takes two.'],
+    ['Will I need a crown afterwards?',
+      'Usually, on a back tooth. A root-treated tooth has had its blood supply removed and becomes more brittle, so it is prone to splitting under chewing. A crown holds it together. Front teeth sometimes manage without.'],
+    ['Is it better to just take the tooth out?',
+      'Extraction is quicker and cheaper on the day, but the gap then needs filling with an implant or a bridge, which costs more than the root canal did. Keeping your own tooth is almost always the better long-term answer where it is possible.'],
+  ],
+  'dental-implants': [
+    ['How long does the whole process take?',
+      'Three to six months in most cases. The post is placed, then left to fuse with the bone before the crown goes on. You are not without a tooth for that time \u2014 a temporary is usually fitted.'],
+    ['Does placing an implant hurt?',
+      'It is done under local anaesthetic, like an extraction. Most people describe the discomfort afterwards as less than they expected, and manageable with ordinary painkillers for a day or two.'],
+    ['Am I suitable for an implant?',
+      'It depends on how much bone is there and on the health of your gums, which is what the first appointment establishes with an examination and X-rays. Gum disease has to be treated first. Smoking lowers the success rate and we will be straight with you about that.'],
+    ['How long does an implant last?',
+      'Implants regularly last decades, but they are not maintenance-free: they can be lost to gum disease the same way a natural tooth can. Cleaning around them properly is what decides it.'],
+  ],
+  'dentures': [
+    ['How long do dentures last?',
+      'Five to ten years is typical, but the fit changes sooner than that because the gum and bone underneath shrink after teeth are lost. A reline every few years keeps them fitting rather than replacing them outright.'],
+    ['Will I be able to eat normally?',
+      'Not immediately. Start with softer food cut small, chew on both sides at once, and build up over a few weeks. Most people manage most things eventually, though very hard or sticky food stays awkward.'],
+    ['Will people be able to tell?',
+      'Modern dentures are made to match your own tooth shade and face. The giveaway is usually movement rather than appearance, which is what a good fit and, where suitable, implant retention are for.'],
+    ['Do I take them out at night?',
+      'Yes. Leaving them out overnight lets the gum tissue recover and lowers the risk of fungal infection. Keep them in water so they do not dry out and warp.'],
+  ],
+  'gum-treatment': [
+    ['Will my gums stop bleeding?',
+      'In early gum disease, usually within a week or two of the cleaning plus proper brushing and cleaning between the teeth. Bleeding is inflammation, and inflammation settles once the deposits causing it are gone.'],
+    ['Can I lose teeth from gum disease?',
+      'Yes \u2014 it is the most common reason adults lose teeth, and it is usually painless until late. The bone holding the teeth shrinks away quietly. That is why the measurement at the first visit matters.'],
+    ['Is the treatment painful?',
+      'Cleaning above the gum line is not. Cleaning below it, where the pockets are deep, is done with the area numbed. Teeth often feel more sensitive for a week or so afterwards as the gum tightens back.'],
+    ['Will the bone grow back?',
+      'No. Treatment stops further loss and settles the inflammation, but bone already lost does not return. That is the honest reason to come in early rather than wait.'],
+  ],
+  'teeth-whitening': [
+    ['How much whiter will my teeth get?',
+      'It varies with the kind of staining and the starting shade, which is why the shade is recorded before and after rather than promised in advance. Yellowish staining lifts well; greyish discolouration responds less.'],
+    ['Will it damage my teeth?',
+      'Whitening at professional concentrations, with the gums protected, does not soften or weaken enamel. Sensitivity for a day or two is common and settles. Shop-bought kits used repeatedly are the greater risk.'],
+    ['How long does it last?',
+      'Typically one to two years, depending on tea, coffee and tobacco. Top-ups are straightforward once the first treatment is done.'],
+    ['Will my fillings and crowns whiten too?',
+      'No \u2014 whitening works on natural tooth, not on restorative materials. If you have a visible filling or crown it may need replacing afterwards to match the new shade, and that is worth planning before you start.'],
+  ],
+  'braces-aligners': [
+    ['How long will treatment take?',
+      'Months to a couple of years, depending on how far the teeth have to move. You will be given a realistic range at the assessment, not an optimistic one.'],
+    ['Braces or clear aligners \u2014 which is better?',
+      'Braces handle more movement and do not rely on you remembering anything. Aligners are less visible and come out for meals, but only work if worn around 22 hours a day. The choice depends on the movement needed and on you being honest about the wearing.'],
+    ['Am I too old for braces?',
+      'No. Teeth move at any age, provided the gums and bone are healthy. Adults make up a growing share of orthodontic patients.'],
+    ['Do I really have to wear a retainer afterwards?',
+      'Yes, and indefinitely. Teeth drift back toward where they started \u2014 that is not a failure of the treatment, it is how teeth behave. Retainers are part of the treatment, not an optional extra.'],
+  ],
+  'tooth-extraction': [
+    ['How long does it take to heal?',
+      'The socket closes over in about a week and the gum heals in two to three. The bone underneath takes a few months to fill in, which matters if you are planning an implant.'],
+    ['What should I avoid afterwards?',
+      'No rinsing, spitting or smoking for 24 hours \u2014 all three can dislodge the clot and leave a dry socket, which is genuinely painful. No hot drinks and nothing through a straw on the first day.'],
+    ['Should I replace the tooth?',
+      'A back tooth that nobody sees can sometimes be left, but the teeth either side tend to tilt into the gap over time and the bite changes. We will set out the options \u2014 implant, bridge or denture \u2014 at a follow-up, not on the day.'],
+  ],
+  'wisdom-tooth': [
+    ['Do all wisdom teeth need removing?',
+      'No, and most do not. One that has come through straight, bites properly and can be cleaned is best left alone. Removal is for the ones causing repeated infection, decay or pressure on the tooth in front.'],
+    ['How bad is the recovery?',
+      'Expect swelling and soreness for two to three days, peaking around day two, and a stiff jaw for a few days after that. A straightforward upper wisdom tooth is usually much easier than a lower one that is lying on its side.'],
+    ['Why does the gum keep getting sore?',
+      'A partly erupted wisdom tooth leaves a flap of gum over it that traps food and bacteria and cannot be cleaned properly. That is pericoronitis, and it tends to recur until the tooth is either fully through or removed.'],
+  ],
+  'dental-fillings': [
+    ['How long does a filling last?',
+      'Commonly five to ten years, sometimes much longer. It depends on the size of the filling, where it is in the mouth, and how heavily you grind or clench.'],
+    ['Can I eat straight afterwards?',
+      'Yes with a composite filling, which is set hard before you leave. Wait until the numbness has worn off though, or you will bite your cheek without feeling it.'],
+    ['Why does my tooth still twinge afterwards?',
+      'A deep filling can leave the nerve irritated for a few weeks. That usually settles. If it gets worse, lingers after hot or cold, or wakes you at night, come back \u2014 that can mean the nerve is not recovering.'],
+  ],
+  'dental-cleaning': [
+    ['How often do I need a cleaning?',
+      'Once or twice a year suits most people. More often if you have had gum disease, smoke, or build up tartar quickly \u2014 that varies far more between people than most expect.'],
+    ['Will it make my teeth whiter?',
+      'It removes surface staining from tea, coffee and tobacco, so teeth often look brighter. It does not change the natural shade of the tooth underneath \u2014 that is whitening, which is a separate treatment.'],
+    ['Does scaling damage enamel or loosen teeth?',
+      'No. The scaler removes deposits, not tooth. Teeth can feel slightly looser briefly after a deep clean because the inflamed gum tightens as it heals \u2014 that is recovery, not damage.'],
+  ],
+  'crowns-bridges': [
+    ['How long do crowns and bridges last?',
+      'Ten to fifteen years is typical, and often longer. What usually fails is not the crown itself but new decay at its edge, so cleaning that margin properly is what decides its life.'],
+    ['Does the tooth have to be filed down?',
+      'Yes, for a crown \u2014 enough to make room for the material without the tooth feeling bulky. That is irreversible, which is why it is only recommended where the tooth genuinely needs the protection.'],
+    ['Bridge or implant?',
+      'A bridge is quicker and needs no surgery, but it means preparing the healthy teeth either side. An implant leaves them untouched but takes months and costs more. Both are explained with the trade-offs before you choose.'],
+  ],
+  'pediatric-dentistry': [
+    ['When should my child first see a dentist?',
+      'Around their first birthday, or within six months of the first tooth. The first visit is mostly about getting them comfortable, not treatment.'],
+    ['Do milk teeth need filling if they fall out anyway?',
+      'Often yes. Decay in a milk tooth causes the same pain and infection as in an adult one, and losing it too early lets the other teeth drift and crowd the adult tooth coming behind it.'],
+    ['How do I stop my child being frightened?',
+      'Bring them along to your own appointment first so the place is familiar. Avoid words like "hurt", "needle" or "pull" even in reassurance \u2014 children hear the word, not the reassurance. We explain things to them in their own terms.'],
+  ],
+  'general-dentistry': [
+    ['How often should I have a check-up?',
+      'Every six months for most adults. Someone with healthy teeth and gums and no risk factors may be fine annually; someone with a history of decay or gum disease may need to come more often.'],
+    ['What happens at a check-up?',
+      'An examination of the teeth, gums and bite, a look at the soft tissues, and X-rays where they would show something an examination cannot. You leave knowing what is fine, what needs attention, and what it costs.'],
+    ['Nothing hurts \u2014 do I still need to come?',
+      'Decay and gum disease are both painless until they are advanced. By the time a tooth hurts, the cheap fix has usually passed. That is the whole argument for check-ups.'],
+  ],
+  'dental-emergency': [
+    ['My tooth is throbbing \u2014 what can I do right now?',
+      'Take the painkiller you would normally use for a headache, at the dose on the packet. Keep your head raised, including at night. Avoid very hot or very cold food on that side. Do not hold an aspirin against the gum \u2014 it burns the tissue and does not help the tooth. Then call, because painkillers mask a problem that is still progressing.'],
+    ['My tooth has been knocked out. Can it be put back?',
+      'Sometimes, if you act fast. Hold it by the crown, never the root. If it is dirty, rinse it briefly in milk or saline \u2014 not tap water, and do not scrub it. Push it gently back into the socket if you can and bite on a clean cloth; if not, keep it in milk and come straight away. The first hour matters more than anything else. Milk teeth are not replanted.'],
+    ['How do I know if it is an emergency or can wait until morning?',
+      'Call and we will tell you honestly. Pain that is manageable with painkillers usually can wait a few hours. Swelling, especially swelling that is spreading or closing your eye, cannot. Swelling that affects swallowing or breathing is a hospital emergency \u2014 go to A&E immediately rather than waiting for a dentist.'],
+    ['Will I be seen the same day?',
+      'Where the problem is genuinely urgent, usually yes \u2014 time is kept free each day for exactly this. The clinic is open until 10 PM every day including Sunday, which is why calling is better than guessing.'],
+  ],
+  'aesthetic-dentistry': [
+    ['Is it permanent?',
+      'It depends what is done. Whitening and bonding are reversible or easily redone. Veneers and crowns involve removing tooth structure and cannot be undone \u2014 that is explained in full before anything starts.'],
+    ['Will it look obvious?',
+      'It should not. The shade is matched to your own teeth and the shape to your face. The common mistake is going too white and too uniform, which is exactly what makes dental work noticeable.'],
+    ['Can anything be done without drilling?',
+      'Often, yes \u2014 whitening, bonding and reshaping an edge all leave the tooth essentially intact. Those are the options discussed first.'],
+  ],
 };
 
 /* ── Local FAQs ────────────────────────────────────────────────────────────
@@ -389,7 +568,7 @@ export async function applyContent({ log = console.log } = {}) {
     if (await one('SELECT id FROM services WHERE slug = ?', t.slug)) continue;
     const category = await servicesRepo.ensureCategory(t.category);
     const created = await servicesRepo.create({
-      name: t.name, category_id: category.id, short_desc: t.short_desc,
+      name: t.name, slug: t.slug, category_id: category.id, short_desc: t.short_desc,
       duration_min: t.duration_min, bookable: true, is_active: true,
     });
     /* servicesRepo.create() derives the slug from the name. If that ever stops
@@ -401,6 +580,33 @@ export async function applyContent({ log = console.log } = {}) {
     added++;
   }
   if (added) log(`[content] ${added} treatment(s) added`);
+
+  /* Related treatments. Set only while empty, so a clinic that has chosen its
+     own pairings keeps them. */
+  let paired = 0;
+  for (const [slug, related] of Object.entries(RELATED)) {
+    const r = await run(
+      `UPDATE services SET related_slugs = ?, updated_at = NOW()
+       WHERE slug = ? AND (related_slugs IS NULL OR related_slugs = '')`, related, slug);
+    paired += r.changes;
+  }
+  if (paired) log(`[content] ${paired} treatment(s) given clinically paired suggestions`);
+
+  /* Per-treatment questions. UNIQUE(service_id, question) makes the insert
+     idempotent, and an answer the clinic has edited is never overwritten. */
+  let sfaq = 0;
+  for (const [slug, rows] of Object.entries(SERVICE_FAQS)) {
+    const svc = await one('SELECT id FROM services WHERE slug = ? AND deleted_at IS NULL', slug);
+    if (!svc) continue;
+    for (const [i, [question, answer]] of rows.entries()) {
+      const r = await run(
+        `INSERT INTO service_faqs (service_id, question, answer, display_order)
+         VALUES (?, ?, ?, ?) ON CONFLICT (service_id, question) DO NOTHING`,
+        svc.id, question, answer, i);
+      sfaq += r.changes;
+    }
+  }
+  if (sfaq) log(`[content] ${sfaq} treatment-specific FAQ(s) added`);
 
   let treatments = 0;
   for (const [slug, t] of Object.entries(TREATMENTS)) {

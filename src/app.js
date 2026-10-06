@@ -33,6 +33,13 @@ export function createApp() {
 
   /* Static assets. Uploaded media is served read-only with a long cache; the
      filenames are content-hashed so they can be cached aggressively. */
+  /* Fonts are versioned by filename and never change in place, so they get a
+     year and an immutable hint — a repeat visitor should never re-fetch them. */
+  app.use('/fonts', express.static(path.join(root, '..', 'public', 'fonts'), {
+    maxAge: config.isProd ? '365d' : 0,
+    immutable: config.isProd,
+    index: false,
+  }));
   app.use(express.static(path.join(root, '..', 'public'), {
     maxAge: config.isProd ? '7d' : 0,
     etag: true,

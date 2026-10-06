@@ -32,12 +32,8 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
               <span>About <%= service.duration_min %> minutes</span>
             </li>
-            <% if (service.show_price && service.price_from) { %>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 4h12M6 9h12M9 4c4 0 6 2 6 5s-2 5-6 5h-3l8 6"/></svg>
-              <span>From <%= service.currency === 'INR' ? '₹' : '' %><%= service.price_from %></span>
-            </li>
-            <% } %>
+            <%# The clinic does not publish prices. The admin fields remain so
+                that decision can be reversed, but nothing renders one. %>
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg>
               <span><%= shortAddress %></span>
@@ -65,9 +61,14 @@
         <div class="tx-hero-visual<%= service.image_url ? ' has-photo' : '' %>">
           <% if (service.image_url) { %>
             <img src="<%= service.image_url %>"
-                 alt="<%= service.image_alt || (service.name + ' at ' + clinic.name) %>"
-                 width="<%= service.image_width || 720 %>" height="<%= service.image_height || 540 %>"
+                 alt="<%= service.image_alt || (service.name + ' — illustration') %>"
+                 width="<%= service.image_width || 1280 %>" height="<%= service.image_height || 720 %>"
                  fetchpriority="high" decoding="async">
+            <%# Said plainly where the photograph is largest. A licensed image
+                presented without this reads as the clinic's own work. %>
+            <% if (service.image_is_stock) { %>
+            <span class="img-credit">Illustrative image</span>
+            <% } %>
           <% } else { %>
             <%- include('partials/treatment-art', { slug: service.slug, name: service.name }) %>
           <% } %>
@@ -140,9 +141,7 @@
           <dl class="tx-aside-meta">
             <div><dt>Clinic</dt><dd><%= clinic.name %></dd></div>
             <div><dt>Where</dt><dd><%= clinic.address %></dd></div>
-            <div><dt>Today</dt><dd>
-              <% if (clinic.today.is_open) { %>Open <%= clinic.today.open %> &ndash; <%= clinic.today.close %><% } else { %>Closed<% } %>
-            </dd></div>
+            <div><dt>Right now</dt><dd><%= clinic.today.now.label %></dd></div>
           </dl>
 
           <div class="tx-aside-actions">

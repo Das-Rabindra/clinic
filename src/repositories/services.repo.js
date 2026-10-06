@@ -3,13 +3,15 @@ import { slugify } from '../utils/format.js';
 
 const FIELDS = ['name','category_id','short_desc','long_desc','icon','image_media_id',
   'duration_min','price_from','currency','show_price','bookable','is_active','display_order',
-  'who_needs','what_to_expect','benefits','seo_title','seo_description','is_featured','has_detail_page'];
+  'who_needs','what_to_expect','benefits','seo_title','seo_description','is_featured','has_detail_page',
+  'related_slugs'];
 
 /* thumb_url is the square 480px variant the media pipeline actually produces.
    It suits the admin list; the public card uses image_url, because a square
    crop would cut the sides off a 16:9 card. */
 const BASE = `SELECT s.*, c.name AS category_name,
     m.url AS image_url, m.alt AS image_alt, m.width AS image_width, m.height AS image_height,
+    m.is_stock AS image_is_stock,
     t.url AS thumb_url
   FROM services s
   LEFT JOIN service_categories c ON c.id = s.category_id
@@ -27,6 +29,35 @@ export const findPublicBySlug = async (slug) =>
   await one(`${BASE} WHERE s.slug = ? AND s.deleted_at IS NULL
        AND s.is_active = 1 AND s.has_detail_page = 1`, slug);
 
+/** The treatments this one should point at, in the clinic's own order. */
+export async function relatedFor(service, limit = 3) {
+  const slugs = String(service.related_slugs || '').split(',').map(x => x.trim()).filter(Boolean);
+  const picked = [];
+  for (const slug of slugs) {
+    if (picked.length >= limit) break;
+    const r = await findPublicBySlug(slug);
+    if (r && r.id !== service.id) picked.push(r);
+  }
+  /* Top up from the featured list when the clinic has not set pairs, so a
+     newly added treatment still shows something rather than nothing. */
+  if (picked.length < limit) {
+    const rest = await list({ activeOnly: true, featuredFirst: true });
+    for (const r of rest) {
+      if (picked.length >= limit) break;
+      if (r.id === service.id || !r.has_detail_page) continue;
+      if (picked.some(p => p.id === r.id)) continue;
+      picked.push(r);
+    }
+  }
+  return picked;
+}
+
+/** FAQs written for one treatment. */
+export const faqsFor = async (serviceId) =>
+  await all(`SELECT question, answer FROM service_faqs
+       WHERE service_id = ? AND is_published = 1
+       ORDER BY display_order, id`, serviceId);
+
 /** Slugs for the sitemap. */
 export const publicSlugs = async () =>
   await all(`SELECT slug, updated_at FROM services
@@ -38,8 +69,13 @@ export const findBookable = async (id) =>
   await one(`${BASE} WHERE s.id = ? AND s.deleted_at IS NULL AND s.is_active = 1 AND s.bookable = 1`, id);
 
 export async function create(s) {
-  let slug = slugify(s.name), n = 1;
-  while (await one('SELECT id FROM services WHERE slug = ?', slug)) slug = `${slugify(s.name)}-${++n}`;
+  /* An explicit slug wins. The display name and the URL are different
+     decisions — "Emergency Dental Care" belongs at /services/dental-emergency,
+     which is the phrase people search — and deriving one from the other made
+     the two silently disagree. */
+  const base = s.slug ? slugify(s.slug) : slugify(s.name);
+  let slug = base, n = 1;
+  while (await one('SELECT id FROM services WHERE slug = ?', slug)) slug = `${base}-${++n}`;
   const order = s.display_order ?? ((await one('SELECT COALESCE(MAX(display_order), 0) + 1 AS n FROM services')).n);
   const info = await run(
     `INSERT INTO services (name, slug, category_id, short_desc, long_desc, icon, image_media_id,
