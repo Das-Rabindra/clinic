@@ -54,6 +54,14 @@ async function upload(key, buffer, contentType) {
     // the way of deterministic URLs.
     addRandomSuffix: false,
     cacheControlMaxAge: 31536000,
+    /*
+     * The key is a hash of the bytes, so a key collision means the identical
+     * image is already stored. Without this the SDK refuses and the admin sees
+     * "Image storage rejected the upload: this blob already exists" — a 502 for
+     * what is simply uploading the same photo twice. Overwriting the same
+     * content with itself is a no-op.
+     */
+    allowOverwrite: true,
   });
   return { key, url: res.url, storage: name };
 }
