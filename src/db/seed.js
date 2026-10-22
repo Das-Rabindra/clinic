@@ -17,6 +17,7 @@ import * as contentRepo from '../repositories/content.repo.js';
 import { config } from '../config/env.js';
 import { applyContent } from './content.js';
 import { applyTestimonials } from './testimonials.js';
+import { applyGalleryContent } from './gallery-content.js';
 
 /* Content carried over verbatim from legacy/index.original.html */
 const CLINIC = {
@@ -171,6 +172,9 @@ export async function seed({ log = console.log } = {}) {
        be marked applied, and never run again. */
     await applyContent({ log });
     await applyTestimonials({ log });
+    /* Not in the test suite: each test database starts with an empty
+       gallery, and test/gallery-content.test.mjs exercises this directly. */
+    if (process.env.NODE_ENV !== 'test') await applyGalleryContent({ log });
   });
 
   /* First admin user. Only from env, only when no users exist. */
