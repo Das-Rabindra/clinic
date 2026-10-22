@@ -58,3 +58,21 @@ describe('clinic gallery photos', () => {
     }
   });
 });
+
+describe('concurrent boots', () => {
+  test('two instances starting at once add each photo only once, and existing duplicates are cleaned up', async () => {
+    await db.run(`DELETE FROM gallery_items`);
+    // Simulate the production race's leftovers: two live copies of one title.
+    const m = await db.one(`INSERT INTO media (storage,key,url,folder,mime,ext,bytes) VALUES ('local','d/1','/media/d1.webp','treatment-results','image/webp','webp',1) RETURNING id`);
+    for (let i = 0; i < 2; i++) {
+      await db.run(`INSERT INTO gallery_items (media_id,title,category,is_published,consent_confirmed) VALUES (?,?, 'treatment', 1, 1)`, m.id, PHOTOS[0].title);
+    }
+    await Promise.all([apply({ log: () => {} }), apply({ log: () => {} }), apply({ log: () => {} })]);
+    for (const p of PHOTOS) {
+      const live = await db.all(`SELECT id FROM gallery_items WHERE title = ? AND deleted_at IS NULL`, p.title);
+      assert.equal(live.length, 1, `${p.title}: ${live.length} live copies`);
+    }
+    const kept = await db.one(`SELECT m.deleted_at FROM gallery_items g JOIN media m ON m.id = g.media_id WHERE g.title = ? AND g.deleted_at IS NULL`, PHOTOS[0].title);
+    assert.equal(kept.deleted_at, null, 'the kept copy still has its image');
+  });
+});
