@@ -698,9 +698,14 @@ p { margin: 0; }
 .action-bar__item svg { width: 1.25rem; height: 1.25rem; }
 .action-bar__item--primary { background: var(--color-primary); color: var(--color-on-primary); }
 .has-action-bar { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
+/* Keyboard focus and anchor jumps must never land behind the fixed bar
+   (WCAG 2.4.11): the browser keeps this much room at the bottom when it
+   scrolls a focused element into view. */
+html:has(body.has-action-bar) { scroll-padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
 @media (min-width: 1024px) {
   .action-bar { display: none; }
   .has-action-bar { padding-bottom: 0; }
+  html:has(body.has-action-bar) { scroll-padding-bottom: 0; }
 }
 
 /* ── Reduced motion: no transitions, no animation, no smooth scroll ───── */
