@@ -289,3 +289,28 @@ image sizes).
 
 **Rollback:** `git revert <stage-4 commit>` restores `site.css`, `site.js` and
 the old partials.
+
+### Stage 4: verified on production (`a262112`)
+
+**Lighthouse mobile, 3 runs each (Stage 0 baseline in brackets)**
+
+| Page | Perf | A11y | LCP | Weight |
+|---|---|---|---|---|
+| `/services` | 98 / 98 / 100 (92) | **100** (94) | 2.4 / 2.4 / 1.5 s (**3.3 s**) | 346 KiB (443) |
+| `/services/root-canal-treatment` | 98 / 99 / 99 (98) | **100** (95) | 2.3 s (2.4) | 176 KiB (223) |
+| `/privacy` | 100 (100) | **100** (94) | 1.5 s (1.7) | 124 KiB (172) |
+
+Best practices and SEO are 100 on every page. CLS is 0 on every page.
+
+**Other checks**
+
+- Every `<loc>` in the live sitemap returns 200. `/css/site.css` returns 404.
+- 4 pages × 8 widths: no overflow, one h1 each, no console errors, and the
+  action bar present below 1024 px. Screenshots are in
+  `/home/ravi/clinic-redesign-artifacts/stage-4/prod/`.
+- Read-only checks (non-GET requests aborted; none were attempted):
+  - Book on a `/services` card lands in the homepage wizard at Date with
+    that treatment chosen
+  - the detail-page FAQ opens
+  - the drawer takes focus
+  - the call-back dialog opens from the detail page, carrying the treatment
