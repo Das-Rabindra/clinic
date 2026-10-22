@@ -273,7 +273,7 @@ router.get('/', async (req, res) => {
     addressHtml: [settings.name, settings.address_line1, settings.address_line2,
       settings.area, [settings.city, settings.state].filter(Boolean).join(', '), settings.postal_code]
       .filter(Boolean).map(esc).join('<br>'),
-    heroTitleHtml: esc(settings.hero_title || settings.name).replace(/\n/g, '<br>'),
+    heroTitleHtml: esc(settings.hero_title || settings.name).replace(/\s*\n\s*/g, ' <br>'),
     servicesJson: JSON.stringify(services.map(s => ({
       id: s.id, name: s.name, slug: s.slug, duration: s.duration_min,
       desc: s.short_desc, category: s.category_name, bookable: s.bookable === 1,
