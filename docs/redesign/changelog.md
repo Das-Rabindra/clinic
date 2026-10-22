@@ -430,3 +430,13 @@ data migration is involved.
 ## Stage 6: production-readiness QA
 
 See `06-qa.md`. Verified fixes: focus kept clear of the mobile bar (WCAG 2.4.11) and an h1 added to the preview page. Every page meets the budget (LCP 1.5–2.4 s, CLS 0, A11y/SEO 100). Vercel blocked the last two deploys (needs a dashboard check). npm audit fixes await approval.
+
+### Deploys unblocked (2026-10-22)
+
+Vercel had blocked six commits: "GitHub couldn't verify an account for the commit". They were authored as `das.rabindra@github.com`, which is not on the GitHub account. The repo now commits as the account's GitHub noreply address, and `b349850` deployed everything waiting. Verified live:
+
+- the focus fix
+- the preview page h1
+- the password-reset fix (an invalid token now returns `INVALID_TOKEN`)
+- the security updates
+- booking (mocked confirmation)
