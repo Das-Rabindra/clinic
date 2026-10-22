@@ -229,3 +229,35 @@ describe('testimonials layout preview (sample content)', () => {
     assert.ok(!body.includes('AggregateRating'));
   });
 });
+
+describe('paper-card testimonials', () => {
+  test('only entries with the patient\'s own words AND consent are published, once', async () => {
+    const { applyTestimonials } = await import('../src/db/testimonials.js');
+    const list = [
+      { name: 'Card Patient', rating: 5, text: 'Exact words from the card.', date: '2026-10-10', consent: true },
+      { name: 'No Words Yet', rating: 5, text: '', consent: true },
+      { name: 'No Consent', rating: 5, text: 'Words here.', consent: false },
+    ];
+    const first = await applyTestimonials({ log: () => {}, list });
+    assert.equal(first.added, 1);
+    assert.deepEqual(first.waiting, ['No Words Yet', 'No Consent']);
+    assert.equal((await applyTestimonials({ log: () => {}, list })).added, 0, 'idempotent');
+    const row = await db.one(`SELECT source, consent_confirmed, collected_via, is_visible FROM reviews WHERE author_name = 'Card Patient'`);
+    assert.equal(row.source, 'manual');
+    assert.equal(row.consent_confirmed, 1);
+    assert.equal(row.collected_via, 'Paper feedback card');
+    const body = await home();
+    assert.match(body, /Exact words from the card\./);
+    assert.match(body, /Shared with the clinic/);
+    assert.ok(!body.includes('Sample &middot;'));
+    assert.ok(!body.includes('AggregateRating'), 'manual testimonials never feed Google rating markup');
+    await db.run(`DELETE FROM reviews WHERE author_name = 'Card Patient'`);
+  });
+
+  test('nothing is published from the shipped list until card text and consent are filled in', async () => {
+    const { TESTIMONIALS } = await import('../src/db/testimonials.js');
+    for (const t of TESTIMONIALS) {
+      if (t.consent) assert.ok(String(t.text).trim().length > 0, `${t.name}: consent without words`);
+    }
+  });
+});

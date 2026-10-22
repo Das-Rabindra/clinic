@@ -16,6 +16,7 @@ import * as settingsRepo from '../repositories/settings.repo.js';
 import * as contentRepo from '../repositories/content.repo.js';
 import { config } from '../config/env.js';
 import { applyContent } from './content.js';
+import { applyTestimonials } from './testimonials.js';
 
 /* Content carried over verbatim from legacy/index.original.html */
 const CLINIC = {
@@ -169,6 +170,7 @@ export async function seed({ log = console.log } = {}) {
        run before the seed, so on a fresh database they would match no rows,
        be marked applied, and never run again. */
     await applyContent({ log });
+    await applyTestimonials({ log });
   });
 
   /* First admin user. Only from env, only when no users exist. */
