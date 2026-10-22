@@ -411,3 +411,18 @@ data migration is involved.
     tick.
   - The database enforces consent before anything shows.
   - The homepage switches to the carousel automatically.
+
+### Stage 5: verified on production (`9876692`)
+
+- The booking POST was **mocked** in the browser. Every other non-GET request
+  was aborted, and none were attempted.
+- **Deep link:** `/#appointment?treatment=root-canal-treatment` opens at
+  "Step 2 of 5 · Date". Day labels read "Friday 23 October, 20 times
+  available". The earliest-time shortcut works.
+- **Live slots:** they skip the 1–3 PM break, and a 60-minute root canal is
+  not offered at 12:30.
+- **Validation:** an empty submit puts focus on Full name.
+- **Confirmation:** the mocked confirmation shows the reference and the
+  WhatsApp button.
+- `/_preview/testimonials` returns 200 with `X-Robots-Tag: noindex, nofollow`.
+  The homepage still shows the genuine-only empty state.
