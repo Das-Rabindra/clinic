@@ -173,3 +173,40 @@ files.
 
 **Rollback:** `git revert <stage-3 commit>`. The homepage returns to
 `site.css` and the old partials, which are still in the repo.
+
+### Stage 3: verified on production after deploy (`55a8f74`)
+
+**Lighthouse mobile, 3 runs (baseline from Stage 0 in brackets)**
+
+| Metric | Now | Baseline |
+|---|---|---|
+| Performance | 100 / 96 / 100 | 96 |
+| Accessibility | **100** | 95 |
+| Best practices | 100 | 100 |
+| SEO | 100 | 100 |
+| LCP | **1.7–1.8 s** | 2.8 s |
+| CLS | 0 | 0 |
+| Page weight | **291 KiB** | 442 KiB |
+
+The LCP element is the hero paragraph.
+
+**Read-only behaviour on production** (every non-GET request aborted; the only
+one attempted was Google Maps' own telemetry):
+
+- The hero serves `treatment-room-480.webp` at 390 px.
+- Urgent line: "open today 9:00 AM to 10:00 PM, closed 1:00 PM to 3:00 PM".
+- The hours table marks today, with two sessions.
+- Gallery: single figure.
+- Reviews: empty state plus QR. No `AggregateRating`.
+- The wizard's Continue button is reachable on steps 1 and 2.
+- Live slots skip 1–3 PM.
+- The action bar returns at the top of the page.
+- The call-back form validates without sending.
+
+**Screenshots** for all 4 pages × 8 widths are in
+`/home/ravi/clinic-redesign-artifacts/stage-3/prod/`. No overflow, one h1 per
+page.
+
+- The first 320 px capture straight after the deploy logged a 504 and a 404:
+  a cold start. Three repeat loads were clean, with the bar visible.
+- Other pages are unchanged and still on `site.css`.
