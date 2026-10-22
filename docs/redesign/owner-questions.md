@@ -156,3 +156,18 @@ examination first", "a written plan") and are fine as they are.
 
 The emergency page's long description and SEO title ("Open till 10 PM") carry
 the same hours wording (audit §11).
+
+### Answer to question 10 (2026-10-22)
+
+- **Photo A** stays as the hero.
+- **Photos B and C** go into the gallery as "patient work" ("Before & after"
+  category), not at the top of the page.
+- **C:** consent is **not confirmed yet**, so it stays unpublished until the
+  patient's written consent is on file.
+- **B** shows no identifiable patient, but the same consent tick applies.
+- **Route:** Admin → Gallery → Media library → upload → "Use this photo" →
+  Gallery, category "Before & after", then tick consent. The database refuses
+  to publish a "Before & after" item without that tick, and records who
+  confirmed it and when.
+- **Layout:** the homepage gallery switches from a single photo to a grid
+  automatically once there are 2–4 photos (tested in `test/home.test.mjs`).

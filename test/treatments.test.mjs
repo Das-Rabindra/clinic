@@ -122,7 +122,7 @@ describe('treatment pages in a browser', () => {
       p.waitForNavigation({ waitUntil: 'networkidle0' }),
       p.click('.treatment-card .book-service'),
     ]);
-    await p.waitForFunction(() => document.querySelector('.bstep.active')?.textContent.includes('Date'), { timeout: 10000 });
+    await p.waitForFunction(() => document.querySelector('.booking-progress__compact')?.textContent.includes('Date'), { timeout: 10000 });
     assert.equal(new URL(p.url()).pathname, '/');
     await p.close();
   });

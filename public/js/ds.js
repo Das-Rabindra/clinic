@@ -156,7 +156,8 @@
        required — any non-blank value
        name     — at least 2 characters          (zName)
        phone    — at least 10 digits, at most 15 (zPhone: 10–20 characters)
-       mobile   — Indian mobile, 6–9 then 9 digits, optional 91 prefix
+       mobile   — exactly what the server's normalisePhone() accepts:
+                  6–9 + 9 digits, optionally prefixed 91 or 0
 
      A form with data-validate-js is submitted by its own script: when it is
      valid the native submit is cancelled and a "ds:valid" event fires on it. */
@@ -164,7 +165,7 @@
     required: function (v) { return v.length > 0; },
     name: function (v) { return v.length >= 2; },
     phone: function (v) { var d = v.replace(/\D/g, ''); return d.length >= 10 && d.length <= 15; },
-    mobile: function (v) { return /^(?:\+?91)?[6-9]\d{9}$/.test(v.replace(/[\s-]/g, '')); },
+    mobile: function (v) { var d = v.replace(/\D/g, ''); return /^(?:91|0)?[6-9]\d{9}$/.test(d); },
   };
 
   function setFieldError(field, message) {

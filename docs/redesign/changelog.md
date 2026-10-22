@@ -314,3 +314,76 @@ Best practices and SEO are 100 on every page. CLS is 0 on every page.
   - the detail-page FAQ opens
   - the drawer takes focus
   - the call-back dialog opens from the detail page, carrying the treatment
+
+## Stage 5: Booking UI (pushed to `main`)
+
+The full map is in `05-booking.md`.
+
+**Changed for patients**
+
+- Calm five-step flow with a clear progress indicator: a numbered list on
+  desktop; "Step 2 of 5 · Date" plus a bar on phones.
+- Treatments are native radio cards. Descriptions are hidden on phones to
+  keep the list short.
+- Calendar:
+  - readable day names
+  - an "Earliest free time" shortcut (from the server's `next_available`)
+  - full or closed days disabled and announced as such
+- Times are grouped Morning, Afternoon and Evening, with large tap targets.
+  The selected time shows a check mark and a 2 px border, not colour alone.
+- Details:
+  - inline errors next to each field
+  - phone rule identical to the server's
+  - a reminder not to type medical history
+- A review step before confirming, with a link to the policy.
+- The confirmation appears only after the server responds. It shows the
+  booking reference, Add to calendar, **WhatsApp the clinic** (previously
+  never shown), and Book another.
+- Every error has a specific message. Call and WhatsApp are always offered
+  when booking can't go ahead. Nothing typed is lost.
+- **New "Already booked? Find or cancel your appointment"** panel, using the
+  existing server endpoints.
+
+**Files**
+
+- Rewritten: `public/js/booking.js`, `public/css/booking.css`, and the
+  booking section of `index.ejs`.
+- Changed:
+  - `ds.js`: mobile rule matches the server
+  - `ds.css`: hover only on hover-capable devices
+  - `public.routes.js`: `booking.css` loads normally
+  - `test/home.test.mjs` and `test/treatments.test.mjs`: new selectors
+- Added: `test/booking-ui.test.mjs`, `docs/redesign/05-booking.md`.
+- **Not changed:** any API, server validation, schema, availability logic,
+  appointment creation, reference numbers, cancellation logic, or
+  notifications.
+
+**Tests actually run**
+
+`npm test`: **245/245 pass**. The 15 new booking tests run in Chromium against
+an isolated database:
+
+| Case | Result |
+|---|---|
+| Valid booking: confirmation after 201 only; reference format; focus; announcement; ICS 200; WhatsApp button; DB row | ✔ |
+| Focus and announcement on step change; readable day labels | ✔ |
+| Missing fields: errors, `aria-invalid`, described-by, focus on first, values kept, nothing sent | ✔ |
+| Invalid phone caught; 0-prefixed phone accepted | ✔ |
+| No free times on a day (mocked) | ✔ |
+| Calendar fails to load (mocked 500), then retry | ✔ |
+| Slot taken before submit (mocked 409) | ✔ |
+| Network failure on submit (aborted): no false success | ✔ |
+| Server rejection with field errors (mocked 400) | ✔ |
+| Rate limited (mocked 429) | ✔ |
+| Duplicate submit: three clicks, one POST | ✔ |
+| Continue clear of the action bar on a phone, every step | ✔ |
+| Find + cancel with explicit confirmation; DB status `cancelled` | ✔ |
+| Wrong phone: not found, nothing leaked | ✔ |
+| Completed booking: not cancellable online | ✔ |
+| Rescheduling | Not supported for patients (server is admin-only); the panel says to call or message |
+
+Step screenshots at 390 and 1440 px are in
+`/home/ravi/clinic-redesign-artifacts/stage-5/`.
+
+**Rollback:** `git revert <stage-5 commit>` restores the previous wizard. No
+data migration is involved.

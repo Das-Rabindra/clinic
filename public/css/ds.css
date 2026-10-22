@@ -523,7 +523,11 @@ p { margin: 0; }
   cursor: pointer;
   transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
 }
-.slot-option:hover:not([aria-disabled='true']) { border-color: var(--color-primary); background: color-mix(in srgb, var(--color-accent-sage) 45%, var(--color-surface)); }
+/* Hover only where a pointer really hovers: on touch screens :hover sticks to
+   the tapped button and would wash out its selected state. */
+@media (hover: hover) {
+  .slot-option:hover:not([aria-disabled='true']):not([aria-pressed='true']) { border-color: var(--color-primary); background: color-mix(in srgb, var(--color-accent-sage) 45%, var(--color-surface)); }
+}
 .slot-option__note { font-size: 0.75rem; font-weight: var(--weight-medium); line-height: 1.2; }
 .slot-option__check { display: none; width: 1rem; height: 1rem; }
 .slot-option[aria-pressed='true'] {

@@ -244,8 +244,9 @@ router.get('/', async (req, res) => {
   res.render('public/index', {
     ...base,
     ds: true,
-    pageCss: ['/css/home.css'],
-    pageCssDeferred: ['/css/booking.css'],
+    /* booking.css blocks render on purpose: arriving at /#appointment from a
+       treatment page shows the wizard first, and it must not flash unstyled. */
+    pageCss: ['/css/home.css', '/css/booking.css'],
     weekHours: orderedHours.map(h => ({ ...h, display: dayHours(h) })),
     todayHoursDisplay: clinic.today.is_open ? dayHours(todayRow) : null,
     hoursSummary: hoursSentence(clinic),

@@ -141,7 +141,8 @@ describe('homepage in a browser', () => {
   btest('the wizard\'s Continue button is never under the action bar', async () => {
     const p = await phone();
     await p.evaluate(() => document.getElementById('appointment').scrollIntoView());
-    await p.click('.booking-shell .choice[data-service]');
+    await p.waitForSelector('input[name="bkService"]');
+    await p.click('input[name="bkService"]');
     const onTop = await p.evaluate(async () => {
       const b = document.getElementById('bookNext');
       b.scrollIntoView({ block: 'end' });
