@@ -44,10 +44,16 @@ describe('styleguide route', () => {
     }
   });
 
-  test('live pages do not load the new system yet', async () => {
-    // Stage 2 must not change what patients see; pages adopt ds.css in Stage 3.
-    const home = await srv.call('/');
-    assert.ok(!home.body.includes('/css/ds.css'));
+  test('each page loads exactly one design system', async () => {
+    // The homepage moved to ds.css in Stage 3; the rest follow in Stage 4.
+    // A page loading both would let site.css and ds.css fight over the base
+    // styles.
+    const home = (await srv.call('/')).body;
+    assert.ok(home.includes('/css/ds.css') && !home.includes('/css/site.css'));
+    for (const path of ['/services', '/privacy']) {
+      const r = (await srv.call(path)).body;
+      assert.ok(r.includes('/css/site.css') && !r.includes('/css/ds.css'), path);
+    }
   });
 });
 

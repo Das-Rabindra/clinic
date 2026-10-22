@@ -1,0 +1,64 @@
+<%# Footer for pages on the new design system. Old pages use footer.ejs. %>
+<% var nav = typeof navBase === 'undefined' ? '' : navBase; %>
+<footer class="site-footer">
+  <div class="container">
+    <div class="site-footer__grid">
+      <div class="site-footer__brand">
+        <a class="site-footer__logo" href="<%= nav || '#top' %>">
+          <img src="<%= logoUrl %>" alt="" width="36" height="36">
+          <span><%= clinic.name %></span>
+        </a>
+        <p class="text-small">
+          <% if (clinic.doctor) { %><%= clinic.doctor %><% if (clinic.qualification) { %>, <%= clinic.qualification %><% } %><br><% } %>
+          <% if (clinic.institution) { %><%= clinic.institution %><br><% } %>
+          <% if (clinic.registration) { %><%= clinic.registration %><% } %>
+        </p>
+        <%- include('social') %>
+      </div>
+
+      <nav class="site-footer__col" aria-labelledby="footTreatments">
+        <h2 class="site-footer__heading" id="footTreatments">Treatments</h2>
+        <ul>
+          <% footerServices.forEach(function (s) { %>
+          <li><a href="/services/<%= s.slug %>"><%= s.name %></a></li>
+          <% }) %>
+          <li><a href="/services">All treatments</a></li>
+        </ul>
+      </nav>
+
+      <nav class="site-footer__col" aria-labelledby="footClinic">
+        <h2 class="site-footer__heading" id="footClinic">Clinic</h2>
+        <ul>
+          <li><a href="<%= nav %>#about">About Dr. <%= (clinic.doctor || '').replace(/^Dr\.?\s*/i, '') %></a></li>
+          <li><a href="<%= nav %>#gallery">Inside the clinic</a></li>
+          <li><a href="<%= nav %>#reviews">Patient testimonials</a></li>
+          <li><a href="<%= nav %>#faq">Questions patients ask</a></li>
+          <li><a href="<%= nav %>#appointment">Book an appointment</a></li>
+          <li><a href="/privacy">Privacy &amp; appointment policy</a></li>
+        </ul>
+      </nav>
+
+      <div class="site-footer__col">
+        <h2 class="site-footer__heading">Visit or contact</h2>
+        <ul>
+          <li><address><%= clinic.address %></address></li>
+          <% if (clinic.phone) { %><li><a href="tel:<%= clinic.phone_intl || clinic.phone %>" data-track="call_clicked"><%= clinic.phone %></a></li><% } %>
+          <% if (clinic.phone_secondary) { %><li><a href="tel:<%= clinic.phone_secondary_intl || clinic.phone_secondary %>" data-track="call_clicked"><%= clinic.phone_secondary %> <span class="site-footer__note">(second line)</span></a></li><% } %>
+          <% if (whatsappUrl) { %><li><a href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked">WhatsApp the clinic</a></li><% } %>
+          <% if (clinic.email) { %><li><a href="mailto:<%= clinic.email %>"><%= clinic.email %></a></li><% } %>
+          <li><a href="<%= clinic.directions_url %>" target="_blank" rel="noopener" data-track="directions_clicked">Get directions</a></li>
+        </ul>
+        <% if (todayHours) { %>
+        <p class="status-pill status-pill--<%= clinic.today.now.state %>"><span class="status-pill__dot" aria-hidden="true"></span><%= todayHours %></p>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="site-footer__bottom">
+      <span>&copy; <%= new Date().getFullYear() %> <%= clinic.name %></span>
+      <a href="/privacy">Privacy &amp; appointment policy</a>
+    </div>
+  </div>
+</footer>
+
+<%- include('quick-actions') %>

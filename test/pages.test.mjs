@@ -291,11 +291,12 @@ describe('about section', () => {
 
   test('gives the credential list its own styling hook', async () => {
     const r = await srv.call('/');
-    assert.ok(r.body.includes('class="cred-list"'));
-    const css = await srv.call('/css/site.css');
+    assert.ok(r.body.includes('class="facts-list"'));
+    const css = await srv.call('/css/home.css');
     // Only `.doctor-cred-list` was ever styled, so every row rendered as
-    // unspaced running text: "QualificationBDS, FRCD".
-    assert.match(css.body, /\.cred-list\b/, 'the class the template uses must be styled');
+    // unspaced running text: "QualificationBDS, FRCD". The class the template
+    // uses must be the class the stylesheet styles.
+    assert.match(css.body, /\.facts-list\b/, 'the class the template uses must be styled');
   });
 });
 
@@ -306,7 +307,7 @@ describe('header on a phone', () => {
     // replaced and the sub-line is nowrap, so putting it here pushed the header
     // 53px past the viewport on a 414px phone — wide phones broke while narrow
     // ones passed, because below 400px the header CTA is hidden and it fit.
-    const m = r.body.match(/class="brand-sub">([^<]*)</);
+    const m = r.body.match(/class="(?:brand-sub|site-header__place)">([^<]*)</);
     assert.ok(m, 'the header carries a location line');
     const line = m[1].trim();
     assert.ok(line.length <= 24, `brand line is ${line.length} chars: "${line}"`);
@@ -334,7 +335,7 @@ describe('mobile menu', () => {
      * for "does it open" passed straight over it.
      */
     const headerEnd = r.body.indexOf('</header>');
-    const panelStart = r.body.indexOf('id="mobilePanel"');
+    const panelStart = r.body.search(/id="(?:mobilePanel|navDrawer)"/);
     assert.ok(headerEnd > -1 && panelStart > -1);
     assert.ok(panelStart > headerEnd,
       'the panel must be a sibling of <header>, not a descendant of it');
@@ -343,8 +344,10 @@ describe('mobile menu', () => {
   test('every page carries the panel, so the menu works away from home', async () => {
     for (const path of ['/', '/services', '/services/dentures', '/privacy']) {
       const r = await srv.call(path);
-      assert.ok(r.body.includes('id="mobilePanel"'), path);
-      assert.ok(r.body.indexOf('id="mobilePanel"') > r.body.indexOf('</header>'), path);
+      // mobilePanel on pages still on site.css, navDrawer on the new system.
+      const at = r.body.search(/id="(?:mobilePanel|navDrawer)"/);
+      assert.ok(at > -1, path);
+      assert.ok(at > r.body.indexOf('</header>'), path);
     }
   });
 });
@@ -497,7 +500,7 @@ describe('FAQ accordion', () => {
       'opening must set the measured height so no answer is clipped');
 
     const page = (await srv.call('/')).body;
-    assert.match(page, /classList\.add\('js'\)/,
+    assert.match(page, /classList\.add\('js'/,
       'the js class must be set before paint, or the answers flash open on load');
   });
 });
@@ -567,7 +570,7 @@ describe('fixes from the audit', () => {
 
   test('the homepage leads with six treatments, not fourteen', async () => {
     const r = await srv.call('/');
-    const cards = (r.body.match(/class="tx-card"/g) || []).length;
+    const cards = (r.body.match(/class="(?:tx-card|card card--interactive treatment-card)"/g) || []).length;
     assert.equal(cards, 6, 'fourteen near-identical cards buried the section');
     assert.match(r.body, /Also treated at the clinic/);
   });

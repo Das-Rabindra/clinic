@@ -14,7 +14,10 @@
 <meta name="twitter:title" content="<%= meta.ogTitle %>">
 <meta name="twitter:description" content="<%= meta.ogDescription %>">
 <meta name="robots" content="<%= typeof noindex !== 'undefined' && noindex ? 'noindex, follow' : 'index, follow' %>">
-<meta name="theme-color" content="#1F3D3A">
+<%# Pages on the new design system pass ds: true plus their own stylesheets;
+    the rest keep the original site.css until they migrate. %>
+<% var onDs = typeof ds !== 'undefined' && ds; %>
+<meta name="theme-color" content="<%= onDs ? '#155E59' : '#1F3D3A' %>">
 <%# Local relevance signals: the town and region the clinic actually serves. %>
 <% if (clinic.address_parts && clinic.address_parts.city) { %>
 <meta name="geo.placename" content="<%= [clinic.address_parts.area, clinic.address_parts.city].filter(Boolean).join(', ') %>">
@@ -30,21 +33,36 @@
     of the site's 0.21 CLS — blocking the font hosts dropped it to exactly 0,
     because the swap to Fraunces changed the header's height and shifted the
     whole page. The two faces used above the fold are preloaded. %>
+<% if (onDs) { %>
+<link rel="preload" href="/fonts/lora-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/ds.css">
+<link rel="stylesheet" href="/css/layout.css">
+<% (typeof pageCss !== 'undefined' ? pageCss : []).forEach(function (href) { %>
+<link rel="stylesheet" href="<%= href %>">
+<% }) %>
+<%# Styles for content far below the fold load without blocking first paint. %>
+<% (typeof pageCssDeferred !== 'undefined' ? pageCssDeferred : []).forEach(function (href) { %>
+<link rel="stylesheet" href="<%= href %>" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="<%= href %>"></noscript>
+<% }) %>
+<% } else { %>
 <link rel="preload" href="/fonts/fraunces-400-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/inter-400-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/fonts/fonts.css">
 <link rel="stylesheet" href="/css/site.css">
+<% } %>
 <%# The hero is the LCP element on desktop and was discovered only when the
     parser reached it. Preloading pulls it forward by roughly a round trip. %>
 <% if (typeof preloadImage !== 'undefined' && preloadImage) { %>
-<link rel="preload" as="image" href="<%= preloadImage %>" fetchpriority="high">
+<link rel="preload" as="image" href="<%= preloadImage %>" fetchpriority="high"<% if (typeof preloadSrcset !== 'undefined' && preloadSrcset) { %> imagesrcset="<%= preloadSrcset %>" imagesizes="(min-width: 1024px) 560px, calc(100vw - 32px)"<% } %>>
 <% } %>
 <%# Marks the document as scripted before first paint, so the FAQ answers can
     be collapsed only where a script exists to reopen them. Without this the
     accordion would hide its own content from anyone browsing without
     JavaScript, and setting the class from site.js (deferred) would flash the
     answers open on every load. %>
-<script>document.documentElement.classList.add('js');</script>
+<script>document.documentElement.classList.add('js', 'ds-js');</script>
 <% (typeof schemas !== 'undefined' ? schemas : []).filter(Boolean).forEach(function (s) { %>
 <script type="application/ld+json"><%- jsonForScript(s) %></script>
 <% }) %>

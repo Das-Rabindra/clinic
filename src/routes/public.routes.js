@@ -20,6 +20,17 @@ import { colorTokens, contrast } from '../utils/design-tokens.js';
 
 const router = Router();
 
+/* The clinic's own treatment-room photograph, supplied by the clinic in
+   October 2026 and re-encoded to WebP (EXIF stripped) at three widths. */
+const CLINIC_PHOTO = {
+  url: '/img/clinic/treatment-room-1086.webp',
+  srcset: '/img/clinic/treatment-room-480.webp 480w, /img/clinic/treatment-room-720.webp 720w, /img/clinic/treatment-room-1086.webp 1086w',
+  sizes: '(min-width: 1024px) 560px, calc(100vw - 32px)',
+  width: 1086,
+  height: 1086,
+  alt: 'The treatment room at Samal Dental Care, with the dental chair beside the consultation desk',
+};
+
 const CATEGORY_LABELS = {
   clinic: 'Clinic', reception: 'Reception', treatment_room: 'Treatment room',
   exterior: 'Exterior', equipment: 'Equipment', waiting_area: 'Waiting area',
@@ -96,6 +107,27 @@ function hoursSentence(clinic) {
     .sort((a, b) => ((a.weekday + 6) % 7) - ((b.weekday + 6) % 7))
     .map(h => `${h.day} ${shape(h)}`)
     .join('; ');
+}
+
+/**
+ * A day's hours as display text, break included.
+ *
+ * The weekly table used to print opening and closing time only, so it said
+ * "09:00 – 22:00" while the FAQ, the booking engine and the structured data
+ * all knew about the 1–3 PM break. Every visible statement of the hours now
+ * comes from here.
+ */
+function dayHours(h) {
+  if (!h || !h.is_open) return { closed: true, text: 'Closed' };
+  const hasBreak = h.break_start && h.break_end;
+  return {
+    closed: false,
+    text: `${h.open_label} – ${h.close_label}`,
+    breakText: hasBreak ? `Closed ${h.break_start_label} – ${h.break_end_label}` : null,
+    sessions: hasBreak
+      ? [`${h.open_label} – ${h.break_start_label}`, `${h.break_end_label} – ${h.close_label}`]
+      : [`${h.open_label} – ${h.close_label}`],
+  };
 }
 
 /** Resolve FAQ placeholders so answers track the clinic's real details. */
@@ -191,12 +223,31 @@ router.get('/', async (req, res) => {
   const heroMedia = settings.hero_media_id ? await mediaRepo.findById(settings.hero_media_id) : null;
   const doctorMedia = doctor?.photo_media_id ? await mediaRepo.findById(doctor.photo_media_id) : null;
 
+  /* A genuine photograph of the clinic beats licensed stock. The admin's own
+     hero choice is used unless it is flagged as stock, in which case the
+     clinic's treatment-room photograph (supplied by the clinic, bundled with
+     the site) takes its place. */
+  const heroImage = heroMedia && !heroMedia.is_stock ? heroMedia : CLINIC_PHOTO;
+
   const metaTags = seo.meta(settings);
-  if (heroMedia && !metaTags.ogImage) metaTags.ogImage = new URL(heroMedia.url, metaTags.canonical).toString();
+  if (!metaTags.ogImage) metaTags.ogImage = new URL(heroImage.url, metaTags.canonical).toString();
+
+  const todayRow = clinic.hours.find(h => h.weekday === clinic.today.weekdayIndex);
+  const galleryMode = gallery.length === 0 ? 'empty'
+    : gallery.length === 1 ? 'single'
+    : gallery.length <= 4 ? 'grid' : 'carousel';
 
   res.render('public/index', {
     ...base,
-    preloadImage: heroMedia?.url || null,
+    ds: true,
+    pageCss: ['/css/home.css'],
+    pageCssDeferred: ['/css/booking.css'],
+    weekHours: orderedHours.map(h => ({ ...h, display: dayHours(h) })),
+    todayHoursDisplay: clinic.today.is_open ? dayHours(todayRow) : null,
+    hoursSummary: hoursSentence(clinic),
+    galleryMode,
+    preloadImage: heroImage.url,
+    preloadSrcset: heroImage.srcset || null,
     emergency: services.find(s => s.slug === 'dental-emergency') || null,
     ...(() => {
       /* The homepage leads with six treatments and lists the rest. Emergency
@@ -211,7 +262,7 @@ router.get('/', async (req, res) => {
     galleryCategories: categoryKeys.map(k => ({ key: k, label: CATEGORY_LABELS[k] || k })),
     meta: metaTags,
     schemas: [await seo.structuredData(), seo.faqStructuredData(faqs)],
-    heroImage: heroMedia,
+    heroImage,
     doctorPhoto: doctorMedia,
     showDoctorBio: saysSomethingNew(doctor?.bio, settings.about_body),
     addressHtml: [settings.name, settings.address_line1, settings.address_line2,

@@ -1,0 +1,64 @@
+<%#
+  Header for pages on the new design system (ds.css). Pages still on site.css
+  use header.ejs until they migrate in Stage 4.
+
+  nav is the anchor prefix: '' on the homepage, '/' everywhere else, so the
+  same hash links work from a treatment page.
+%>
+<% var nav = typeof navBase === 'undefined' ? '' : navBase; %>
+<% var ic = function (n) { return include('icon', { name: n }); }; %>
+<header class="site-header">
+  <div class="container site-header__row">
+    <a class="site-header__brand" href="<%= nav || '#top' %>">
+      <img src="<%= logoUrl %>" alt="" width="36" height="36">
+      <span class="site-header__text">
+        <span class="site-header__name"><%= clinic.name %></span>
+        <span class="site-header__place"><%= brandLocation %></span>
+      </span>
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul class="site-nav__list">
+        <li><a class="site-nav__link" href="<%= nav %>#about">About</a></li>
+        <li><a class="site-nav__link" href="/services">Treatments</a></li>
+        <li><a class="site-nav__link" href="<%= nav %>#gallery">Clinic</a></li>
+        <li><a class="site-nav__link" href="<%= nav %>#reviews">Testimonials</a></li>
+        <li><a class="site-nav__link" href="<%= nav %>#faq">FAQ</a></li>
+        <li><a class="site-nav__link" href="<%= nav %>#location">Contact</a></li>
+      </ul>
+    </nav>
+    <div class="site-header__actions">
+      <% if (clinic.phone) { %>
+      <a class="site-header__phone" href="tel:<%= clinic.phone_intl || clinic.phone %>" data-track="call_clicked">
+        <%- ic('phone') %><span><%= clinic.phone %></span>
+      </a>
+      <% } %>
+      <a class="button button--primary button--small site-header__cta" href="<%= nav %>#appointment" data-track="appointment_started">Book appointment</a>
+      <button type="button" class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="navDrawer" aria-label="Open menu">
+        <svg class="icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        <svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        <span data-nav-label>Menu</span>
+      </button>
+    </div>
+  </div>
+</header>
+<%# A sibling of the header, not a child: see the drawer note in ds.css. %>
+<nav class="nav-drawer" id="navDrawer" aria-label="Mobile">
+  <ul class="nav-drawer__list">
+    <li><a class="nav-drawer__link" href="<%= nav %>#about">About <%- ic('arrow') %></a></li>
+    <li><a class="nav-drawer__link" href="/services">Treatments <%- ic('arrow') %></a></li>
+    <li><a class="nav-drawer__link" href="<%= nav %>#gallery">Clinic <%- ic('arrow') %></a></li>
+    <li><a class="nav-drawer__link" href="<%= nav %>#reviews">Testimonials <%- ic('arrow') %></a></li>
+    <li><a class="nav-drawer__link" href="<%= nav %>#faq">FAQ <%- ic('arrow') %></a></li>
+    <li><a class="nav-drawer__link" href="<%= nav %>#location">Contact &amp; directions <%- ic('arrow') %></a></li>
+  </ul>
+  <div class="nav-drawer__actions">
+    <a class="button button--primary button--block" href="<%= nav %>#appointment" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
+    <% if (clinic.phone) { %>
+    <a class="button button--secondary button--block" href="tel:<%= clinic.phone_intl || clinic.phone %>" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a>
+    <% } %>
+    <% if (whatsappUrl) { %>
+    <a class="button button--secondary button--block" href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked"><%- ic('whatsapp') %>WhatsApp</a>
+    <% } %>
+    <button type="button" class="button button--text button--block" data-callback-open><%- ic('callback') %>Request a call back</button>
+  </div>
+</nav>

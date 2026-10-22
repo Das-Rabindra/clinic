@@ -3,389 +3,349 @@
 <head>
 <%- include('partials/head') %>
 </head>
-<body>
+<body class="has-action-bar">
+<% var ic = function (n, label) { return include('partials/icon', { name: n, label: label }); }; %>
+<% var tel = clinic.phone ? 'tel:' + (clinic.phone_intl || clinic.phone) : null; %>
 
-<a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-to-content" href="#main">Skip to content</a>
 
-<%- include('partials/header') %>
+<%- include('partials/site-header') %>
 
 <main id="main">
 
   <!-- ============ HERO ============ -->
   <section class="hero" id="top">
-    <div class="wrap hero-grid">
-      <div class="reveal in">
-        <% if (settings.hero_eyebrow) { %><span class="eyebrow"><%= settings.hero_eyebrow %></span><% } %>
-        <h1><%- heroTitleHtml %></h1>
-        <% if (settings.hero_lede) { %><p class="hero-lede"><%= settings.hero_lede %></p><% } %>
-        <div class="hero-ctas">
-          <a href="#appointment" class="btn btn-primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3.5 9h17M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>
-            <%= settings.hero_cta_label || 'Book an Appointment' %>
-          </a>
-          <% if (clinic.phone) { %>
-          <a href="tel:<%= clinic.phone_intl || clinic.phone %>" class="btn btn-outline-dark">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.4 21 3 13.6 3 4.5c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1L6.6 10.8z"/></svg>
-            Call Now
-          </a>
-          <% } %>
-          <% if (whatsappUrl) { %>
-          <a href="<%= whatsappUrl %>" target="_blank" rel="noopener" class="btn btn-whatsapp">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.9.5 3.6 1.4 5.1L2 22l5.1-1.3c1.4.8 3.1 1.3 4.9 1.3 5.5 0 10-4.5 10-10S17.5 2 12 2zm5.9 14.2c-.2.7-1.4 1.3-1.9 1.4-.5.1-1.1.1-1.8-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.1.1.3 0 .5-.1.2-.1.3-.3.5-.1.2-.3.4-.4.5-.1.1-.3.3-.1.6.2.3.9 1.5 1.9 2.4 1.3 1.2 2.4 1.5 2.7 1.7.3.2.5.1.7-.1.2-.2.8-.9 1-1.3.2-.3.4-.3.7-.2.3.1 1.8.9 2.1 1 .3.2.5.2.6.3.1.2.1.9-.1 1.6z"/></svg>
-            WhatsApp
-          </a>
-          <% } %>
-        </div>
-        <% if (clinic.doctor) { %>
-        <div class="hero-trust">
-          <div class="hero-trust-avatar"><%= initials %></div>
-          <div class="hero-trust-text">
-            <strong><%= clinic.doctor %><% if (clinic.qualification) { %> &middot; <%= clinic.qualification %><% } %></strong>
-            <span>
-              <% if (clinic.institution) { %><%= clinic.institution %><% } %>
-              <% if (clinic.institution && clinic.registration) { %>&nbsp;&middot;&nbsp;<% } %>
-              <% if (clinic.registration) { %><%= clinic.registration %><% } %>
-            </span>
+    <div class="container hero__grid">
+      <div class="hero__copy">
+        <% if (settings.hero_eyebrow) { %><span class="eyebrow-label"><%= settings.hero_eyebrow %></span><% } %>
+        <h1 class="hero__title"><%- heroTitleHtml %></h1>
+        <% if (settings.hero_lede) { %><p class="hero__lede"><%= settings.hero_lede %></p><% } %>
+
+        <div class="hero__actions">
+          <a href="#appointment" class="button button--primary" data-track="appointment_started"><%- ic('calendar') %><%= settings.hero_cta_label || 'Book an appointment' %></a>
+          <div class="hero__secondary">
+            <% if (tel) { %><a href="<%= tel %>" class="button button--secondary" data-track="call_clicked"><%- ic('phone') %>Call</a><% } %>
+            <% if (whatsappUrl) { %><a href="<%= whatsappUrl %>" target="_blank" rel="noopener" class="button button--secondary" data-track="whatsapp_clicked"><%- ic('whatsapp') %>WhatsApp</a><% } %>
           </div>
         </div>
+
+        <%# One compact trust row. The credentials used to appear three times in
+            the first screen (lede, trust card, credential strip). %>
+        <% if (clinic.doctor) { %>
+        <% if (settings.hero_trust_text) { %><p class="hero__note"><%- ic('check') %><%= settings.hero_trust_text %></p><% } %>
+        <ul class="trust-row" aria-label="About the dentist">
+          <li><%- ic('cap') %><span><strong><%= clinic.doctor %></strong><% if (clinic.qualification) { %>, <%= clinic.qualification %><% } %></span></li>
+          <% if (clinic.registration) { %><li><%- ic('shield') %><span><%= clinic.registration %></span></li><% } %>
+          <% if (shortAddress) { %><li><%- ic('pin') %><span><%= shortAddress %></span></li><% } %>
+        </ul>
         <% } %>
       </div>
 
-      <div class="hero-visual reveal in">
-        <div class="hero-visual-frame<%= heroImage ? ' has-image' : '' %>">
-          <% if (heroImage) { %>
-            <img src="<%= heroImage.url %>" alt="<%= heroImage.alt || (clinic.name + ' clinic') %>"
-                 width="<%= heroImage.width %>" height="<%= heroImage.height %>"
-                 fetchpriority="high" decoding="async">
-          <% } else { %>
-            <svg class="arc-deco" viewBox="0 0 400 460" xmlns="http://www.w3.org/2000/svg">
-              <path d="M40 340 Q200 420 360 340" stroke="#C79A4B" stroke-width="2" fill="none" opacity="0.5"/>
-              <path d="M20 90 Q200 20 380 90" stroke="#7C9885" stroke-width="1.5" fill="none" opacity="0.35"/>
-            </svg>
-            <div class="hero-photo-note">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="12" cy="12.5" r="3.4"/><path d="M8 5l1.5-2h5L16 5"/></svg>
-              <strong>Clinic &amp; doctor photography</strong>
-              <span>Admin &rarr; Gallery &rarr; Media library: upload a photo, then press
-              &ldquo;Use this photo&rdquo; and choose <em>Hero area</em>.</span>
-            </div>
-          <% } %>
-        </div>
-        <% if (settings.hero_trust_text) { %>
-        <div class="hero-card-float">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
-          <span><%= settings.hero_trust_text %></span>
-        </div>
-        <% } %>
-      </div>
+      <% if (heroImage) { %>
+      <figure class="hero__media">
+        <img src="<%= heroImage.url %>" alt="<%= heroImage.alt || '' %>"
+             <% if (heroImage.srcset) { %>srcset="<%= heroImage.srcset %>" sizes="<%= heroImage.sizes %>"<% } %>
+             width="<%= heroImage.width %>" height="<%= heroImage.height %>"
+             fetchpriority="high" decoding="async">
+      </figure>
+      <% } %>
     </div>
   </section>
 
   <!-- ============ URGENT CARE ============ -->
-  <%# Nothing on the site addressed pain, which is what the highest-intent
-      local searches are about. The 10 PM closing time is a real advantage and
-      was never stated where someone in trouble would see it. %>
+  <%# Hours here come from the live weekly grid, break included — this band
+      used to say "open until 10 PM every day" while the clinic closes 1–3 PM. %>
   <% if (emergency) { %>
-  <aside class="urgent-band">
-    <div class="wrap urgent-row">
-      <div class="urgent-text">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
-        <p><strong>In pain today?</strong> The clinic is open until <%= clinic.today.close || '10:00 PM' %> every day, and keeps time free for urgent problems.</p>
+  <aside class="urgent" aria-labelledby="urgentTitle">
+    <div class="container urgent__row">
+      <div class="urgent__text">
+        <%- ic('alert') %>
+        <p><strong id="urgentTitle">In pain today?</strong>
+          <% if (todayHoursDisplay) { %>
+            The clinic is open today <%= todayHoursDisplay.text.replace(' – ', ' to ') %><% if (todayHoursDisplay.breakText) { %>, closed <%= todayHoursDisplay.breakText.replace('Closed ', '').replace(' – ', ' to ') %><% } %>, and keeps time free for urgent problems.
+          <% } else { %>
+            Call the clinic to ask about urgent care.
+          <% } %>
+        </p>
       </div>
-      <div class="urgent-actions">
-        <% if (clinic.phone) { %>
-        <a class="btn btn-urgent" href="tel:<%= clinic.phone_intl || clinic.phone %>" data-track="emergency_call">
-          Call <%= clinic.phone %>
-        </a>
-        <% } %>
-        <a class="btn btn-urgent-ghost" href="/services/<%= emergency.slug %>">What counts as an emergency</a>
+      <div class="urgent__actions">
+        <% if (tel) { %><a class="button button--primary button--small" href="<%= tel %>" data-track="emergency_call"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
+        <a class="button button--text button--small" href="/services/<%= emergency.slug %>">What counts as an emergency</a>
       </div>
     </div>
   </aside>
   <% } %>
 
-  <!-- ============ CREDENTIAL STRIP ============ -->
-  <div class="cred-strip">
-    <div class="wrap cred-row">
-      <% if (clinic.registration) { %>
-      <div class="cred-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l7 4v6c0 5-3.4 8.4-7 10-3.6-1.6-7-5-7-10V6l7-4z"/></svg><span><strong><%= clinic.registration %></strong></span></div>
-      <% } %>
-      <% if (clinic.qualification) { %>
-      <div class="cred-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg><span><strong><%= clinic.qualification %></strong><% if (clinic.institution) { %> &nbsp;&mdash;&nbsp; <%= clinic.institution %><% } %></span></div>
-      <% } %>
-      <div class="cred-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg><span><%= shortAddress %></span></div>
-    </div>
-  </div>
-
-  <!-- ============ ABOUT / DOCTOR ============ -->
-  <section class="section-pad" id="about">
-    <div class="wrap doctor-grid">
-      <div class="reveal">
-        <div class="doctor-photo<%= doctorPhoto ? ' has-image' : '' %>">
-          <% if (doctorPhoto) { %>
-            <img src="<%= doctorPhoto.url %>" alt="<%= clinic.doctor %>" width="<%= doctorPhoto.width %>" height="<%= doctorPhoto.height %>">
-          <% } else { %>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
-            <span>Photograph of <%= clinic.doctor || 'the dentist' %><br>
-            Admin &rarr; Gallery &rarr; Media library, then &ldquo;Use this photo&rdquo; &rarr; <em>Dentist&rsquo;s portrait</em>.</span>
-          <% } %>
-        </div>
-      </div>
-      <div class="reveal">
-        <span class="eyebrow">The Dentist</span>
-        <h2 class="section-title"><%= settings.about_title || 'Care led by an experienced dentist' %></h2>
-        <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
-        <% if (settings.about_body) { %><p class="section-lede" style="max-width:none;"><%= settings.about_body %></p><% } %>
-        <%# The doctor record carries its own bio, which is very often a
-            shorter restatement of the About copy above. An exact-match guard
-            missed that — the two differed by a comma — and the section showed
-            the same sentence twice. %>
-        <% if (showDoctorBio) { %>
-          <p class="section-lede" style="max-width:none;"><%= doctor.bio %></p>
+  <!-- ============ DENTIST ============ -->
+  <section class="section" id="about">
+    <div class="container profile">
+      <div class="profile__photo">
+        <% if (doctorPhoto) { %>
+          <img src="<%= doctorPhoto.url %>" alt="<%= clinic.doctor %>" width="<%= doctorPhoto.width %>" height="<%= doctorPhoto.height %>" loading="lazy" decoding="async">
+        <% } else { %>
+          <div class="profile__placeholder"><%- ic('camera') %><span>Photograph of <%= clinic.doctor || 'the dentist' %> coming soon</span></div>
         <% } %>
-        <ul class="cred-list">
-          <% if (clinic.qualification) { %><li><strong>Qualification</strong><span><%= clinic.qualification %></span></li><% } %>
-          <% if (clinic.institution) { %><li><strong>Institution</strong><span><%= clinic.institution %></span></li><% } %>
-          <% if (clinic.registration) { %><li><strong>Registration</strong><span><%= clinic.registration %></span></li><% } %>
-          <% if (doctor && doctor.specialization) { %><li><strong>Focus</strong><span><%= doctor.specialization %></span></li><% } %>
-          <% if (doctor && doctor.languages) { %><li><strong>Languages</strong><span><%= doctor.languages %></span></li><% } %>
-        </ul>
+      </div>
+      <div class="profile__body">
+        <div class="section-heading">
+          <span class="eyebrow-label">The dentist</span>
+          <h2><%= settings.about_title || clinic.doctor %></h2>
+        </div>
+        <div class="prose">
+          <% if (settings.about_body) { %><p class="text-body-lg"><%= settings.about_body %></p><% } %>
+          <% if (showDoctorBio) { %><p><%= doctor.bio %></p><% } %>
+        </div>
+        <dl class="facts-list">
+          <% if (clinic.qualification) { %><div><dt>Qualification</dt><dd><%= clinic.qualification %></dd></div><% } %>
+          <% if (clinic.institution) { %><div><dt>Institution</dt><dd><%= clinic.institution %></dd></div><% } %>
+          <% if (clinic.registration) { %><div><dt>Registration</dt><dd><%= clinic.registration %></dd></div><% } %>
+          <% if (doctor && doctor.specialization) { %><div><dt>Focus</dt><dd><%= doctor.specialization %></dd></div><% } %>
+          <% if (doctor && doctor.languages) { %><div><dt>Languages</dt><dd><%= doctor.languages %></dd></div><% } %>
+        </dl>
       </div>
     </div>
   </section>
 
-  <!-- ============ CLINIC STORY ============ -->
-  <% if (settings.story_body) { %>
-  <section class="section-pad alt">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <span class="eyebrow">The Clinic</span>
-        <h2 class="section-title"><%= settings.story_title || 'A calm, modern clinic' %></h2>
-        <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
+  <!-- ============ THE CLINIC ============ -->
+  <%# Bento of facts the clinic has entered itself — hours from the weekly grid,
+      languages from the doctor record, the address — beside its own story.
+      Nothing here is a claim written for the page. %>
+  <section class="section section--sage" aria-labelledby="clinicTitle">
+    <div class="container">
+      <div class="section-heading">
+        <span class="eyebrow-label">The clinic</span>
+        <h2 id="clinicTitle"><%= settings.story_title || 'The clinic' %></h2>
       </div>
-      <p class="reveal" style="max-width:720px; font-size:16.5px; line-height:1.8; color:#4B564F;"><%= settings.story_body %></p>
+      <div class="bento bento--3 clinic-bento">
+        <% if (settings.story_body) { %>
+        <div class="card bento__wide clinic-bento__story"><div class="card__body"><p class="text-body-lg"><%= settings.story_body %></p></div></div>
+        <% } %>
+        <div class="card"><div class="card__body">
+          <span class="clinic-bento__icon"><%- ic('clock') %></span>
+          <h3 class="card__title">Opening hours</h3>
+          <p class="card__text">Open <%= hoursSummary %>.</p>
+          <a class="link link--arrow" href="#location">Weekly hours <%- ic('arrow') %></a>
+        </div></div>
+        <div class="card"><div class="card__body">
+          <span class="clinic-bento__icon"><%- ic('calendar') %></span>
+          <h3 class="card__title">Book online</h3>
+          <p class="card__text">Choose a treatment, a day and a time from the clinic's live availability.</p>
+          <a class="link link--arrow" href="#appointment">Book an appointment <%- ic('arrow') %></a>
+        </div></div>
+        <% if (doctor && doctor.languages) { %>
+        <div class="card"><div class="card__body">
+          <span class="clinic-bento__icon"><%- ic('language') %></span>
+          <h3 class="card__title">Languages</h3>
+          <p class="card__text"><%= doctor.languages %></p>
+        </div></div>
+        <% } %>
+      </div>
     </div>
   </section>
-  <% } %>
 
   <!-- ============ TREATMENTS ============ -->
-  <section class="section-pad" id="services">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <span class="eyebrow"><%= settings.treatments_eyebrow || 'Our Treatments' %></span>
-        <h2 class="section-title"><%= settings.services_title || 'Dental treatments offered at the clinic' %></h2>
-        <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
-        <% if (settings.services_lede) { %><p class="section-lede"><%= settings.services_lede %></p><% } %>
+  <section class="section" id="services">
+    <div class="container">
+      <div class="section-heading">
+        <span class="eyebrow-label"><%= settings.treatments_eyebrow || 'Treatments' %></span>
+        <h2><%= settings.services_title || 'Dental treatments offered at the clinic' %></h2>
+        <% if (settings.services_lede) { %><p class="section-heading__lede"><%= settings.services_lede %></p><% } %>
       </div>
 
       <% if (services.length) { %>
-        <%# Six cards, not fourteen. Fourteen near-identical photographs five
-            rows deep blurred together and added ~1,500px to the page without
-            helping anyone choose. The rest stay one tap away as a plain list. %>
-        <div class="reveal">
-          <%- include('partials/treatment-grid', { cards: featuredServices }) %>
+        <div class="treatment-grid">
+          <% featuredServices.forEach(function (s) { %>
+          <article class="card card--interactive treatment-card">
+            <div class="card__media">
+              <% if (s.image_url) { %>
+                <img src="<%= s.image_url %>" alt="<%= s.image_alt || '' %>"
+                     width="<%= s.image_width || 1280 %>" height="<%= s.image_height || 720 %>" loading="lazy" decoding="async">
+              <% } else { %>
+                <div class="treatment-card__art"><%- include('partials/treatment-art', { slug: s.slug, name: s.name }) %></div>
+              <% } %>
+            </div>
+            <div class="card__body">
+              <% if (s.category_name) { %><span class="eyebrow-label"><%= s.category_name %></span><% } %>
+              <h3 class="card__title">
+                <% if (s.has_detail_page) { %><a class="card__link" href="/services/<%= s.slug %>"><%= s.name %></a><% } else { %><%= s.name %><% } %>
+              </h3>
+              <% if (s.short_desc) { %><p class="card__text"><%= s.short_desc %></p><% } %>
+              <div class="card__footer">
+                <% if (s.bookable) { %>
+                <button type="button" class="button button--primary button--small book-service" data-service="<%= s.id %>" data-service-name="<%= s.name %>" data-track="appointment_started">Book<span class="visually-hidden-ds"> <%= s.name %></span></button>
+                <% } %>
+                <button type="button" class="button button--text button--small" data-callback-open data-service="<%= s.id %>" data-service-name="<%= s.name %>">Request a call back<span class="visually-hidden-ds"> about <%= s.name %></span></button>
+              </div>
+            </div>
+          </article>
+          <% }) %>
         </div>
+
         <% if (otherServices.length) { %>
-        <div class="tx-more-list reveal">
-          <h3 class="tx-more-head">Also treated at the clinic</h3>
+        <div class="more-treatments">
+          <h3 class="more-treatments__title">Also treated at the clinic</h3>
           <ul>
             <% otherServices.forEach(function (s) { %>
-            <li>
-              <a href="/services/<%= s.slug %>">
-                <span><%= s.name %></span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
-              </a>
-            </li>
+            <li><a href="/services/<%= s.slug %>"><span><%= s.name %></span><%- ic('arrow') %></a></li>
             <% }) %>
           </ul>
         </div>
         <% } %>
-        <div class="tx-index-foot reveal">
-          <a class="btn btn-outline-dark" href="/services">See all treatments</a>
-        </div>
+        <p class="section-foot"><a class="button button--secondary" href="/services">See all treatments</a></p>
       <% } else { %>
-        <div class="reveal reviews-empty">
+        <div class="empty-state">
           <h3>Treatments are being updated</h3>
-          <p>Please call <strong class="mono"><%= clinic.phone %></strong> and the clinic will tell you what is available.</p>
+          <p>Please call <% if (tel) { %><a class="link" href="<%= tel %>"><%= clinic.phone %></a><% } %> and the clinic will tell you what is available.</p>
         </div>
       <% } %>
     </div>
   </section>
 
   <!-- ============ GALLERY ============ -->
-  <section class="section-pad alt" id="gallery">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <span class="eyebrow">Inside The Clinic</span>
-        <h2 class="section-title"><%= settings.gallery_title || 'A closer look at the clinic' %></h2>
-        <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
-        <% if (settings.gallery_lede) { %><p class="section-lede"><%= settings.gallery_lede %></p><% } %>
+  <%# Layout follows the number of real photographs: one is shown on its own,
+      two to four as a grid, five or more as a carousel. No controls for a
+      single image, and no images that are not the clinic's own uploads. %>
+  <section class="section section--surface" id="gallery">
+    <div class="container">
+      <div class="section-heading">
+        <span class="eyebrow-label">Inside the clinic</span>
+        <h2><%= settings.gallery_title || 'A closer look at the clinic' %></h2>
+        <% if (settings.gallery_lede) { %><p class="section-heading__lede"><%= settings.gallery_lede %></p><% } %>
       </div>
 
-      <% if (gallery.length) { %>
-        <% if (galleryCategories.length > 1) { %>
-        <div class="gallery-filters reveal" role="group" aria-label="Filter photos">
-          <button type="button" class="gallery-filter" data-filter="all" aria-pressed="true">All</button>
-          <% galleryCategories.forEach(function(c) { %>
-            <button type="button" class="gallery-filter" data-filter="<%= c.key %>" aria-pressed="false"><%= c.label %></button>
-          <% }) %>
-        </div>
-        <% } %>
-        <div class="gallery-grid reveal" id="galleryGrid">
-          <% gallery.forEach(function(g, i) { %>
-          <button type="button" class="gallery-item has-image<%= i === 0 ? ' tall' : '' %>"
-                  data-index="<%= i %>" data-category="<%= g.category %>"
-                  aria-label="View: <%= g.title %>">
-            <figure>
-              <img src="<%= g.thumb_url || g.image_url %>" alt="<%= g.image_alt || g.title %>" loading="lazy" width="480" height="480">
-            </figure>
-            <span class="gi-caption"><%= g.title %></span>
-          </button>
+      <% if (galleryMode === 'empty') { %>
+        <div class="empty-state"><%- ic('camera') %><h3>Photographs coming soon</h3><p>Photographs of the clinic will appear here.</p></div>
+      <% } else if (galleryMode === 'single') { var g = gallery[0]; %>
+        <figure class="gallery-feature">
+          <img src="<%= g.image_url %>" alt="<%= g.image_alt || g.title %>" width="<%= g.width || 1200 %>" height="<%= g.height || 1200 %>" loading="lazy" decoding="async">
+          <figcaption><%= g.title %><% if (g.description) { %> — <%= g.description %><% } %></figcaption>
+        </figure>
+      <% } else if (galleryMode === 'grid') { %>
+        <div class="gallery-grid-ds">
+          <% gallery.forEach(function (g) { %>
+          <figure>
+            <img src="<%= g.thumb_url || g.image_url %>" alt="<%= g.image_alt || g.title %>" width="480" height="480" loading="lazy" decoding="async">
+            <figcaption><%= g.title %></figcaption>
+          </figure>
           <% }) %>
         </div>
       <% } else { %>
-        <div class="reveal reviews-empty">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="12" cy="12.5" r="3.4"/><path d="M8 5l1.5-2h5L16 5"/></svg>
-          <h3>Photographs coming soon</h3>
-          <p>Add them in Admin &rarr; Gallery &rarr; Media library: upload a photo, press
-          &ldquo;Use this photo&rdquo; and choose <em>Gallery</em>.</p>
+        <div class="carousel" data-carousel>
+          <ul class="carousel__track" data-carousel-track tabindex="0" aria-label="Clinic photographs, scrollable">
+            <% gallery.forEach(function (g) { %>
+            <li class="carousel__item">
+              <figure>
+                <img src="<%= g.image_url %>" alt="<%= g.image_alt || g.title %>" width="<%= g.width || 1200 %>" height="<%= g.height || 900 %>" loading="lazy" decoding="async">
+                <figcaption><%= g.title %></figcaption>
+              </figure>
+            </li>
+            <% }) %>
+          </ul>
+          <div class="carousel__controls" data-carousel-controls>
+            <button type="button" class="button button--secondary button--small" data-carousel-prev aria-label="Previous photographs"><%- ic('chevronLeft') %></button>
+            <span class="text-small text-muted" data-carousel-status aria-live="polite"></span>
+            <button type="button" class="button button--secondary button--small" data-carousel-next aria-label="More photographs"><%- ic('chevronRight') %></button>
+          </div>
         </div>
       <% } %>
     </div>
   </section>
 
-  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo preview">
-    <div class="lightbox-inner has-image">
-      <button class="lightbox-close" id="lightboxClose" aria-label="Close preview">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
-      <div id="lightboxMedia"></div>
-      <%# Not a heading: it is empty until a photo is opened, and an empty
-          heading is a WCAG 1.3.1 failure that also pollutes the document
-          outline a screen reader announces. aria-live announces the caption
-          when the photo changes. %>
-      <p id="lightboxTitle" class="lb-title" aria-live="polite"></p>
-      <p style="margin-top:8px; color:#5B665A; font-size:14px;" id="lightboxDesc"></p>
-      <div style="display:flex; justify-content:center; gap:10px; margin-top:22px;">
-        <button type="button" class="btn btn-outline-dark btn-sm" id="lightboxPrev" aria-label="Previous photo">&larr; Previous</button>
-        <span class="mono" id="lightboxCount" style="align-self:center; font-size:12px; color:#7C8A78;"></span>
-        <button type="button" class="btn btn-outline-dark btn-sm" id="lightboxNext" aria-label="Next photo">Next &rarr;</button>
-      </div>
-    </div>
-  </div>
-
   <!-- ============ TESTIMONIALS ============ -->
-  <section class="section-pad" id="reviews">
-    <div class="wrap">
-      <div class="section-head reveal" style="text-align:center; margin-left:auto; margin-right:auto;">
-        <span class="eyebrow">Testimonials From Patients</span>
-        <h2 class="section-title" style="margin-left:auto; margin-right:auto;"><%= settings.reviews_title || 'What patients are saying' %></h2>
-        <svg class="smile-arc" viewBox="0 0 64 16" style="margin-left:auto; margin-right:auto;"><path d="M4 4 Q32 18 60 4"/></svg>
+  <section class="section" id="reviews">
+    <div class="container">
+      <div class="section-heading section-heading--center">
+        <span class="eyebrow-label">Testimonials from patients</span>
+        <h2><%= settings.reviews_title || 'What patients are saying' %></h2>
       </div>
 
       <% if (reviews.reviews.length) { %>
-        <div class="reviews-head reveal">
-          <div class="rating-badge">
-            <span class="rating-score"><%= reviews.average %></span>
-            <div>
-              <span class="stars" aria-label="<%= reviews.average %> out of 5">
-                <%- starsHtml(reviews.average) %>
-              </span>
-              <div class="rating-meta">
-                <strong><%= reviews.google_count ? 'Google rating' : 'Patient feedback' %></strong>
-                <% if (reviews.google_count && reviews.has_manual) { %>
-                  <%= reviews.google_count %> Google review<%= reviews.google_count === 1 ? '' : 's' %>
-                  and <%= reviews.count - reviews.google_count %> shared with the clinic
-                <% } else { %>
-                  Based on <%= reviews.count %> review<%= reviews.count === 1 ? '' : 's' %>
-                <% } %>
-              </div>
-            </div>
+        <div class="rating-summary">
+          <span class="rating-summary__score"><%= reviews.average %></span>
+          <div>
+            <span class="stars" role="img" aria-label="<%= reviews.average %> out of 5"><%- starsHtml(reviews.average) %></span>
+            <p class="text-small text-muted">
+              <% if (reviews.google_count && reviews.has_manual) { %>
+                <%= reviews.google_count %> Google review<%= reviews.google_count === 1 ? '' : 's' %> and <%= reviews.count - reviews.google_count %> shared with the clinic
+              <% } else { %>
+                <%= reviews.google_count ? 'Google rating' : 'Patient feedback' %>, based on <%= reviews.count %> review<%= reviews.count === 1 ? '' : 's' %>
+              <% } %>
+            </p>
           </div>
         </div>
-
-        <%#
-          Slider, not a static grid. Built on CSS scroll-snap so it is a real
-          scrollable region: it works with a finger, a trackpad, the arrow keys
-          and a screen reader before any JavaScript runs, and the buttons below
-          only enhance it.
-        %>
-        <div class="tm-slider reveal" data-slider>
-          <div class="tm-track" id="tmTrack" tabindex="0" role="group"
-               aria-label="Patient testimonials, scrollable">
+        <div class="carousel" data-carousel>
+          <ul class="carousel__track carousel__track--reviews" data-carousel-track tabindex="0" aria-label="Patient testimonials, scrollable">
             <% reviews.reviews.forEach(function (r) { %>
-            <article class="tm-card">
-              <svg class="tm-quote" viewBox="0 0 32 24" aria-hidden="true"><path d="M13 24V13.6C13 6.4 16.7 1.8 24 0l1.4 3.6c-4.4 1.4-6.6 4-6.6 7.6H24V24zm-13 0V13.6C0 6.4 3.7 1.8 11 0l1.4 3.6c-4.4 1.4-6.6 4-6.6 7.6H11V24z"/></svg>
-              <span class="stars" aria-label="<%= r.rating %> out of 5"><%- starsHtml(r.rating) %></span>
-              <% if (r.text) { %><p class="tm-text"><%= r.text %></p><% } %>
-              <footer class="tm-author">
-                <div class="tm-avatar">
-                  <% if (r.author_photo_url) { %>
-                    <img src="<%= r.author_photo_url %>" alt="" loading="lazy" referrerpolicy="no-referrer" width="42" height="42">
-                  <% } else { %><%= (r.author_name || '?').trim().charAt(0).toUpperCase() %><% } %>
-                </div>
-                <div class="tm-who">
-                  <span class="tm-name"><%= r.author_name %></span>
-                  <span class="tm-meta">
-                    <% if (r.source === 'manual') { %>Shared with the clinic<% } else { %>Google review<% } %>
-                    <% if (r.reviewed_at) { %> &middot; <%= formatReviewDate(r.reviewed_at) %><% } %>
-                  </span>
-                </div>
-              </footer>
-            </article>
+            <li class="carousel__item">
+              <article class="card review-card"><div class="card__body">
+                <span class="stars" role="img" aria-label="<%= r.rating %> out of 5"><%- starsHtml(r.rating) %></span>
+                <% if (r.text) { %><p><%= r.text %></p><% } %>
+                <footer class="review-card__author">
+                  <strong><%= r.author_name %></strong>
+                  <span class="text-small text-muted"><% if (r.source === 'manual') { %>Shared with the clinic<% } else { %>Google review<% } %><% if (r.reviewed_at) { %> · <%= formatReviewDate(r.reviewed_at) %><% } %></span>
+                </footer>
+              </div></article>
+            </li>
             <% }) %>
-          </div>
-
-          <div class="tm-controls">
-            <button type="button" class="tm-arrow" data-slider-prev aria-label="Previous testimonials">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
-            </button>
-            <div class="tm-dots" data-slider-dots aria-hidden="true"></div>
-            <button type="button" class="tm-arrow" data-slider-next aria-label="More testimonials">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-            </button>
+          </ul>
+          <div class="carousel__controls" data-carousel-controls>
+            <button type="button" class="button button--secondary button--small" data-carousel-prev aria-label="Previous testimonials"><%- ic('chevronLeft') %></button>
+            <span class="text-small text-muted" data-carousel-status aria-live="polite"></span>
+            <button type="button" class="button button--secondary button--small" data-carousel-next aria-label="More testimonials"><%- ic('chevronRight') %></button>
           </div>
         </div>
-
         <% if (clinic.reviews_url) { %>
-        <div class="reviews-foot reveal">
-          <a class="btn btn-outline-dark" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener">Read the reviews on Google</a>
-        </div>
+        <p class="section-foot"><a class="button button--secondary" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener">Read the reviews on Google</a></p>
         <% } %>
-        <%- include('partials/review-qr') %>
       <% } else { %>
-        <div class="reveal reviews-empty">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 17.3l-6.2 3.3 1.2-6.9L2 8.9l7-1L12 1.5l3 6.4 7 1-5 4.8 1.2 6.9z"/></svg>
+        <div class="empty-state">
+          <%- ic('star') %>
           <h3>Testimonials coming soon</h3>
           <p>This section shows genuine feedback only &mdash; reviews synced from the clinic&rsquo;s
           Google Business Profile, and testimonials patients have shared directly and agreed to
           have published. Nothing here is written by the clinic.</p>
-          <%# No button here when the scan panel below carries the same action:
-              two "leave a review" CTAs a few lines apart is just noise. %>
           <% if (clinic.reviews_url && !reviewQr) { %>
-            <div style="margin-top:20px;"><a class="btn btn-outline-dark btn-sm" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener">Leave a review on Google</a></div>
+            <p><a class="button button--secondary button--small" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener">Leave a review on Google</a></p>
           <% } %>
         </div>
-        <%- include('partials/review-qr') %>
+      <% } %>
+
+      <% if (reviewQr) { %>
+      <aside class="card review-qr" aria-labelledby="qrTitle">
+        <div class="review-qr__code">
+          <% if (clinic.reviews_url) { %><a href="<%= clinic.reviews_url %>" target="_blank" rel="noopener" aria-label="Open the Google review page for <%= clinic.name %>"><% } %>
+            <img src="<%= reviewQr.url %>" alt="QR code linking to the Google review page for <%= clinic.name %>, <%= shortAddress %>"
+                 width="<%= reviewQr.width || 320 %>" height="<%= reviewQr.height || 320 %>" loading="lazy" decoding="async">
+          <% if (clinic.reviews_url) { %></a><% } %>
+        </div>
+        <div class="review-qr__text">
+          <span class="eyebrow-label">Google</span>
+          <h3 id="qrTitle"><%= settings.review_qr_title || 'Leave a review on Google' %></h3>
+          <% if (settings.review_qr_body) { %><p class="text-muted"><%= settings.review_qr_body %></p><% } %>
+          <% if (clinic.reviews_url) { %><a class="button button--secondary button--small" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener">Open the review page</a><% } %>
+        </div>
+      </aside>
       <% } %>
     </div>
   </section>
 
   <!-- ============ FAQ ============ -->
   <% if (faqs.length) { %>
-  <section class="section-pad alt" id="faq">
-    <div class="wrap">
-      <div class="section-head reveal" style="text-align:center; margin-left:auto; margin-right:auto;">
-        <span class="eyebrow">Good To Know</span>
-        <h2 class="section-title" style="margin-left:auto; margin-right:auto;">Frequently asked questions</h2>
+  <section class="section section--surface" id="faq">
+    <div class="container container--narrow">
+      <div class="section-heading">
+        <span class="eyebrow-label">Good to know</span>
+        <h2>Frequently asked questions</h2>
       </div>
-      <div class="faq-list reveal">
-        <% faqs.forEach(function(f, i) { %>
-        <div class="faq-item">
-          <button class="faq-q" aria-expanded="false" aria-controls="faq-a-<%= i %>" id="faq-q-<%= i %>">
-            <span><%= f.question %></span>
-            <span class="plus" aria-hidden="true"></span>
-          </button>
-          <div class="faq-a" id="faq-a-<%= i %>" role="region" aria-labelledby="faq-q-<%= i %>">
+      <div class="accordion" data-accordion>
+        <% faqs.forEach(function (f, i) { %>
+        <div class="accordion__item">
+          <h3 class="accordion__heading">
+            <button type="button" class="accordion__trigger" aria-expanded="false" aria-controls="faq-a-<%= i %>" id="faq-q-<%= i %>">
+              <%= f.question %><span class="accordion__icon"><%- ic('plus') %></span>
+            </button>
+          </h3>
+          <div class="accordion__panel" id="faq-a-<%= i %>" role="region" aria-labelledby="faq-q-<%= i %>" data-collapsed>
             <p><%= f.answer %></p>
           </div>
         </div>
@@ -396,60 +356,27 @@
   <% } %>
 
   <!-- ============ BOOKING ============ -->
-  <section class="section-pad" id="appointment">
-    <div class="wrap appt-wrap">
-      <div class="appt-side reveal">
-        <span class="eyebrow">Book a Visit</span>
-        <h2>Book an appointment</h2>
-        <p>Choose a treatment, pick a date and reserve a time that suits you. Availability below is live &mdash; the times shown are genuinely free.</p>
-
-        <div class="appt-contact-list">
-          <% if (clinic.phone) { %>
-          <a href="tel:<%= clinic.phone_intl || clinic.phone %>" data-track="call_clicked">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.4 21 3 13.6 3 4.5c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1L6.6 10.8z"/></svg>
-            <span class="mono"><%= clinic.phone %></span>
-          </a>
-          <% } %>
-          <% if (clinic.phone_secondary) { %>
-          <a href="tel:<%= clinic.phone_secondary_intl || clinic.phone_secondary %>" data-track="call_clicked">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.4 21 3 13.6 3 4.5c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1L6.6 10.8z"/></svg>
-            <span class="mono"><%= clinic.phone_secondary %></span>
-            <span class="contact-alt">second line</span>
-          </a>
-          <% } %>
-          <% if (whatsappUrl) { %>
-          <a href="<%= whatsappUrl %>" target="_blank" rel="noopener">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.9.5 3.6 1.4 5.1L2 22l5.1-1.3c1.4.8 3.1 1.3 4.9 1.3 5.5 0 10-4.5 10-10S17.5 2 12 2zm5.9 14.2c-.2.7-1.4 1.3-1.9 1.4-.5.1-1.1.1-1.8-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.1.1.3 0 .5-.1.2-.1.3-.3.5-.1.2-.3.4-.4.5-.1.1-.3.3-.1.6.2.3.9 1.5 1.9 2.4 1.3 1.2 2.4 1.5 2.7 1.7.3.2.5.1.7-.1.2-.2.8-.9 1-1.3.2-.3.4-.3.7-.2.3.1 1.8.9 2.1 1 .3.2.5.2.6.3.1.2.1.9-.1 1.6z"/></svg>
-            Chat on WhatsApp
-          </a>
-          <% } %>
-          <a href="#location">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg>
-            <%= shortAddress %>
-          </a>
+  <%# data-bar-yield: the mobile action bar steps aside while this is on
+      screen, so it can never cover the wizard's Continue button. %>
+  <section class="section" id="appointment" data-bar-yield>
+    <div class="container booking-layout">
+      <div class="booking-layout__intro">
+        <div class="section-heading">
+          <span class="eyebrow-label">Book a visit</span>
+          <h2>Book an appointment</h2>
+          <p class="section-heading__lede">Choose a treatment, pick a date and reserve a time that suits you. The times shown come straight from the clinic's diary.</p>
         </div>
-
-        <div style="margin-top:34px;">
-          <div class="open-pill <%= clinic.today.now.state %>">
-            <span class="open-dot"></span>
-            <%= clinic.today.now.label %>
+        <div class="booking-layout__fallback">
+          <p class="form-label">Prefer to talk to someone?</p>
+          <div class="cluster">
+            <% if (tel) { %><a class="button button--secondary button--small" href="<%= tel %>" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
+            <% if (whatsappUrl) { %><a class="button button--secondary button--small" href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked"><%- ic('whatsapp') %>WhatsApp</a><% } %>
+            <button type="button" class="button button--text button--small" data-callback-open><%- ic('callback') %>Request a call back</button>
           </div>
-          <table class="hours-table">
-            <tbody>
-            <% orderedHours.forEach(function(h) { %>
-              <tr class="<%= h.weekday === clinic.today.weekdayIndex ? 'is-today' : '' %>">
-                <td class="hours-day"><%= h.day %></td>
-                <td class="hours-time">
-                  <% if (h.is_open) { %><%= h.open %> &ndash; <%= h.close %><% } else { %><span class="closed-note">Closed</span><% } %>
-                </td>
-              </tr>
-            <% }) %>
-            </tbody>
-          </table>
         </div>
       </div>
 
-      <div class="reveal">
+      <div>
         <!-- Booking wizard: rendered and driven by /js/booking.js against the API -->
         <div class="booking-shell" id="bookingShell" data-services='<%- servicesJson %>'>
           <div class="booking-steps" id="bookingSteps"></div>
@@ -457,64 +384,96 @@
             <noscript>
               <p class="booking-hint">Online booking needs JavaScript. Please call <strong><%= clinic.phone %></strong> or message the clinic on WhatsApp to book an appointment.</p>
             </noscript>
-            <div class="spinner" aria-label="Loading availability"></div>
+            <div class="spinner" role="img" aria-label="Loading availability"></div>
           </div>
           <div class="booking-foot" id="bookingFoot" hidden>
-            <button type="button" class="btn btn-outline-dark btn-sm" id="bookBack">Back</button>
-            <button type="button" class="btn btn-primary btn-sm" id="bookNext">Continue</button>
+            <button type="button" class="button button--secondary button--small" id="bookBack">Back</button>
+            <button type="button" class="button button--primary button--small" id="bookNext">Continue</button>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ============ LOCATION ============ -->
-  <section class="section-pad alt" id="location">
-    <div class="wrap">
-      <div class="location-grid reveal">
-        <div class="location-info">
-          <span class="eyebrow">Find Us</span>
-          <h2><%= settings.location_title || 'Visit the clinic' %></h2>
-          <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
-          <p class="location-address"><%- addressHtml %></p>
-          <% if (settings.location_body) { %>
-          <p class="location-note"><%= settings.location_body %></p>
-          <% } %>
-          <div class="location-actions">
-            <a class="btn btn-primary" href="<%= clinic.directions_url %>" target="_blank" rel="noopener" data-track="directions_clicked">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
-              Get Directions
-            </a>
-            <% if (clinic.phone) { %><a class="btn btn-outline" href="tel:<%= clinic.phone_intl || clinic.phone %>" data-track="call_clicked">Call <%= clinic.phone %></a><% } %>
-            <% if (whatsappUrl) { %><a class="btn btn-outline" href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked">WhatsApp</a><% } %>
+  <!-- ============ LOCATION & CONTACT ============ -->
+  <section class="section section--sand" id="location">
+    <div class="container">
+      <div class="section-heading">
+        <span class="eyebrow-label">Find us</span>
+        <h2><%= settings.location_title || 'Visit the clinic' %></h2>
+        <% if (settings.location_body) { %><p class="section-heading__lede"><%= settings.location_body %></p><% } %>
+      </div>
+
+      <div class="bento bento--3 contact-bento">
+        <div class="card contact-bento__address"><div class="card__body">
+          <h3 class="card__title"><%- ic('pin') %>Address</h3>
+          <address class="contact-bento__lines"><%- addressHtml %></address>
+          <div class="card__footer">
+            <a class="button button--primary button--small" href="<%= clinic.directions_url %>" target="_blank" rel="noopener" data-track="directions_clicked"><%- ic('directions') %>Get directions</a>
           </div>
           <%- include('partials/social') %>
+        </div></div>
+
+        <div class="card"><div class="card__body">
+          <h3 class="card__title"><%- ic('phone') %>Call or message</h3>
+          <ul class="contact-list">
+            <% if (tel) { %><li><a href="<%= tel %>" data-track="call_clicked"><%= clinic.phone %></a><span class="text-small text-muted">Main line<% if (whatsappUrl) { %> and WhatsApp<% } %></span></li><% } %>
+            <% if (clinic.phone_secondary) { %><li><a href="tel:<%= clinic.phone_secondary_intl || clinic.phone_secondary %>" data-track="call_clicked"><%= clinic.phone_secondary %></a><span class="text-small text-muted">Second line</span></li><% } %>
+          </ul>
+          <div class="card__footer">
+            <% if (whatsappUrl) { %><a class="button button--secondary button--small" href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked"><%- ic('whatsapp') %>WhatsApp</a><% } %>
+            <button type="button" class="button button--text button--small" data-callback-open>Request a call back</button>
+          </div>
+        </div></div>
+
+        <div class="card bento__tall contact-bento__hours"><div class="card__body">
+          <h3 class="card__title"><%- ic('clock') %>Opening hours</h3>
+          <p class="status-pill status-pill--<%= clinic.today.now.state %>"><span class="status-pill__dot" aria-hidden="true"></span><%= clinic.today.now.label %></p>
+          <table class="hours-table-ds">
+            <caption class="visually-hidden-ds">Weekly opening hours</caption>
+            <tbody>
+            <% weekHours.forEach(function (h) { var d = h.display; var isToday = h.weekday === clinic.today.weekdayIndex; %>
+              <tr<% if (isToday) { %> class="is-today" aria-current="date"<% } %>>
+                <th scope="row"><%= h.day %><% if (isToday) { %> <span class="badge">Today</span><% } %></th>
+                <td>
+                  <% if (d.closed) { %>Closed<% } else { %>
+                    <% d.sessions.forEach(function (sess, i) { %><span class="hours-table-ds__session"><% if (i) { %><span class="visually-hidden-ds">and </span><% } %><%= sess %></span><% }) %>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+            </tbody>
+          </table>
+        </div></div>
+
+        <div class="card bento__wide contact-bento__map">
+          <iframe class="contact-bento__frame" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+            data-src="<%= clinic.map_embed_url %>"
+            title="Map showing <%= clinic.name %>, <%= shortAddress %>"></iframe>
         </div>
-        <iframe class="map-embed" id="mapEmbed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-          data-src="<%= clinic.map_embed_url %>"
-          title="Map showing <%= clinic.name %>, <%= shortAddress %>"></iframe>
       </div>
     </div>
   </section>
 
-  <!-- ============ CTA BAND ============ -->
-  <section class="cta-band" id="contact">
-    <div class="wrap">
-      <span class="eyebrow" style="color:var(--honey);">Ready When You Are</span>
-      <h2><%= settings.cta_title || 'Your smile deserves attentive, modern care' %></h2>
-      <% if (settings.cta_body) { %><p><%= settings.cta_body %></p><% } %>
-      <div class="hero-ctas">
-        <a href="#appointment" class="btn btn-primary">Book an Appointment</a>
-        <% if (clinic.phone) { %><a href="tel:<%= clinic.phone_intl || clinic.phone %>" class="btn btn-outline">Call Now</a><% } %>
+  <!-- ============ CTA ============ -->
+  <section class="section section--primary cta" id="contact">
+    <div class="container cta__inner">
+      <span class="eyebrow-label">Ready when you are</span>
+      <h2><%= settings.cta_title || 'Book a visit' %></h2>
+      <% if (settings.cta_body) { %><p class="cta__body"><%= settings.cta_body %></p><% } %>
+      <div class="cluster cta__actions">
+        <a href="#appointment" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
+        <% if (tel) { %><a href="<%= tel %>" class="button button--text cta__call" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
       </div>
     </div>
   </section>
 
 </main>
 
-<%- include('partials/footer') %>
+<%- include('partials/site-footer') %>
 
-<script src="/js/site.js" defer></script>
+<script src="/js/ds.js" defer></script>
+<script src="/js/site-ds.js" defer></script>
 <script src="/js/booking.js" defer></script>
 </body>
 </html>

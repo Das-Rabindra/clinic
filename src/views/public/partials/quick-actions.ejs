@@ -1,0 +1,86 @@
+<% var nav = typeof navBase === 'undefined' ? '' : navBase; %>
+<% var ic = function (n) { return include('icon', { name: n }); }; %>
+<%#
+  The one persistent action bar, below 1024px. Above that the sticky header
+  carries Book and the phone number, so there is no second rail. The bar steps
+  aside while the booking form is on screen or a text field has focus.
+%>
+<nav class="action-bar" data-action-bar aria-label="Quick actions">
+  <a class="action-bar__item action-bar__item--primary" href="<%= nav %>#appointment" data-track="appointment_started"><%- ic('calendar') %>Appointment</a>
+  <% if (clinic.phone) { %>
+  <a class="action-bar__item" href="tel:<%= clinic.phone_intl || clinic.phone %>" data-track="call_clicked"><%- ic('phone') %>Call</a>
+  <% } %>
+  <% if (whatsappUrl) { %>
+  <a class="action-bar__item" href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked"><%- ic('whatsapp') %>WhatsApp</a>
+  <% } %>
+</nav>
+
+<%#
+  Call-back request. Posts to the existing /api/enquiries endpoint, so a
+  request lands in Admin → Enquiries exactly as before. Native <dialog>: the
+  page behind is inert while it is open.
+%>
+<dialog class="dialog" id="callbackDialog" aria-labelledby="cbTitle">
+  <div class="dialog__header">
+    <div>
+      <span class="eyebrow-label">No obligation</span>
+      <h2 class="dialog__title" id="cbTitle">Request a call back</h2>
+    </div>
+    <button type="button" class="dialog__close" data-dialog-close aria-label="Close"><%- ic('close') %></button>
+  </div>
+  <div class="dialog__body">
+    <div id="cbFormWrap">
+      <p class="text-muted">Leave your number and the clinic will call you back during opening hours.
+        <% if (clinic.phone) { %>If it is urgent, calling <a class="link" href="tel:<%= clinic.phone_intl || clinic.phone %>" data-track="call_clicked"><%= clinic.phone %></a> is quicker.<% } %></p>
+
+      <form id="callbackForm" class="callback-form" data-validate data-validate-js novalidate>
+        <p class="visually-hidden-ds" role="status" aria-live="polite" data-form-status></p>
+        <div class="notice notice--error" id="cbFailure" role="alert" tabindex="-1" hidden>
+          <span class="notice__icon"><%- ic('error') %></span>
+          <div class="notice__body"><p class="notice__title">The request was not sent</p><p id="cbFailureText"></p></div>
+        </div>
+        <p class="badge badge--neutral" id="cbTreatmentNote" hidden>About <strong id="cbTreatmentName"></strong></p>
+        <input type="hidden" name="service_id" id="cbServiceId" value="">
+        <div class="form-field">
+          <label class="form-label" for="cbName">Your name</label>
+          <input class="input" id="cbName" name="name" type="text" autocomplete="name" maxlength="120"
+                 data-rule="name" data-error-id="cbNameErr" data-message="Please enter your name." aria-describedby="cbNameErr">
+          <p class="form-error" id="cbNameErr"></p>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="cbPhone">Mobile number</label>
+          <input class="input" id="cbPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20"
+                 placeholder="10-digit mobile number"
+                 data-rule="phone" data-error-id="cbPhoneErr" data-message="Enter a valid 10-digit mobile number." aria-describedby="cbPhoneErr">
+          <p class="form-error" id="cbPhoneErr"></p>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="cbMessage">What would you like to talk about? <span class="form-label__optional">(optional)</span></label>
+          <textarea class="textarea" id="cbMessage" name="message" rows="3" maxlength="1000" aria-describedby="cbMessageErr"
+                    placeholder="For example: a tooth that has been sensitive for a week"></textarea>
+          <p class="form-error" id="cbMessageErr"></p>
+        </div>
+        <fieldset class="fieldset form-field">
+          <legend class="form-label">How should the clinic reach you?</legend>
+          <div class="callback-form__options">
+            <label class="option-card"><input type="radio" name="preferred_contact" value="phone" checked><span class="option-card__title">A phone call</span></label>
+            <label class="option-card"><input type="radio" name="preferred_contact" value="whatsapp"><span class="option-card__title">A WhatsApp message</span></label>
+          </div>
+        </fieldset>
+        <p class="form-hint">Your number is used only to return this call. Nothing is shared with anyone else &mdash; see the <a class="link" href="/privacy">privacy note</a>.</p>
+        <button type="submit" class="button button--primary button--block" id="cbSubmit">Request a call back</button>
+      </form>
+    </div>
+
+    <div id="cbDone" class="callback-done" hidden>
+      <div class="notice notice--success" role="status">
+        <span class="notice__icon"><%- ic('check') %></span>
+        <div class="notice__body">
+          <p class="notice__title" id="cbDoneTitle" tabindex="-1">Request received</p>
+          <p>The clinic has your number and will call you back during opening hours.</p>
+        </div>
+      </div>
+      <button type="button" class="button button--secondary" data-dialog-close>Close</button>
+    </div>
+  </div>
+</dialog>

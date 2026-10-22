@@ -1,0 +1,102 @@
+/*
+ * Site chrome on the new design system: header details, footer, the
+ * call-back dialog, status pill, social links, icons. Shared by every page
+ * that renders with ds: true. Built only from ds.css tokens.
+ */
+
+.icon { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+.button .icon { width: 1.125em; height: 1.125em; }
+
+/* ── Header extras ── */
+.site-header__text { min-width: 0; }
+.site-header__phone {
+  display: none; align-items: center; gap: var(--space-2);
+  min-height: var(--target-min); padding-inline: var(--space-2);
+  color: var(--color-text); font-weight: var(--weight-semibold); text-decoration: none;
+}
+.site-header__phone .icon { color: var(--color-primary); width: 1.1rem; height: 1.1rem; }
+.site-header__phone:hover { color: var(--color-primary); text-decoration: underline; text-underline-offset: 0.3em; }
+@media (min-width: 1280px) { .site-header__phone { display: inline-flex; } }
+/* Narrow phones: the brand line and the menu button must share 320px. */
+@media (max-width: 380px) {
+  .site-header__name { font-size: 1rem; }
+  .nav-toggle [data-nav-label] { display: none; }
+}
+
+/* ── Status pill (open now / break / closed), state in words not colour ── */
+.status-pill {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill);
+  background: var(--color-surface); border: var(--border-width) solid var(--color-border-subtle);
+  font-size: var(--text-small); font-weight: var(--weight-semibold); color: var(--color-text);
+}
+.status-pill__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-text-muted); }
+.status-pill--open .status-pill__dot { background: var(--color-success-text); }
+.status-pill--break .status-pill__dot { background: var(--color-warning-text); }
+.status-pill--closed .status-pill__dot { background: var(--color-error-text); }
+
+/* ── Social links (partials/social.ejs markup) ── */
+.social-row { display: flex; gap: var(--space-2); margin-top: var(--space-4); }
+.social-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: var(--target-min); height: var(--target-min);
+  border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-md);
+  color: var(--color-primary); background: var(--color-surface);
+}
+.social-link:hover { background: var(--color-accent-sage); }
+.social-link svg { width: 1.125rem; height: 1.125rem; fill: currentColor; }
+
+/* ── Footer ── */
+.site-footer {
+  padding-block: var(--space-16) var(--space-8);
+  background: var(--color-surface);
+  border-top: var(--border-width) solid var(--color-border-subtle);
+  font-size: var(--text-small);
+}
+.site-footer__grid { display: grid; gap: var(--space-10); grid-template-columns: 1fr; }
+.site-footer__grid > * { min-width: 0; }
+/* Phones: the two link lists sit side by side; brand and contact span both. */
+@media (min-width: 360px) and (max-width: 1023px) {
+  .site-footer__grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-8) var(--space-6); }
+  .site-footer__brand, .site-footer__col:last-child { grid-column: 1 / -1; }
+}
+@media (min-width: 1024px) { .site-footer__grid { grid-template-columns: 1.4fr 1fr 1fr 1.2fr; } }
+.site-footer__logo {
+  display: inline-flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);
+  color: var(--color-text); text-decoration: none;
+  font-family: var(--font-display); font-size: 1.125rem; font-weight: var(--weight-semibold);
+}
+.site-footer__logo img { border-radius: var(--radius-sm); }
+.site-footer__brand p { color: var(--color-text-muted); }
+.site-footer__heading {
+  margin-bottom: var(--space-3);
+  font-family: var(--font-body); font-size: var(--text-eyebrow); font-weight: var(--weight-semibold);
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text);
+}
+.site-footer__col ul { list-style: none; margin: 0; padding: 0; }
+.site-footer__col li { padding-block: 2px; }
+.site-footer__col a {
+  display: inline-flex; align-items: center; min-height: 32px;
+  color: var(--color-text-muted); text-decoration: none;
+}
+.site-footer__col a:hover { color: var(--color-primary); text-decoration: underline; text-underline-offset: 0.2em; }
+.site-footer__col address { font-style: normal; color: var(--color-text-muted); padding-bottom: var(--space-2); }
+.site-footer__note { margin-left: var(--space-1); color: var(--color-text-muted); }
+.site-footer .status-pill { margin-top: var(--space-4); }
+.site-footer__bottom {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3);
+  margin-top: var(--space-12); padding-top: var(--space-6);
+  border-top: var(--border-width) solid var(--color-border-subtle); color: var(--color-text-muted);
+}
+.site-footer__bottom a { color: inherit; }
+
+/* ── Call-back dialog ── */
+.callback-form { margin-top: var(--space-5); }
+.callback-form .notice { margin-bottom: var(--space-5); }
+.callback-form .notice:focus { outline: var(--border-width-strong) solid var(--color-focus); outline-offset: 2px; }
+.callback-form > .badge { margin-bottom: var(--space-4); }
+.callback-form__options { display: grid; gap: var(--space-2); grid-template-columns: 1fr; }
+@media (min-width: 480px) { .callback-form__options { grid-template-columns: 1fr 1fr; } }
+.callback-form .form-hint { margin-block: var(--space-5) var(--space-4); }
+.callback-done { display: grid; gap: var(--space-5); justify-items: start; }
+.callback-done .notice__title:focus { outline: none; }

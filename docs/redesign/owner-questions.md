@@ -64,6 +64,14 @@ Every treatment and hero image is licensed stock, labelled "Illustration:"
 - **4d.** Is the hero image (a close-up of a smiling mouth, stock) acceptable,
   or would you prefer the portrait or a clinic photo there?
 
+### Photo update (2026-10-22)
+
+You supplied three photos.
+
+- **A (treatment room)** is now the homepage hero. It replaces the stock smile
+  image.
+- **B and C are not used yet.** See question 10.
+
 ## 5. Qualification wording
 
 - **5a.** What does "FRCD" stand for, and which institution awarded it?
@@ -110,3 +118,17 @@ website has no screen for it.**
 - **9b.** The prompt asks for one branch and one PR per stage. OK to push
   `redesign/stage-1-audit` and open a docs-only PR? (Pushing creates a Vercel
   preview build.)
+
+## 10. The two photos not used yet
+
+- **10a. Photo B** (extracted tooth fragments on a bloodied glove). This
+  would put many patients off. I suggest it is not published on the website.
+  Do you want it used anywhere? If so, where, and why?
+- **10b. Photo C** (before/after "Smile Transformation" poster).
+  - Has this patient given **written consent** for the photo to be published?
+  - If yes, the right route is **Admin → Gallery → upload → category
+    "Before & after"**. That records who confirmed consent and when, and the
+    database refuses to publish the photo without it.
+  - Please supply the plain before and after photographs rather than the
+    poster. The poster carries "Safe & Painless Treatment" (claim 3, not yet
+    confirmed), plus the phone number and URL as text inside the image.

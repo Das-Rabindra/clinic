@@ -140,7 +140,7 @@
       var io = new IntersectionObserver(function (entries) {
         entries.forEach(function (en) { if (en.isIntersecting) inView.add(en.target); else inView.delete(en.target); });
         sync();
-      }, { threshold: 0.15 });
+      }, { threshold: 0, rootMargin: '0px 0px 120px 0px' });
       document.querySelectorAll('[data-bar-yield]').forEach(function (el) { io.observe(el); });
     }
   }
@@ -149,30 +149,57 @@
      data-validate forms: on submit, mark invalid fields with aria-invalid,
      put the message in the field's error element (already linked through
      aria-describedby), announce a summary in the form's live region, and
-     move focus to the first problem. Values are never cleared. */
-  document.querySelectorAll('form[data-validate]').forEach(function (form) {
+     move focus to the first problem. Values are never cleared.
+
+     Rules mirror the server's, never stricter: the server has the last word
+     and a client rule it would not enforce only turns patients away.
+       required — any non-blank value
+       name     — at least 2 characters          (zName)
+       phone    — at least 10 digits, at most 15 (zPhone: 10–20 characters)
+       mobile   — Indian mobile, 6–9 then 9 digits, optional 91 prefix
+
+     A form with data-validate-js is submitted by its own script: when it is
+     valid the native submit is cancelled and a "ds:valid" event fires on it. */
+  var RULES = {
+    required: function (v) { return v.length > 0; },
+    name: function (v) { return v.length >= 2; },
+    phone: function (v) { var d = v.replace(/\D/g, ''); return d.length >= 10 && d.length <= 15; },
+    mobile: function (v) { return /^(?:\+?91)?[6-9]\d{9}$/.test(v.replace(/[\s-]/g, '')); },
+  };
+
+  function setFieldError(field, message) {
+    var err = document.getElementById(field.getAttribute('data-error-id') ||
+      (field.getAttribute('aria-describedby') || '').split(' ').pop());
+    if (message) field.setAttribute('aria-invalid', 'true'); else field.removeAttribute('aria-invalid');
+    if (err) err.textContent = message || '';
+  }
+
+  function announceProblems(form, fields) {
     var live = form.querySelector('[data-form-status]');
+    if (live) live.textContent = fields.length === 1 ? 'There is 1 problem with this form.' : 'There are ' + fields.length + ' problems with this form.';
+    fields[0].focus();
+  }
+
+  document.querySelectorAll('form[data-validate]').forEach(function (form) {
     form.addEventListener('submit', function (e) {
       var problems = [];
       form.querySelectorAll('[data-rule]').forEach(function (field) {
-        var err = document.getElementById(field.getAttribute('data-error-id'));
-        var value = field.value.trim();
-        var rule = field.getAttribute('data-rule');
-        var message = '';
-        if (rule === 'required' && !value) message = field.getAttribute('data-message');
-        if (rule === 'mobile' && !/^(?:\+?91)?[6-9]\d{9}$/.test(value.replace(/[\s-]/g, ''))) message = field.getAttribute('data-message');
-        field.setAttribute('aria-invalid', String(Boolean(message)));
-        if (!message) field.removeAttribute('aria-invalid');
-        if (err) err.textContent = message;
-        if (message) problems.push(field);
+        var check = RULES[field.getAttribute('data-rule')];
+        var ok = !check || check(field.value.trim());
+        setFieldError(field, ok ? '' : field.getAttribute('data-message'));
+        if (!ok) problems.push(field);
       });
-      e.preventDefault();
-      if (problems.length) {
-        if (live) live.textContent = problems.length === 1 ? 'There is 1 problem with this form.' : 'There are ' + problems.length + ' problems with this form.';
-        problems[0].focus();
-        return;
+      if (problems.length) { e.preventDefault(); announceProblems(form, problems); return; }
+      var live = form.querySelector('[data-form-status]');
+      if (live) live.textContent = '';
+      if (form.hasAttribute('data-validate-js')) {
+        e.preventDefault();
+        form.dispatchEvent(new CustomEvent('ds:valid'));
       }
-      if (live) live.textContent = 'Looks good. (Preview only — nothing was sent.)';
     });
   });
+
+  /* Shared with page scripts that map server-side field errors back onto
+     the form using the same pattern. */
+  window.dsForm = { setFieldError: setFieldError, announceProblems: announceProblems };
 })();

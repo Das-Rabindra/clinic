@@ -64,3 +64,112 @@ templates patients see, backend, schema, env.
 
 **Rollback:** `git revert <stage-2 commit>`. Nothing live depends on these
 files.
+
+## Stage 3: Homepage (pushed to `main`)
+
+**What patients see on `/` now**
+
+- New system throughout: Lora + Inter, teal primary, ivory background.
+- Header: brand, nav, phone at ≥1280 px, and a Book button. On mobile, a menu
+  drawer with focus trap, Esc to close, and Menu/Close label. It also offers
+  Book, Call, WhatsApp and Request a call back.
+- Hero:
+  - the clinic's **real treatment-room photo** (served at 480/720/1086 px)
+  - Book, Call and WhatsApp buttons
+  - one compact trust row. The credential strip and the duplicate trust card
+    are removed
+- Urgent band: today's hours from the grid, break included. Calm styling.
+- Dentist profile: portrait plus a facts list (qualification, institution,
+  registration, focus, languages).
+- "The clinic" bento:
+  - the clinic's own story
+  - hours summary (from the grid)
+  - book online
+  - languages
+- Six featured treatments as interactive cards, each with Book and Request a
+  call back. The "Also treated" list and "See all treatments" remain.
+- Gallery laid out by photo count. Today that is 1 → a single figure with no
+  controls.
+- Testimonials: genuine-only empty state plus the review QR. A carousel
+  appears once real reviews exist. No rating markup.
+- FAQ: accessible accordion. Open without JavaScript, no flash on load.
+- Booking: the existing wizard, unchanged logic, re-skinned. A side panel
+  offers Call, WhatsApp and Call back as fallbacks.
+- Location & contact bento:
+  - address and directions
+  - main line, second line, WhatsApp, call back
+  - weekly hours table **with the break** (two sessions per day), today
+    marked, open-now status
+  - lazy map
+- Final CTA in primary, and a new footer.
+- **One** action bar below 1024 px (Appointment, Call, WhatsApp) with
+  safe-area padding. It steps aside over the booking form and while typing.
+  The desktop side rail is gone.
+
+**Files**
+
+- Added:
+  - `public/css/{layout,home,booking}.css`
+  - `public/js/site-ds.js`
+  - `public/img/clinic/treatment-room-{480,720,1086}.webp`
+  - `src/views/public/partials/{site-header,site-footer,quick-actions,icon}.ejs`
+  - `test/home.test.mjs`
+- Changed:
+  - `src/views/public/index.ejs` (rewritten)
+  - `partials/head.ejs`: design-system branch, deferred CSS, `ds-js` class set
+    before paint, preload with `imagesrcset`
+  - `src/routes/public.routes.js`: home view-model, `dayHours()`, clinic photo
+  - `public/js/ds.js`: validation rules mirror the server; `ds:valid` event;
+    bar pre-yield
+  - `styleguide.ejs`
+  - `test/pages.test.mjs`: 6 assertions retargeted to the new markup, same
+    intent
+  - `test/styleguide.test.mjs`
+- Not changed:
+  - other pages
+  - `booking.js`
+  - `site.js`
+  - `site.css`
+  - backend
+  - schema
+  - API
+  - env
+
+**Checks run**
+
+- `npm test`: **218/218 pass**. That includes 15 new homepage tests, 5 of
+  them in real Chromium:
+  - the bar yields over booking and returns afterwards
+  - Continue is never covered
+  - the call-back dialog: focus, validation, trap, focus return
+  - a call-back reaches the enquiries table
+  - the menu drawer
+- Local behaviour script (isolated `sdc_local` DB):
+  - every `tel:` is `+918847879686` or `+919124839288`
+  - WhatsApp is `wa.me/918847879686`
+  - directions URL unchanged
+  - all 9 anchors exist
+  - booking end to end gave `SDC-2026-00003/4`
+  - Continue reachable at every step, in 3 consecutive runs
+  - deep link and card Book both open at Date
+  - call-back works, including a mocked network failure that keeps typed
+    values and moves focus to the error
+  - no-JS: FAQ visible, booking `<noscript>` present
+- Screenshots at 320/360/375/390/768/1024/1440/1920 in
+  `/home/ravi/clinic-redesign-artifacts/stage-3/`. No horizontal overflow, one
+  h1, no console errors at any width.
+- Lighthouse on the local server (uncompressed, ×3): Perf 94, **A11y 100**
+  (baseline 95), BP 100, SEO 100, CLS 0. LCP 2.9 s: the hero paragraph,
+  render-delayed. Production numbers are recorded after deploy.
+
+**Open items**
+
+- Owner questions 1, 3, 4, 7 and 10 still shape copy. Flagged claims are kept
+  verbatim (D23).
+- The gallery's only item is still the promo poster, with alt text
+  "Illustration: opening day" (owner question 4c).
+- Treatment card images are still 1280 px with no `srcset`. The media
+  pipeline has no mid-size variant; Stage 4 will look at this.
+
+**Rollback:** `git revert <stage-3 commit>`. The homepage returns to
+`site.css` and the old partials, which are still in the repo.
