@@ -520,7 +520,7 @@ describe('fixes from the audit', () => {
     const dentist = [...r.body.matchAll(/application\/ld\+json">(.*?)<\/script>/gs)]
       .map((m) => JSON.parse(m[1])).find((d) => d['@type'] === 'Dentist');
     assert.ok(dentist.image, 'image is expected on a LocalBusiness');
-    assert.match(dentist.image, /^https?:\/\//, 'must be absolute');
+    for (const u of [].concat(dentist.image)) assert.match(u, /^https?:\/\//, 'must be absolute');
     assert.ok(!('priceRange' in dentist), 'the clinic does not publish prices');
     assert.ok(Array.isArray(dentist.areaServed) && dentist.areaServed.length);
   });
@@ -652,5 +652,40 @@ describe('image provenance', () => {
     } finally {
       await run('DELETE FROM media WHERE id = ?', m.id);
     }
+  });
+});
+
+describe('local SEO details', () => {
+  test('clinic markup: stable @id, logo, genuine photos only, Google listing in sameAs', async () => {
+    const body = (await srv.call('/')).body;
+    const ld = [...body.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)]
+      .map((m) => JSON.parse(m[1])).find((n) => n['@type'] === 'Dentist');
+    assert.match(ld['@id'], /\/#clinic$/);
+    assert.match(ld.logo, /\/img\/logo-240\.png$/);
+    assert.ok(Array.isArray(ld.image) && ld.image.length >= 1);
+    assert.ok(ld.image.some((u) => u.includes('/img/clinic/treatment-room')), 'the real clinic photo');
+    assert.ok(ld.sameAs.includes('https://www.google.com/search?kgmid=/g/11nw0z267l'));
+    assert.match(ld.employee['@id'], /\/#dentist$/);
+    assert.equal(ld.aggregateRating, undefined);
+  });
+
+  test('treatment markup names its provider with the same @id', async () => {
+    const body = (await srv.call('/services/dentures')).body;
+    const proc = [...body.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)]
+      .map((m) => JSON.parse(m[1])).find((n) => n['@type'] === 'MedicalProcedure');
+    assert.match(proc.provider['@id'], /\/#clinic$/);
+    assert.equal(proc.provider['@type'], 'Dentist');
+  });
+
+  test('sitemap lastmod is a real change date, not today on every request', async () => {
+    const { run } = await import('../src/db/index.js');
+    await run(`UPDATE services SET updated_at = '2026-01-05' WHERE slug = 'dentures'`);
+    const xml = (await srv.call('/sitemap.xml')).body;
+    assert.match(xml, /<loc>[^<]*\/services\/dentures<\/loc><lastmod>2026-01-05<\/lastmod>/);
+    assert.match(xml, /<loc>[^<]*\/privacy<\/loc><lastmod>2026-09-15<\/lastmod>/);
+  });
+
+  test('the privacy page shows when its wording last changed, not the current month', async () => {
+    assert.match((await srv.call('/privacy')).body, /Last updated September 2026\./);
   });
 });

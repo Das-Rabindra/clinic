@@ -13,6 +13,16 @@ import { minToHHMM } from '../utils/time.js';
 
 const COUNTRY_CODES = { india: 'IN', in: 'IN' };
 
+/* The clinic's Google listing, as identified by the Maps link the owner
+   shared (share.google/uZmjctaXNvyBXT3lG resolves to Knowledge Graph id
+   /g/11nw0z267l, "Samal Dental Care"). Emitted in sameAs so search engines
+   can tie this website to that listing. */
+const GOOGLE_LISTING_URL = 'https://www.google.com/search?kgmid=/g/11nw0z267l';
+
+/* Stable entity ids, shared by every page's markup. */
+export const clinicId = (url) => `${url}/#clinic`;
+export const dentistId = (url) => `${url}/#dentist`;
+
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export function canonicalUrl(s) {
@@ -78,8 +88,17 @@ export async function structuredData() {
   /* Prefer an explicit social image, then the hero, then the clinic logo —
      absolute, because a relative URL in JSON-LD is not resolved. */
   const absolute = (u) => (u ? new URL(u, url).toString() : null);
+  /* Real photographs only: a licensed stock image is not the clinic, and
+     `image` on a LocalBusiness is meant to show the actual place. The admin
+     hero is used when it is genuine; otherwise the clinic's own
+     treatment-room photograph. The dentist's portrait follows. */
   const hero = s.hero_media_id ? await mediaRepo.findById(s.hero_media_id) : null;
-  const node_image = absolute(s.og_image_url) || absolute(hero?.url) || `${url}/img/logo-240.png`;
+  const doctorPhoto = doctor?.photo_media_id ? await mediaRepo.findById(doctor.photo_media_id) : null;
+  const images = [
+    absolute(s.og_image_url),
+    hero && !hero.is_stock ? absolute(hero.url) : `${url}/img/clinic/treatment-room-1086.webp`,
+    absolute(doctorPhoto?.url),
+  ].filter(Boolean);
 
   /*
    * addressLocality must be the town Google matches against a search like
@@ -101,9 +120,10 @@ export async function structuredData() {
   const node = {
     '@context': 'https://schema.org',
     '@type': 'Dentist',
-    '@id': `${url}#clinic`,
+    '@id': clinicId(url),
     name: s.name,
-    url,
+    url: `${url}/`,
+    logo: `${url}/img/logo-240.png`,
     description: s.description || undefined,
     telephone: s.phone_intl || undefined,
     /* A second published line. Google accepts an array, and listing it keeps
@@ -118,7 +138,7 @@ export async function structuredData() {
     /* `image` is effectively expected on a LocalBusiness and feeds local rich
        results; it was absent because og_image_url is only set when an admin
        picks a social image. Fall back to whatever the page already shows. */
-    image: node_image || undefined,
+    image: images.length ? images : undefined,
     address,
     medicalSpecialty: 'Dentistry',
     /* No priceRange: the clinic does not publish prices, and a band in the
@@ -133,7 +153,7 @@ export async function structuredData() {
 
   /* sameAs is how Google ties the website to the clinic's own profiles.
      Only links the clinic has actually supplied are emitted. */
-  const sameAs = [s.instagram_url, s.facebook_url, s.youtube_url].filter(Boolean);
+  const sameAs = [GOOGLE_LISTING_URL, s.instagram_url, s.facebook_url, s.youtube_url].filter(Boolean);
   if (sameAs.length) node.sameAs = sameAs;
 
   if (s.city) {
@@ -147,7 +167,10 @@ export async function structuredData() {
   if (doctor) {
     node.employee = {
       '@type': 'Physician',
+      '@id': dentistId(url),
       name: doctor.name,
+      url: `${url}/#about`,
+      ...(doctorPhoto ? { image: absolute(doctorPhoto.url) } : {}),
       medicalSpecialty: 'Dentistry',
       ...(doctor.qualification ? { hasCredential: doctor.qualification } : {}),
       ...(s.institution ? { alumniOf: s.institution } : {}),
@@ -198,6 +221,10 @@ export function faqStructuredData(faqs) {
   };
 }
 
+/* The date the privacy policy's wording last changed (git: 360723f). Update
+   it whenever the policy text changes — not when its layout does. */
+export const PRIVACY_UPDATED = '2026-09-15';
+
 /** robots.txt / sitemap.xml content. */
 export const robotsTxt = (canonical) =>
   `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\n\nSitemap: ${canonical}/sitemap.xml\n`;
@@ -211,23 +238,32 @@ export const robotsTxt = (canonical) =>
  * without a code change.
  */
 export async function sitemapXml(canonical) {
-  const today = new Date().toISOString().slice(0, 10);
-  const lastmod = (v) => (v ? String(v).slice(0, 10) : today);
+  /* lastmod is the date content actually changed, never "today": a date that
+     moves on every request tells crawlers nothing and teaches them to ignore
+     it. Pages built from settings and treatments take the newest of those. */
+  const day = (v) => {
+    if (!v) return null;
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+  };
+  const settings = await settingsRepo.get();
+  const slugs = await servicesRepo.publicSlugs();
+  const newest = [settings.updated_at, ...slugs.map(sv => sv.updated_at)].map(day).filter(Boolean).sort().pop();
 
   const entries = [
-    { loc: `${canonical}/`, lastmod: today, changefreq: 'weekly', priority: '1.0' },
-    { loc: `${canonical}/services`, lastmod: today, changefreq: 'monthly', priority: '0.8' },
+    { loc: `${canonical}/`, lastmod: newest, changefreq: 'weekly', priority: '1.0' },
+    { loc: `${canonical}/services`, lastmod: newest, changefreq: 'monthly', priority: '0.8' },
   ];
-  for (const sv of await servicesRepo.publicSlugs()) {
+  for (const sv of slugs) {
     entries.push({
       loc: `${canonical}/services/${sv.slug}`,
-      lastmod: lastmod(sv.updated_at), changefreq: 'monthly', priority: '0.7',
+      lastmod: day(sv.updated_at), changefreq: 'monthly', priority: '0.7',
     });
   }
-  entries.push({ loc: `${canonical}/privacy`, lastmod: today, changefreq: 'yearly', priority: '0.2' });
+  entries.push({ loc: `${canonical}/privacy`, lastmod: PRIVACY_UPDATED, changefreq: 'yearly', priority: '0.2' });
 
   const body = entries.map(e =>
-    `  <url><loc>${e.loc}</loc><lastmod>${e.lastmod}</lastmod>` +
+    `  <url><loc>${e.loc}</loc>${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ''}` +
     `<changefreq>${e.changefreq}</changefreq><priority>${e.priority}</priority></url>`
   ).join('\n');
 
@@ -276,7 +312,12 @@ export function serviceStructuredData(service, settings) {
     indication: service.who_needs
       ? { '@type': 'MedicalIndication', description: service.who_needs }
       : undefined,
-    provider: { '@id': `${url}#clinic` },
+    /* Self-contained: the full clinic entity lives on the homepage; this
+       carries enough to identify it on its own and the shared @id. */
+    provider: {
+      '@type': 'Dentist', '@id': clinicId(url), name: settings.name, url: `${url}/`,
+      ...(settings.phone_intl ? { telephone: settings.phone_intl } : {}),
+    },
   }));
 }
 

@@ -382,7 +382,9 @@ router.get('/privacy', async (_req, res) => {
     },
     ogType: 'website',
     schemas: [seo.breadcrumbs(canonical, [{ name: 'Home', path: '/' }, { name: 'Privacy', path: '/privacy' }])],
-    updatedAt: new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }),
+    /* The policy's real revision date, not the current month — a privacy
+       page claiming it changed every month would be untrue. */
+    updatedAt: new Date(`${seo.PRIVACY_UPDATED}T00:00:00Z`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }),
   });
 });
 

@@ -107,7 +107,8 @@
 .gallery-feature { max-width: 36rem; margin: 0 auto; }
 .gallery-feature img { width: 100%; height: auto; border-radius: var(--radius-md); border: var(--border-width) solid var(--color-border-subtle); }
 .gallery-feature figcaption, .gallery-grid-ds figcaption, .carousel figcaption { margin-top: var(--space-2); font-size: var(--text-small); color: var(--color-text-muted); }
-.gallery-grid-ds { display: grid; gap: var(--gap-md); grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr)); }
+.gallery-grid-ds { display: grid; gap: var(--gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+@media (min-width: 1024px) { .gallery-grid-ds { grid-template-columns: repeat(auto-fit, minmax(16rem, 22rem)); justify-content: start; } }
 .gallery-grid-ds figure, .carousel figure { margin: 0; }
 .gallery-grid-ds img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-md); }
 

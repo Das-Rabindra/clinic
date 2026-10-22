@@ -46,7 +46,18 @@ export const GALLERY_PHOTOS = [
    so a second instance waits, then finds the first one's row. */
 const LOCK_KEY = 7042226;
 
+/* Alt-text corrections for photos already in the gallery. Guarded on the
+   exact old wording, so text the clinic has since edited is left alone. The
+   opening-day item is a printed promotional poster, not an illustration. */
+const ALT_FIXES = [
+  ['Illustration: opening day', 'Grand opening poster for Samal Dental Care, Sunday 13 September 2026, with Dr. Sonali S. Samal'],
+];
+
 export async function applyGalleryContent({ log = console.log, list = GALLERY_PHOTOS, dir = DIR } = {}) {
+  for (const [from, to] of ALT_FIXES) {
+    const r = await run('UPDATE media SET alt = ?, updated_at = NOW() WHERE alt = ? AND deleted_at IS NULL', to, from);
+    if (r.changes) log(`[gallery] corrected alt text on ${r.changes} image(s)`);
+  }
   let added = 0;
   for (const p of list) {
     if (p.category === 'treatment' && !p.consent) {
