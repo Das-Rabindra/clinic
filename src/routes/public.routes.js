@@ -422,6 +422,46 @@ router.get('/_styleguide', async (_req, res) => {
   });
 });
 
+/* ── Testimonials layout preview (client demo) ────────────────────────────
+   Shows the homepage testimonials section as it will look once genuine
+   reviews arrive, filled with SAMPLE content and labelled as such on the
+   page and on every card. noindex by meta and header, unlinked, not in the
+   sitemap, and it emits no structured data — so nothing here can be read as
+   a real review by a patient or a search engine. The live homepage keeps
+   its genuine-only behaviour. */
+const SAMPLE_REVIEWS = [
+  ['Biswa P Tripathy', 5, 'The doctor explained every step before starting and never rushed me. The clinic is clean and calm.', '2026-10-18'],
+  ['Subrat Das', 5, 'Booked online in a couple of minutes and was seen on time. Friendly people at the front desk.', '2026-10-15'],
+  ['Bunny', 5, 'My first visit to a dentist in years. I was nervous, but everything was explained gently and patiently.', '2026-10-12'],
+  ['Sushil K', 4, 'Easy to find in the Annapurna Market Complex. Clear advice and no pressure to take extra treatment.', '2026-10-09'],
+  ['Mamuni Pradhan', 5, 'Brought my mother for a check-up. The doctor was patient with all of our questions.', '2026-10-05'],
+  ['Baibhav Kumar Samal', 5, 'Good to have a proper dental clinic so close to home in Talcher.', '2026-09-30'],
+  ['Sradha Suman Samal', 5, 'A warm welcome and a very clean treatment room. Everything felt well organised.', '2026-09-24'],
+  ['Nihal Garanayak', 4, 'Called in the evening and got a convenient time for the next day. Would recommend.', '2026-09-20'],
+];
+
+router.get('/_preview/testimonials', async (req, res) => {
+  const base = await baseLocals();
+  const list = SAMPLE_REVIEWS.map(([author_name, rating, text, reviewed_at]) =>
+    ({ author_name, rating, text, reviewed_at, source: 'manual' }));
+  const average = (list.reduce((n, r) => n + r.rating, 0) / list.length).toFixed(1);
+  issuePublicToken(req, res);
+  res.set('X-Robots-Tag', 'noindex, nofollow');
+  res.render('public/preview-testimonials', {
+    ...base,
+    pageCss: ['/css/home.css'],
+    noindex: true,
+    meta: {
+      title: `Testimonials layout preview (sample content) | ${base.settings.name}`,
+      description: '', canonical: '', ogTitle: '', ogDescription: '', ogUrl: '', ogImage: null,
+    },
+    schemas: [],
+    reviews: { reviews: list, average, count: list.length, google_count: 0, has_manual: true },
+    starsHtml, formatReviewDate,
+    sample: true,
+  });
+});
+
 /* SEO endpoints, generated from live settings. */
 router.get('/robots.txt', async (_req, res) => {
   res.type('text/plain').send(seo.robotsTxt(seo.canonicalUrl(await settingsRepo.get())));

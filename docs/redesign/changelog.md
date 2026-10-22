@@ -387,3 +387,27 @@ Step screenshots at 390 and 1440 px are in
 
 **Rollback:** `git revert <stage-5 commit>` restores the previous wizard. No
 data migration is involved.
+
+### Stage 5 follow-ups
+
+- **Hero:** the headline is now 34–52 px with balanced line breaks. The admin
+  line break applies only on phones. The photo shape matches the text
+  column's height at each width. This answers the feedback that the top text
+  looked too big and misaligned.
+- **`/_preview/testimonials`**, for the client demo:
+  - shows the testimonials section filled with 8 **sample** cards, using the
+    supplied names with sample wording I wrote
+  - a "Sample content, not real reviews" banner, and every card labelled
+    "Sample"
+  - noindex (meta and header), unlinked, not in the sitemap, no structured
+    data; tests assert all of this, and that the live homepage never shows
+    the sample cards
+- **Testimonials section** moved into `partials/reviews.ejs`, shared by the
+  homepage and the preview.
+- **Real testimonials:** the owner says these patients gave written comments
+  on paper.
+  - Route: **Admin → Reviews → add testimonial**, with the patient's **own
+    words** from the card, "collected via: feedback card", and the consent
+    tick.
+  - The database enforces consent before anything shows.
+  - The homepage switches to the carousel automatically.

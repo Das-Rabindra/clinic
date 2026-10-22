@@ -203,3 +203,29 @@ describe('homepage in a browser', () => {
     await p.close();
   });
 });
+
+describe('testimonials layout preview (sample content)', () => {
+  test('is labelled as sample, noindex, unlinked, out of the sitemap, with no structured data', async () => {
+    const r = await srv.call('/_preview/testimonials');
+    assert.equal(r.status, 200);
+    assert.equal(r.headers.get('x-robots-tag'), 'noindex, nofollow');
+    assert.match(r.body, /<meta name="robots" content="noindex, follow">|noindex/);
+    assert.match(r.body, /Sample content &mdash; layout preview, not real reviews/);
+    const cards = (r.body.match(/class="card review-card"/g) || []).length;
+    assert.ok(cards > 0);
+    assert.equal((r.body.match(/Sample &middot; Shared with the clinic/g) || []).length, cards, 'every card says Sample');
+    assert.ok(!r.body.includes('application/ld+json'), 'no structured data at all');
+    assert.ok(!(await srv.call('/sitemap.xml')).body.includes('_preview'));
+    for (const page of ['/', '/services', '/privacy']) {
+      assert.ok(!(await srv.call(page)).body.includes('_preview'), `${page} links to the preview`);
+    }
+  });
+
+  test('the live homepage never shows the sample testimonials', async () => {
+    const body = await home();
+    assert.ok(!body.includes('Biswa P Tripathy'));
+    assert.ok(!body.includes('Sample &middot;'));
+    assert.match(body, /Testimonials coming soon/);
+    assert.ok(!body.includes('AggregateRating'));
+  });
+});

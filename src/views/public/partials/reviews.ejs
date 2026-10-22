@@ -1,0 +1,86 @@
+<%#
+  Testimonials section. Shared by the homepage and the internal layout
+  preview (/_preview/testimonials), so the preview shows exactly the markup
+  patients will get. Locals: reviews, reviewQr, settings, clinic, starsHtml,
+  formatReviewDate, shortAddress, sample (optional: marks every card as a
+  sample, for the preview only).
+%>
+<% var ic = function (n) { return include('icon', { name: n }); }; %>
+<% var isSample = typeof sample !== 'undefined' && sample; %>
+  <section class="section" id="reviews">
+    <div class="container">
+      <div class="section-heading section-heading--center">
+        <span class="eyebrow-label">Testimonials from patients</span>
+        <h2><%= settings.reviews_title || 'What patients are saying' %></h2>
+      </div>
+
+      <% if (reviews.reviews.length) { %>
+        <div class="rating-summary">
+          <span class="rating-summary__score"><%= reviews.average %></span>
+          <div>
+            <span class="stars" role="img" aria-label="<%= reviews.average %> out of 5"><%- starsHtml(reviews.average) %></span>
+            <p class="text-small text-muted">
+              <% if (reviews.google_count && reviews.has_manual) { %>
+                <%= reviews.google_count %> Google review<%= reviews.google_count === 1 ? '' : 's' %> and <%= reviews.count - reviews.google_count %> shared with the clinic
+              <% } else { %>
+                <%= reviews.google_count ? 'Google rating' : 'Patient feedback' %>, based on <%= reviews.count %> review<%= reviews.count === 1 ? '' : 's' %>
+              <% } %>
+            </p>
+          </div>
+        </div>
+        <div class="carousel" data-carousel>
+          <ul class="carousel__track carousel__track--reviews" data-carousel-track tabindex="0" aria-label="Patient testimonials, scrollable">
+            <% reviews.reviews.forEach(function (r) { %>
+            <li class="carousel__item">
+              <article class="card review-card"><div class="card__body">
+                <span class="stars" role="img" aria-label="<%= r.rating %> out of 5"><%- starsHtml(r.rating) %></span>
+                <% if (r.text) { %><p><%= r.text %></p><% } %>
+                <footer class="review-card__author">
+                  <strong><%= r.author_name %></strong>
+                  <span class="text-small text-muted"><% if (isSample) { %>Sample &middot; <% } %><% if (r.source === 'manual') { %>Shared with the clinic<% } else { %>Google review<% } %><% if (r.reviewed_at) { %> · <%= formatReviewDate(r.reviewed_at) %><% } %></span>
+                </footer>
+              </div></article>
+            </li>
+            <% }) %>
+          </ul>
+          <div class="carousel__controls" data-carousel-controls>
+            <button type="button" class="button button--secondary button--small" data-carousel-prev aria-label="Previous testimonials"><%- ic('chevronLeft') %></button>
+            <span class="text-small text-muted" data-carousel-status aria-live="polite"></span>
+            <button type="button" class="button button--secondary button--small" data-carousel-next aria-label="More testimonials"><%- ic('chevronRight') %></button>
+          </div>
+        </div>
+        <% if (clinic.reviews_url) { %>
+        <p class="section-foot"><a class="button button--secondary" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener">Read the reviews on Google</a></p>
+        <% } %>
+      <% } else { %>
+        <div class="empty-state">
+          <%- ic('star') %>
+          <h3>Testimonials coming soon</h3>
+          <p>This section shows genuine feedback only &mdash; reviews synced from the clinic&rsquo;s
+          Google Business Profile, and testimonials patients have shared directly and agreed to
+          have published. Nothing here is written by the clinic.</p>
+          <% if (clinic.reviews_url && !reviewQr) { %>
+            <p><a class="button button--secondary button--small" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener">Leave a review on Google</a></p>
+          <% } %>
+        </div>
+      <% } %>
+
+      <% if (reviewQr) { %>
+      <aside class="card review-qr" aria-labelledby="qrTitle">
+        <div class="review-qr__code">
+          <% if (clinic.reviews_url) { %><a href="<%= clinic.reviews_url %>" target="_blank" rel="noopener" aria-label="Open the Google review page for <%= clinic.name %>"><% } %>
+            <img src="<%= reviewQr.url %>" alt="QR code linking to the Google review page for <%= clinic.name %>, <%= shortAddress %>"
+                 width="<%= reviewQr.width || 320 %>" height="<%= reviewQr.height || 320 %>" loading="lazy" decoding="async">
+          <% if (clinic.reviews_url) { %></a><% } %>
+        </div>
+        <div class="review-qr__text">
+          <span class="eyebrow-label">Google</span>
+          <h3 id="qrTitle"><%= settings.review_qr_title || 'Leave a review on Google' %></h3>
+          <% if (settings.review_qr_body) { %><p class="text-muted"><%= settings.review_qr_body %></p><% } %>
+          <% if (clinic.reviews_url) { %><a class="button button--secondary button--small" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener">Open the review page</a><% } %>
+        </div>
+      </aside>
+      <% } %>
+    </div>
+  </section>
+

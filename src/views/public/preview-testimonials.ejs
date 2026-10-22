@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head') %>
+<style>
+  .preview-banner { padding: var(--space-3) var(--gutter);
+    background: var(--color-warning-bg); border-bottom: 2px solid var(--color-warning-text); color: var(--color-text);
+    text-align: center; font-size: var(--text-small); }
+  .preview-banner strong { color: var(--color-warning-text); }
+</style>
+</head>
+<body class="has-action-bar">
+<a class="skip-to-content" href="#main">Skip to content</a>
+<div class="preview-banner" role="note">
+  <strong>Sample content &mdash; layout preview, not real reviews.</strong>
+  This page shows how the testimonials section will look once genuine patient reviews are added. It is not linked from the site and is hidden from search engines.
+</div>
+<%- include('partials/site-header') %>
+<main id="main">
+  <%- include('partials/reviews', { sample: true }) %>
+</main>
+<%- include('partials/site-footer') %>
+<script src="/js/ds.js" defer></script>
+<script src="/js/site-ds.js" defer></script>
+</body>
+</html>
