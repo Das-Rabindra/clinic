@@ -426,3 +426,7 @@ data migration is involved.
   WhatsApp button.
 - `/_preview/testimonials` returns 200 with `X-Robots-Tag: noindex, nofollow`.
   The homepage still shows the genuine-only empty state.
+
+## Stage 6: production-readiness QA
+
+See `06-qa.md`. Verified fixes: focus kept clear of the mobile bar (WCAG 2.4.11) and an h1 added to the preview page. Every page meets the budget (LCP 1.5–2.4 s, CLS 0, A11y/SEO 100). Vercel blocked the last two deploys (needs a dashboard check). npm audit fixes await approval.
