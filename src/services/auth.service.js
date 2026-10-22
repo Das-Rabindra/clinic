@@ -105,12 +105,14 @@ export async function requestPasswordReset(email, ctx = {}) {
   if (!user || !user.is_active) return { issued: false };
 
   const token = randomToken(32);
-  run(
+  /* Awaited: unawaited, the token row could still be uncommitted when the
+     patient clicks the link, and a failure would vanish silently. */
+  await run(
     `INSERT INTO password_resets (user_id, token_hash, expires_at)
      VALUES (?, ?, NOW() + INTERVAL '+1 hour')`,
     user.id, sha256(token)
   );
-  audit(ctx, {
+  await audit(ctx, {
     action: 'auth.password.reset_requested', entity: 'user', entity_id: user.id,
     summary: `Password reset requested for ${user.email}`,
   });
@@ -118,16 +120,21 @@ export async function requestPasswordReset(email, ctx = {}) {
 }
 
 export async function resetPassword({ token, newPassword }, ctx = {}) {
-  const row = one(
+  /* Must be awaited. Unawaited, `row` was a Promise — always truthy — so a
+     bad token was never rejected and the password was set for user
+     "undefined": the reset reported success and changed nothing. */
+  const row = await one(
     `SELECT * FROM password_resets WHERE token_hash = ? AND used_at IS NULL
        AND expires_at > NOW()`, sha256(token)
   );
   if (!row) throw new AuthError('INVALID_TOKEN', 'This reset link is invalid or has expired.', 400);
 
-  await usersRepo.setPassword(row.user_id, newPassword);
-  run(`UPDATE password_resets SET used_at = NOW() WHERE id = ?`, row.id);
+  if (await usersRepo.setPassword(row.user_id, newPassword) !== 1) {
+    throw new AuthError('INVALID_TOKEN', 'This reset link is invalid or has expired.', 400);
+  }
+  await run(`UPDATE password_resets SET used_at = NOW() WHERE id = ?`, row.id);
   await sessionsRepo.revokeAllForUser(row.user_id);
-  audit(ctx, {
+  await audit(ctx, {
     action: 'auth.password.reset', entity: 'user', entity_id: row.user_id,
     summary: 'Password reset completed',
   });

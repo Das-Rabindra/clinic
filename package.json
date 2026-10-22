@@ -2,7 +2,7 @@
   "name": "samal-dental-care",
   "version": "1.0.0",
   "private": true,
-  "description": "Samal Dental Care — public website, patient booking platform and clinic management system",
+  "description": "Samal Dental Care \u2014 public website, patient booking platform and clinic management system",
   "type": "module",
   "engines": {
     "node": ">=20"
@@ -14,7 +14,8 @@
     "seed": "node src/db/seed.js",
     "create-admin": "node scripts/create-admin.js",
     "test": "node --test --test-concurrency=1 \"test/*.test.mjs\"",
-    "test:watch": "node --test --watch \"test/*.test.mjs\""
+    "test:watch": "node --test --watch \"test/*.test.mjs\"",
+    "reset-admin-password": "node scripts/reset-admin-password.js"
   },
   "dependencies": {
     "@vercel/blob": "^2.8.0",

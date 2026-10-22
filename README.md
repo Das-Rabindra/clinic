@@ -63,6 +63,18 @@ npm run create-admin      # interactive; prompts for email and password
 npm start
 ```
 
+**Forgot the admin password?** With no email (SMTP) configured, reset links
+only reach the server log. Reset it directly instead — needs only the
+database URL (Vercel → Settings → Environment Variables → `DATABASE_URL`,
+or the Neon console):
+
+```bash
+DATABASE_URL='postgres://…' npm run reset-admin-password
+```
+
+It lists the admin accounts, sets a new password, clears any lockout and
+signs that account out everywhere. Nothing is written to disk.
+
 `npm test` runs the full suite (92 tests, including the concurrency and
 consent-gate tests). It needs a Postgres it can create databases on:
 

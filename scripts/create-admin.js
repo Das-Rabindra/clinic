@@ -7,8 +7,8 @@ import { seed } from '../src/db/seed.js';
 import * as usersRepo from '../src/repositories/users.repo.js';
 import { closeDb } from '../src/db/index.js';
 
-migrate({ log: () => {} });
-seed({ log: () => {} });
+await migrate({ log: () => {} });
+await seed({ log: () => {} });
 
 const rl = readline.createInterface({ input: stdin, output: stdout });
 
@@ -17,7 +17,7 @@ if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
   console.error('That is not a valid email address.');
   process.exit(1);
 }
-if (usersRepo.findByEmail(email)) {
+if (await usersRepo.findByEmail(email)) {
   console.error('An account with that email already exists.');
   process.exit(1);
 }
@@ -34,7 +34,7 @@ if (password !== confirm) {
 }
 rl.close();
 
-const role = usersRepo.count() === 0 ? 'owner' : 'admin';
-const user = usersRepo.create({ email, name, password, role });
+const role = (await usersRepo.count()) === 0 ? 'owner' : 'admin';
+const user = await usersRepo.create({ email, name, password, role });
 console.log(`\nCreated ${role} account: ${user.email}`);
-closeDb();
+await closeDb();
