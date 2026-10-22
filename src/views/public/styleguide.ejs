@@ -1,0 +1,423 @@
+<%#
+  Internal design-system preview. Not linked from anywhere, noindex (meta and
+  X-Robots-Tag), absent from the sitemap. Every primitive and every state on
+  one page, so the visual system can be reviewed before pages adopt it.
+  Copy here is placeholder text, marked as such — no business facts.
+%>
+<% var I = {
+  calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 2v4M16 2v4M3.5 9h17M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>',
+  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 21l1.7-5A8.5 8.5 0 1 1 8 19.3z"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17.7 16.7l-4.3 4.2a2 2 0 0 1-2.8 0l-4.3-4.2a8 8 0 1 1 11.4 0z"/><circle cx="12" cy="11" r="3"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>',
+  info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>',
+  error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+  menu: '<svg class="icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+}; %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#155E59">
+<title>Design system preview — internal</title>
+<link rel="icon" type="image/png" href="/img/logo-64.png">
+<link rel="preload" href="/fonts/lora-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/ds.css">
+<style>
+  /* Preview-page scaffolding only; not part of the system. */
+  .sg-swatches { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); }
+  .sg-swatch { border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); overflow: hidden; background: var(--color-surface); font-size: var(--text-small); }
+  .sg-swatch__chip { height: 4rem; }
+  .sg-swatch__meta { padding: var(--space-2) var(--space-3); }
+  .sg-swatch__meta code { display: block; color: var(--color-text-muted); font-size: 0.75rem; }
+  .sg-block + .sg-block { margin-top: var(--space-12); }
+  .sg-sub { margin: var(--space-8) 0 var(--space-3); font-family: var(--font-body); font-size: var(--text-small); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--color-text-muted); }
+  .sg-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
+  .sg-type > * + * { margin-top: var(--space-4); }
+  .sg-type small { display: block; font-family: var(--font-body); font-size: 0.75rem; color: var(--color-text-muted); letter-spacing: 0; font-weight: 400; }
+  .sg-spacing { display: grid; gap: var(--space-2); }
+  .sg-spacing div { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-small); }
+  .sg-spacing span { display: block; height: 12px; background: var(--color-primary); border-radius: 2px; }
+  .sg-elev { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); }
+  .sg-elev > div { padding: var(--space-6); background: var(--color-surface); border-radius: var(--radius-md); border: 1px solid var(--color-border-subtle); }
+  .sg-form { max-width: 34rem; }
+  .sg-demo-frame { border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); overflow: hidden; background: var(--color-bg); }
+  .sg-demo-frame .action-bar { position: static; display: grid; max-width: 420px; }
+  .sg-note { padding: var(--space-3) var(--space-4); border-radius: var(--radius-sm); background: var(--color-accent-sand); font-size: var(--text-small); }
+</style>
+</head>
+<body class="has-action-bar">
+<a class="skip-to-content" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="container site-header__row">
+    <a class="site-header__brand" href="#top">
+      <img src="/img/logo-96.png" alt="" width="36" height="36">
+      <span>
+        <span class="site-header__name"><%= clinicName %></span>
+        <span class="site-header__place">Design system preview</span>
+      </span>
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul class="site-nav__list">
+        <li><a class="site-nav__link" href="#colour" aria-current="page">Colour</a></li>
+        <li><a class="site-nav__link" href="#type">Type</a></li>
+        <li><a class="site-nav__link" href="#buttons">Buttons</a></li>
+        <li><a class="site-nav__link" href="#forms">Forms</a></li>
+        <li><a class="site-nav__link" href="#slots">Slots</a></li>
+        <li><a class="site-nav__link" href="#feedback">Feedback</a></li>
+      </ul>
+    </nav>
+    <div class="site-header__actions">
+      <a class="button button--primary button--small site-header__cta" href="#slots"><%- I.calendar %>Book appointment</a>
+      <button type="button" class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="sgDrawer" aria-label="Open menu">
+        <%- I.menu %><span data-nav-label>Menu</span>
+      </button>
+    </div>
+  </div>
+</header>
+<nav class="nav-drawer" id="sgDrawer" aria-label="Mobile">
+  <ul class="nav-drawer__list">
+    <li><a class="nav-drawer__link" href="#colour">Colour <%- I.arrow %></a></li>
+    <li><a class="nav-drawer__link" href="#type">Type <%- I.arrow %></a></li>
+    <li><a class="nav-drawer__link" href="#buttons">Buttons <%- I.arrow %></a></li>
+    <li><a class="nav-drawer__link" href="#forms">Forms <%- I.arrow %></a></li>
+    <li><a class="nav-drawer__link" href="#slots">Slots <%- I.arrow %></a></li>
+    <li><a class="nav-drawer__link" href="#feedback">Feedback <%- I.arrow %></a></li>
+  </ul>
+  <div class="nav-drawer__actions">
+    <a class="button button--primary button--block" href="#slots"><%- I.calendar %>Book appointment</a>
+    <a class="button button--secondary button--block" href="#buttons"><%- I.phone %>Call</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<section class="section" id="top">
+  <div class="container">
+    <div class="section-heading">
+      <span class="eyebrow-label">Internal · not indexed</span>
+      <h1 class="text-display">Calm Clinical Elegance</h1>
+      <p class="section-heading__lede">Every token and shared primitive, in every state. Copy on this page is placeholder text; nothing here is clinic information.</p>
+    </div>
+    <p class="sg-note">Stage 2 preview. Live pages are unchanged until this system is approved.</p>
+  </div>
+</section>
+
+<!-- ── Colour ── -->
+<section class="section section--surface" id="colour">
+  <div class="container">
+    <div class="section-heading"><span class="eyebrow-label">Tokens</span><h2>Colour</h2>
+      <p class="section-heading__lede">Ratios are against the token named; full matrix in docs/redesign/design-tokens.md.</p></div>
+    <% swatches.forEach(function (group) { %>
+      <h3 class="sg-sub"><%= group.title %></h3>
+      <div class="sg-swatches">
+        <% group.items.forEach(function (s) { %>
+        <div class="sg-swatch">
+          <div class="sg-swatch__chip" style="background:var(<%= s.token %>)"></div>
+          <div class="sg-swatch__meta"><strong><%= s.name %></strong><code><%= s.token %> · <%= s.value %></code><% if (s.note) { %><code><%= s.note %></code><% } %></div>
+        </div>
+        <% }) %>
+      </div>
+    <% }) %>
+  </div>
+</section>
+
+<!-- ── Type ── -->
+<section class="section" id="type">
+  <div class="container">
+    <div class="section-heading"><span class="eyebrow-label">Tokens</span><h2>Typography</h2>
+      <p class="section-heading__lede">Lora for headlines, Inter for everything else. Fluid sizes shown at the current viewport.</p></div>
+    <div class="sg-type">
+      <p class="text-display">Display — care close to home <small>--text-display · Lora 500 · 40→64px</small></p>
+      <p class="text-h1" style="font-family:var(--font-display)">Heading 1 — a calm first visit <small>--text-h1 · Lora 500 · 34→48px</small></p>
+      <p class="text-h2" style="font-family:var(--font-display)">Heading 2 — treatments explained <small>--text-h2 · Lora 500 · 28→36px</small></p>
+      <p class="text-h3" style="font-family:var(--font-display); font-weight:600">Heading 3 / card title <small>--text-h3 · Lora 600 · 20→22px</small></p>
+      <p class="text-body-lg">Body large. Placeholder lede text for an introduction that sets context in a sentence or two. <small>--text-body-lg · Inter 400 · 18px</small></p>
+      <div class="prose"><p>Body. Placeholder paragraph set at sixteen pixels with a 1.65 line height and a measure capped at sixty-eight characters, so long explanations stay comfortable to read on any screen. <a href="#type">An inline link</a> sits within the text. <small>--text-body · Inter 400 · 16px · max 68ch</small></p></div>
+      <p class="text-small text-muted">Small / caption — muted secondary text. <small>--text-small · 14px · --color-text-muted</small></p>
+      <p><span class="form-label">Form label</span> <small>--text-label · Inter 600 · 15px</small></p>
+      <p><span class="eyebrow-label">Eyebrow label</span> <small>--text-eyebrow · Inter 600 · 13px · uppercase</small></p>
+      <p><span class="button button--primary" role="presentation">Button text</span> <small>--text-button · Inter 600 · 16px</small></p>
+      <p style="font-size:1.25rem">Tabular figures: 09:30 · 10:00 · 11:30 <small>font-variant-numeric: tabular-nums (replaces the mono face)</small></p>
+    </div>
+
+    <h3 class="sg-sub">Spacing (4px base)</h3>
+    <div class="sg-spacing">
+      <% [1,2,3,4,5,6,8,10,12,16,20,24].forEach(function (n) { %>
+        <div><code style="width:6.5rem">--space-<%= n %></code><span style="width:var(--space-<%= n %>)"></span><%= n * 4 %>px</div>
+      <% }) %>
+    </div>
+
+    <h3 class="sg-sub">Radius, border, elevation</h3>
+    <div class="sg-elev">
+      <div style="border-radius:var(--radius-sm)">--radius-sm · 6px<br><span class="text-small text-muted">inputs, badges, slots</span></div>
+      <div>--radius-md · 12px<br><span class="text-small text-muted">cards, buttons, dialogs</span></div>
+      <div style="box-shadow:var(--shadow-1)">--shadow-1<br><span class="text-small text-muted">resting interactive card</span></div>
+      <div style="box-shadow:var(--shadow-2)">--shadow-2<br><span class="text-small text-muted">hover, booking panel, dialog</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Buttons & links ── -->
+<section class="section section--surface" id="buttons">
+  <div class="container">
+    <div class="section-heading"><span class="eyebrow-label">Primitives</span><h2>Buttons &amp; links</h2></div>
+    <% [['Primary','button--primary'],['Secondary','button--secondary'],['Tertiary','button--tertiary'],['Text','button--text']].forEach(function (b) { %>
+      <h3 class="sg-sub"><%= b[0] %></h3>
+      <div class="sg-row">
+        <button type="button" class="button <%= b[1] %>"><%- I.calendar %>Default</button>
+        <button type="button" class="button <%= b[1] %> sg-hover">Hover</button>
+        <button type="button" class="button <%= b[1] %>" data-sg-force="focus">Focus</button>
+        <button type="button" class="button <%= b[1] %>" disabled>Disabled</button>
+        <button type="button" class="button <%= b[1] %>" aria-busy="true">Sending…</button>
+        <button type="button" class="button <%= b[1] %> button--small">Small</button>
+      </div>
+    <% }) %>
+    <h3 class="sg-sub">Contact actions (patterns)</h3>
+    <div class="sg-row">
+      <a class="button button--primary" href="#slots"><%- I.calendar %>Book appointment</a>
+      <a class="button button--secondary" href="#buttons"><%- I.phone %>Call</a>
+      <a class="button button--secondary" href="#buttons"><%- I.chat %>WhatsApp</a>
+      <a class="button button--text" href="#buttons"><%- I.pin %>Get directions</a>
+    </div>
+    <h3 class="sg-sub">Links</h3>
+    <div class="sg-row">
+      <a class="link" href="#buttons">Inline link</a>
+      <a class="link link--quiet" href="#buttons">Quiet link</a>
+      <a class="link link--arrow" href="#buttons">Read more <%- I.arrow %></a>
+    </div>
+    <h3 class="sg-sub">On primary</h3>
+    <div class="section--primary" style="padding:var(--space-6); border-radius:var(--radius-md)">
+      <div class="sg-row">
+        <a class="button button--inverse" href="#buttons">Inverse button</a>
+        <a class="button button--text" href="#buttons" style="color:var(--color-on-primary)">Text button</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Cards & badges ── -->
+<section class="section" id="cards">
+  <div class="container">
+    <div class="section-heading"><span class="eyebrow-label">Primitives</span><h2>Cards &amp; badges</h2></div>
+    <div class="grid-auto">
+      <article class="card card--interactive">
+        <div class="card__media"></div>
+        <div class="card__body">
+          <span class="eyebrow-label">Category</span>
+          <h3 class="card__title"><a class="card__link" href="#cards">Interactive card title</a></h3>
+          <p class="card__text">Placeholder description, one or two lines. The whole card opens the detail page.</p>
+          <div class="card__footer">
+            <span class="link link--arrow" aria-hidden="true">Details <%- I.arrow %></span>
+            <button type="button" class="button button--tertiary button--small" style="margin-left:auto">Book</button>
+          </div>
+        </div>
+      </article>
+      <div class="card">
+        <div class="card__body">
+          <h3 class="card__title">Static card</h3>
+          <p class="card__text">Not clickable, so no shadow. Border is decorative (subtle).</p>
+        </div>
+      </div>
+      <div class="card card--tint">
+        <div class="card__body">
+          <h3 class="card__title">Tinted card</h3>
+          <p class="card__text">Sage background for a soft emphasis block.</p>
+        </div>
+      </div>
+    </div>
+    <h3 class="sg-sub">Badges</h3>
+    <div class="sg-row">
+      <span class="badge">Default</span>
+      <span class="badge badge--neutral">Neutral</span>
+      <span class="badge badge--success"><%- I.check %>Success</span>
+      <span class="badge badge--warning"><%- I.alert %>Warning</span>
+      <span class="badge badge--error"><%- I.error %>Error</span>
+      <span class="badge badge--info"><%- I.info %>Info</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── Forms ── -->
+<section class="section section--surface" id="forms">
+  <div class="container">
+    <div class="section-heading"><span class="eyebrow-label">Primitives</span><h2>Forms</h2>
+      <p class="section-heading__lede">Submit empty to see the error pattern: inline messages linked by aria-describedby, a live summary, focus on the first problem. Nothing is sent.</p></div>
+    <form class="sg-form" data-validate novalidate>
+      <p class="visually-hidden-ds" role="status" aria-live="polite" data-form-status></p>
+      <div class="form-field">
+        <label class="form-label" for="sgName">Full name</label>
+        <input class="input" id="sgName" autocomplete="off" data-rule="required" data-error-id="sgNameErr" data-message="Enter your name." aria-describedby="sgNameErr">
+        <p class="form-error" id="sgNameErr"></p>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="sgPhone">Mobile number</label>
+        <p class="form-hint" id="sgPhoneHint">10-digit Indian mobile number</p>
+        <input class="input" id="sgPhone" type="tel" inputmode="numeric" autocomplete="off" data-rule="mobile" data-error-id="sgPhoneErr" data-message="Enter a 10-digit mobile number starting with 6, 7, 8 or 9." aria-describedby="sgPhoneHint sgPhoneErr">
+        <p class="form-error" id="sgPhoneErr"></p>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="sgSelect">Select</label>
+        <select class="select" id="sgSelect"><option>Option one</option><option>Option two</option></select>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="sgText">Message <span class="form-label__optional">(optional)</span></label>
+        <textarea class="textarea" id="sgText" rows="3"></textarea>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="sgInvalid">Invalid state (static)</label>
+        <input class="input" id="sgInvalid" value="12345" aria-invalid="true" aria-describedby="sgInvalidErr">
+        <p class="form-error" id="sgInvalidErr"><%- I.error %>Enter a 10-digit mobile number.</p>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="sgDisabled">Disabled</label>
+        <input class="input" id="sgDisabled" value="Not editable" disabled>
+      </div>
+      <fieldset class="fieldset form-field">
+        <legend class="form-label">Checkboxes and radios</legend>
+        <label class="check"><input type="checkbox" checked><span>Checked option</span></label>
+        <label class="check"><input type="checkbox"><span>Unchecked option</span></label>
+        <label class="check"><input type="radio" name="sgr" checked><span>Radio one</span></label>
+        <label class="check"><input type="radio" name="sgr"><span>Radio two</span></label>
+        <label class="check"><input type="checkbox" disabled><span>Disabled option</span></label>
+      </fieldset>
+      <fieldset class="fieldset form-field">
+        <legend class="form-label">Option cards</legend>
+        <div class="grid-auto" style="--gap-md:var(--space-3)">
+          <label class="option-card"><input type="radio" name="sgo" checked><span><span class="option-card__title">Option A</span><br><span class="option-card__meta">30 min · Category</span></span></label>
+          <label class="option-card"><input type="radio" name="sgo"><span><span class="option-card__title">Option B</span><br><span class="option-card__meta">45 min · Category</span></span></label>
+        </div>
+      </fieldset>
+      <div class="sg-row" style="margin-top:var(--space-6)">
+        <button class="button button--primary" type="submit">Submit (preview)</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ── Slots ── -->
+<section class="section" id="slots">
+  <div class="container">
+    <div class="section-heading"><span class="eyebrow-label">Primitives</span><h2>Time slots</h2>
+      <p class="section-heading__lede">Four states, each recognisable without colour. These are static samples; real slots only ever come from the server.</p></div>
+    <div class="slot-grid" role="group" aria-label="Sample time slots">
+      <button type="button" class="slot-option" aria-pressed="false"><span class="slot-option__time">9:00 AM</span></button>
+      <button type="button" class="slot-option" aria-pressed="true"><span class="slot-option__check"><%- I.check %></span><span class="slot-option__time">9:30 AM</span></button>
+      <button type="button" class="slot-option slot-option--unavailable" aria-disabled="true"><span class="slot-option__time">10:00 AM</span><span class="slot-option__note">Booked</span></button>
+      <button type="button" class="slot-option slot-option--disabled" aria-disabled="true"><span class="slot-option__time">1:00 PM</span><span class="slot-option__note">Closed</span></button>
+    </div>
+    <p class="text-small text-muted" style="margin-top:var(--space-3)">Available · Selected · Unavailable (booked) · Disabled (closed)</p>
+  </div>
+</section>
+
+<!-- ── Accordion & dialog ── -->
+<section class="section section--surface" id="disclosure">
+  <div class="container container--narrow">
+    <div class="section-heading"><span class="eyebrow-label">Primitives</span><h2>Accordion &amp; dialog</h2></div>
+    <div class="accordion" data-accordion>
+      <% [1,2,3].forEach(function (n) { %>
+      <div class="accordion__item">
+        <h3 class="accordion__heading">
+          <button type="button" class="accordion__trigger" aria-expanded="<%= n === 1 %>" aria-controls="sgAcc<%= n %>" id="sgAccT<%= n %>">
+            Placeholder question <%= n %>?<span class="accordion__icon"><%- I.plus %></span>
+          </button>
+        </h3>
+        <div class="accordion__panel" id="sgAcc<%= n %>" role="region" aria-labelledby="sgAccT<%= n %>">
+          <p>Placeholder answer. Without JavaScript every answer is visible.</p>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <div class="sg-row" style="margin-top:var(--space-8)">
+      <button type="button" class="button button--secondary" data-dialog-open="sgDialog">Open dialog</button>
+    </div>
+    <dialog class="dialog" id="sgDialog" aria-labelledby="sgDialogTitle">
+      <div class="dialog__header">
+        <h2 class="dialog__title" id="sgDialogTitle">Dialog title</h2>
+        <button type="button" class="dialog__close" data-dialog-close aria-label="Close"><%- I.close %></button>
+      </div>
+      <div class="dialog__body stack">
+        <p class="text-muted">Focus moves to the first field, Tab stays inside, Esc or the backdrop closes it, and focus returns to the button that opened it.</p>
+        <div class="form-field"><label class="form-label" for="sgDlgInput">Field</label><input class="input" id="sgDlgInput"></div>
+        <div class="sg-row"><button type="button" class="button button--primary" data-dialog-close>Done</button></div>
+      </div>
+    </dialog>
+  </div>
+</section>
+
+<!-- ── Feedback ── -->
+<section class="section" id="feedback">
+  <div class="container container--narrow">
+    <div class="section-heading"><span class="eyebrow-label">Primitives</span><h2>Feedback</h2></div>
+    <div class="stack">
+      <div class="notice notice--success" role="status"><span class="notice__icon"><%- I.check %></span><div class="notice__body"><p class="notice__title">Success</p><p>Placeholder confirmation message.</p></div></div>
+      <div class="notice notice--error" role="alert"><span class="notice__icon"><%- I.error %></span><div class="notice__body"><p class="notice__title">Something went wrong</p><p>Placeholder error, with what to do next.</p></div></div>
+      <div class="notice notice--warning"><span class="notice__icon"><%- I.alert %></span><div class="notice__body"><p class="notice__title">Warning</p><p>Placeholder caution message.</p></div></div>
+      <div class="notice notice--info"><span class="notice__icon"><%- I.info %></span><div class="notice__body"><p class="notice__title">Information</p><p>Placeholder neutral information.</p></div></div>
+      <div class="sg-row"><span class="spinner-ds" role="img" aria-label="Loading"></span><span class="text-muted">Loading indicator</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Layout ── -->
+<section class="section section--sage" id="layout">
+  <div class="container">
+    <div class="section-heading section-heading--center"><span class="eyebrow-label">Layout</span><h2>Section heading, centred</h2>
+      <p class="section-heading__lede">Sage section background. Bento below: allowed only for hero trust, clinic benefits and the contact cluster, and only with real content.</p></div>
+    <div class="bento bento--3">
+      <div class="card bento__wide"><div class="card__body"><h3 class="card__title">Wide module</h3><p class="card__text">Spans two columns from 768px.</p></div></div>
+      <div class="card bento__tall"><div class="card__body"><h3 class="card__title">Tall module</h3><p class="card__text">Spans two rows from 1024px.</p></div></div>
+      <div class="card"><div class="card__body"><h3 class="card__title">Module</h3><p class="card__text">Sizes to content.</p></div></div>
+      <div class="card"><div class="card__body"><h3 class="card__title">Module</h3><p class="card__text">Sizes to content.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section section--sand">
+  <div class="container">
+    <div class="section-heading"><span class="eyebrow-label">Pattern</span><h2>Mobile action bar</h2>
+      <p class="section-heading__lede">Shown below 1024px, fixed to the bottom. It steps aside while a text field has focus or while the booking area is on screen. Static copy here; the live one is at the bottom of this page on a phone.</p></div>
+    <div class="sg-demo-frame">
+      <nav class="action-bar" aria-label="Quick actions (sample)">
+        <a class="action-bar__item" href="#buttons"><%- I.phone %>Call</a>
+        <a class="action-bar__item" href="#buttons"><%- I.chat %>WhatsApp</a>
+        <a class="action-bar__item action-bar__item--primary" href="#slots"><%- I.calendar %>Book</a>
+      </nav>
+    </div>
+  </div>
+</section>
+
+<section class="section section--primary">
+  <div class="container">
+    <div class="section-heading"><span class="eyebrow-label">Layout</span><h2>Primary section</h2>
+      <p class="section-heading__lede" style="color:var(--color-on-primary)">Focus rings switch to the inverse colour inside dark blocks.</p></div>
+    <div class="cluster"><a class="button button--inverse" href="#top">Back to top</a></div>
+  </div>
+</section>
+
+</main>
+
+<nav class="action-bar" data-action-bar aria-label="Quick actions">
+  <a class="action-bar__item" href="#buttons"><%- I.phone %>Call</a>
+  <a class="action-bar__item" href="#buttons"><%- I.chat %>WhatsApp</a>
+  <a class="action-bar__item action-bar__item--primary" href="#slots"><%- I.calendar %>Book</a>
+</nav>
+
+<script src="/js/ds.js" defer></script>
+<style>
+  .button--primary.sg-hover { --button-bg: var(--color-primary-hover); --button-border: var(--color-primary-hover); }
+  .button--secondary.sg-hover { --button-bg: var(--color-accent-sage); }
+  .button--tertiary.sg-hover { --button-border: var(--color-primary); }
+  .button--text.sg-hover { text-decoration-thickness: 2px; }
+  [data-sg-force="focus"] { outline: var(--border-width-strong) solid var(--color-focus); outline-offset: 2px; }
+</style>
+</body>
+</html>

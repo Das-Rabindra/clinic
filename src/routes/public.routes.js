@@ -16,6 +16,7 @@ import { publicClinic, whatsappLink } from '../services/clinic.view.js';
 import { esc, jsonForScript } from '../utils/format.js';
 import { weekdayOf, todayIn } from '../utils/time.js';
 import { issuePublicToken } from '../middleware/csrf.js';
+import { colorTokens, contrast } from '../utils/design-tokens.js';
 
 const router = Router();
 
@@ -326,6 +327,42 @@ router.get('/privacy', async (_req, res) => {
     ogType: 'website',
     schemas: [seo.breadcrumbs(canonical, [{ name: 'Home', path: '/' }, { name: 'Privacy', path: '/privacy' }])],
     updatedAt: new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }),
+  });
+});
+
+/* ── Design-system preview ───────────────────────────────────────────────────
+   Internal review page for the redesign's tokens and primitives. Unlinked,
+   noindex by meta and header, and absent from the sitemap (which lists routes
+   explicitly). It renders no clinic facts beyond the name. */
+router.get('/_styleguide', async (_req, res) => {
+  const tokens = colorTokens();
+  const swatch = (token, name, against) => ({
+    token, name, value: tokens.get(token),
+    note: against ? `${contrast(tokens.get(token), tokens.get(against))}:1 on ${against.replace('--color-', '')}` : '',
+  });
+  res.set('X-Robots-Tag', 'noindex, nofollow');
+  res.render('public/styleguide', {
+    clinicName: (await settingsRepo.get()).name,
+    swatches: [
+      { title: 'Surfaces', items: [
+        swatch('--color-bg', 'Background'), swatch('--color-surface', 'Surface'),
+        swatch('--color-accent-sage', 'Sage (decorative)', '--color-bg'),
+        swatch('--color-accent-sand', 'Sand (decorative)', '--color-bg') ] },
+      { title: 'Brand & text', items: [
+        swatch('--color-primary', 'Primary', '--color-bg'),
+        swatch('--color-primary-hover', 'Primary hover', '--color-bg'),
+        swatch('--color-text', 'Text', '--color-bg'),
+        swatch('--color-text-muted', 'Text muted', '--color-accent-sand') ] },
+      { title: 'Lines & focus', items: [
+        swatch('--color-border-subtle', 'Border subtle (decorative)', '--color-surface'),
+        swatch('--color-border-strong', 'Border strong', '--color-accent-sand'),
+        swatch('--color-focus', 'Focus ring', '--color-accent-sand'),
+        swatch('--color-disabled-bg', 'Disabled bg'),
+        swatch('--color-disabled-text', 'Disabled text', '--color-disabled-bg') ] },
+      { title: 'Feedback', items: ['success', 'error', 'warning', 'info'].flatMap(k => [
+        swatch(`--color-${k}-text`, `${k[0].toUpperCase()}${k.slice(1)} text`, `--color-${k}-bg`),
+        swatch(`--color-${k}-bg`, `${k[0].toUpperCase()}${k.slice(1)} tint`) ]) },
+    ],
   });
 });
 
