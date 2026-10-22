@@ -317,8 +317,8 @@ describe('header on a phone', () => {
   });
 
   test('lets the brand block shrink instead of pushing the header wider', async () => {
-    const css = await srv.call('/css/site.css');
-    assert.match(css.body, /\.brand-text\{[^}]*min-width:0/,
+    const css = await srv.call('/css/ds.css');
+    assert.match(css.body, /\.site-header__brand \{[^}]*min-width: 0/,
       'a flex item defaults to min-width:auto, which is what lets nowrap text widen the header');
   });
 });
@@ -335,7 +335,7 @@ describe('mobile menu', () => {
      * for "does it open" passed straight over it.
      */
     const headerEnd = r.body.indexOf('</header>');
-    const panelStart = r.body.search(/id="(?:mobilePanel|navDrawer)"/);
+    const panelStart = r.body.indexOf('id="navDrawer"');
     assert.ok(headerEnd > -1 && panelStart > -1);
     assert.ok(panelStart > headerEnd,
       'the panel must be a sibling of <header>, not a descendant of it');
@@ -344,8 +344,7 @@ describe('mobile menu', () => {
   test('every page carries the panel, so the menu works away from home', async () => {
     for (const path of ['/', '/services', '/services/dentures', '/privacy']) {
       const r = await srv.call(path);
-      // mobilePanel on pages still on site.css, navDrawer on the new system.
-      const at = r.body.search(/id="(?:mobilePanel|navDrawer)"/);
+      const at = r.body.indexOf('id="navDrawer"');
       assert.ok(at > -1, path);
       assert.ok(at > r.body.indexOf('</header>'), path);
     }
@@ -482,26 +481,24 @@ describe('FAQ accordion', () => {
 
   test('the answer panel can actually be opened', async () => {
     /*
-     * `.faq-a` collapses to max-height:0 and nothing in the stylesheet ever
-     * expanded it, while the padding was written against `.faq-a-inner` — a
-     * class the markup has never contained. Clicking a question did nothing.
+     * The old accordion collapsed `.faq-a` to max-height:0 and nothing ever
+     * expanded it, while its padding targeted a class the markup never had —
+     * clicking a question did nothing. Now: panels are collapsed only under
+     * html.ds-js (set before paint), the script removes data-collapsed to
+     * open one, and every trigger points at a panel that exists.
      */
-    const css = (await srv.call('/css/site.css')).body;
-    assert.match(css, /\.js \.faq-a\{[^}]*max-height:0/,
+    const css = (await srv.call('/css/ds.css')).body;
+    assert.match(css, /\.ds-js \.accordion__panel\[data-collapsed\] \{ display: none; \}/,
       'collapsed state must be gated on JS being present');
-    assert.match(css, /\.faq-a > p\{/,
-      'the answer padding must target the element the markup actually renders');
-    // Only a selector counts — the comment above the rule names the old class.
-    assert.ok(!/\.faq-a-inner\s*[{,]/.test(css),
-      'no rules left pointing at a class that is never rendered');
-
-    const js = (await srv.call('/js/site.js')).body;
-    assert.match(js, /maxHeight = panel\.scrollHeight/,
-      'opening must set the measured height so no answer is clipped');
+    const js = (await srv.call('/js/ds.js')).body;
+    assert.match(js, /panel\.removeAttribute\('data-collapsed'\)/, 'opening must reveal the panel');
 
     const page = (await srv.call('/')).body;
-    assert.match(page, /classList\.add\('js'/,
-      'the js class must be set before paint, or the answers flash open on load');
+    assert.match(page, /classList\.add\('js', 'ds-js'\)/,
+      'the class must be set before paint, or the answers flash open on load');
+    for (const m of page.matchAll(/class="accordion__trigger"[^>]*aria-controls="([^"]+)"/g)) {
+      assert.ok(page.includes(`id="${m[1]}"`), `trigger points at missing panel ${m[1]}`);
+    }
   });
 });
 
@@ -552,7 +549,7 @@ describe('fixes from the audit', () => {
   test('related treatments differ by page and make clinical sense', async () => {
     const pick = async (slug) => {
       const r = await srv.call(`/services/${slug}`);
-      return [...r.body.matchAll(/<a href="\/services\/([a-z-]+)" class="tx-link"/g)].map((m) => m[1]);
+      return [...r.body.matchAll(/<a class="card__link" href="\/services\/([a-z-]+)"/g)].map((m) => m[1]);
     };
     const rct = await pick('root-canal-treatment');
     const dent = await pick('dentures');
@@ -586,7 +583,7 @@ describe('fixes from the audit', () => {
   test('the 404 page carries the site layout and a way to reach the clinic', async () => {
     const r = await srv.call('/no-such-page');
     assert.equal(r.status, 404);
-    assert.ok(r.body.includes('id="mobilePanel"'), 'navigation');
+    assert.ok(r.body.includes('id="navDrawer"'), 'navigation');
     assert.ok(r.body.includes('tel:'), 'a phone number');
     assert.ok(r.body.includes('footer'), 'the footer');
     assert.match(r.body, /noindex/);
@@ -599,21 +596,15 @@ describe('fixes from the audit', () => {
   });
 
   test('label colours clear WCAG AA on every page ground', async () => {
-    const css = (await srv.call('/css/site.css')).body;
-    const sage = css.match(/--sage-text:\s*(#[0-9A-Fa-f]{6})/);
-    assert.ok(sage, 'a text-safe sage token must exist');
-    const lum = (hex) => {
-      const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
-        .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
-      return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-    };
-    const ratio = (a, b) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05);
-    for (const ground of ['#FAF8F3', '#F1EDE4', '#FFFFFF']) {
-      assert.ok(ratio(sage[1], ground) >= 4.5,
-        `${sage[1]} on ${ground} is ${ratio(sage[1], ground).toFixed(2)}:1`);
+    // Eyebrow labels are small text, so they must use a token that clears
+    // 4.5:1 on every ground; test/design-tokens.test.mjs proves the token does.
+    const css = (await srv.call('/css/ds.css')).body;
+    assert.match(css, /\.eyebrow-label \{[^}]*color: var\(--color-primary\)/);
+    const { colorTokens, contrast } = await import('../src/utils/design-tokens.js');
+    const t = colorTokens(css);
+    for (const ground of ['--color-bg', '--color-surface', '--color-accent-sage', '--color-accent-sand']) {
+      assert.ok(contrast(t.get('--color-primary'), t.get(ground)) >= 4.5, ground);
     }
-    // The raw sage stays for strokes but must not be used for small text.
-    assert.ok(!/\.eyebrow[^}]*color:var\(--sage\)[^-]/.test(css));
   });
 });
 

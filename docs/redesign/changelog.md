@@ -210,3 +210,82 @@ page.
 - The first 320 px capture straight after the deploy logged a 504 and a 404:
   a cold start. Three repeat loads were clean, with the bar visible.
 - Other pages are unchanged and still on `site.css`.
+
+## Stage 4: Treatments listing, treatment pages, privacy, 404 (pushed to `main`)
+
+**What changed for patients**
+
+- `/services`:
+  - page hero with breadcrumb and a consultation CTA (Book, Call, WhatsApp)
+  - "All treatments" heading with a count
+  - every active treatment as a card: category, description, detail link,
+    **working Book link**, and Request a call back
+  - a "Not sure what you need?" consultation section
+- `/services/<slug>`, all 15 pages:
+  - visible breadcrumb, with BreadcrumbList JSON-LD kept
+  - hero with category, name and summary, appointment length, location, Book,
+    Call, and Ask on WhatsApp (message pre-filled with the treatment)
+  - image, with the stock disclosure kept
+  - body sections: what it is, when it may be needed, what it generally
+    involves, what it aims to do, what a consultation helps decide
+  - sticky contact card: dentist, where, today's status, Book, Call back, Call
+  - the treatment's own FAQs as an accordion
+  - related treatments, "See all treatments", and a closing CTA
+- `/privacy`: same text, new layout, ~66-character lines.
+- 404 and error pages: on the new system.
+- URLs, metadata, canonical tags and structured data are unchanged. No
+  redirects.
+
+**Bug fixed:** Book on `/services`, on related-treatment cards and on the 404
+page did nothing. It was a `<button>` that only the homepage wizard listened
+for. Verified on production before the fix. It is now a link that deep-links
+into the wizard.
+
+**Removed:**
+
+- `public/css/site.css`
+- `public/js/site.js`
+- partials `header`, `footer`, `action-rail`, `treatment-grid`, `review-qr`
+
+`fonts.css` and the Fraunces and Plex fonts stay because the admin console
+uses them.
+
+**Files**
+
+- Added:
+  - `public/css/pages.css`
+  - `partials/treatment-card.ejs`
+  - `partials/breadcrumbs.ejs`
+  - `test/treatments.test.mjs`
+- Rewritten: `services.ejs`, `service.ejs`, `404.ejs`, `error.ejs`.
+- Migrated: `privacy.ejs`.
+- Changed:
+  - `index.ejs`: uses the shared card partial
+  - `head.ejs`: design system only
+  - `public.routes.js`: `ds` and `pageCss` defaults
+  - `layout.css`: shared card, empty-state and CTA styles moved here
+  - `home.css`
+  - `README.md` and `PROJECT.md`: code map
+  - tests: 6 assertions retargeted from `site.css` to `ds.css`, same intent
+
+**Checks run**
+
+- `npm test`: **230/230**. That includes 12 new treatment-page tests:
+  - every active treatment listed with a working Book link
+  - one h1 and no skipped heading level on all 15 detail pages
+  - breadcrumb plus JSON-LD
+  - Book, Call, WhatsApp and call-back present
+  - no price anywhere
+  - stock disclosure
+  - in Chromium: Book on `/services` lands in the homepage wizard at Date,
+    and there is no overflow or console error at 320 px on `/services`, a
+    detail page and `/privacy`
+- Local screenshots: 4 pages × 8 widths in
+  `/home/ravi/clinic-redesign-artifacts/stage-4/`. No overflow, one h1, no
+  console errors.
+
+**Open:** owner question 11 (outcome wording in benefit lines) and D30 (card
+image sizes).
+
+**Rollback:** `git revert <stage-4 commit>` restores `site.css`, `site.js` and
+the old partials.

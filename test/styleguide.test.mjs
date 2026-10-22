@@ -44,16 +44,13 @@ describe('styleguide route', () => {
     }
   });
 
-  test('each page loads exactly one design system', async () => {
-    // The homepage moved to ds.css in Stage 3; the rest follow in Stage 4.
-    // A page loading both would let site.css and ds.css fight over the base
-    // styles.
-    const home = (await srv.call('/')).body;
-    assert.ok(home.includes('/css/ds.css') && !home.includes('/css/site.css'));
-    for (const path of ['/services', '/privacy']) {
+  test('every public page is on the design system, none on the old stylesheet', async () => {
+    for (const path of ['/', '/services', '/services/dentures', '/privacy', '/no-such-page']) {
       const r = (await srv.call(path)).body;
-      assert.ok(r.includes('/css/site.css') && !r.includes('/css/ds.css'), path);
+      assert.ok(r.includes('/css/ds.css'), path);
+      assert.ok(!r.includes('/css/site.css') && !r.includes('/js/site.js'), path);
     }
+    assert.equal((await srv.call('/css/site.css')).status, 404, 'the old stylesheet is gone');
   });
 });
 

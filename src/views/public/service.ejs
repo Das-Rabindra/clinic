@@ -3,155 +3,112 @@
 <head>
 <%- include('partials/head') %>
 </head>
-<body>
-<a class="skip-link" href="#main">Skip to content</a>
-<%- include('partials/header') %>
+<body class="has-action-bar">
+<% var ic = function (n) { return include('partials/icon', { name: n }); }; %>
+<% var tel = clinic.phone ? 'tel:' + (clinic.phone_intl || clinic.phone) : null; %>
+<% var bookHref = '/#appointment' + (service.bookable ? '?treatment=' + service.slug : ''); %>
+<a class="skip-to-content" href="#main">Skip to content</a>
+<%- include('partials/site-header') %>
 
 <main id="main">
 
   <!-- ============ TREATMENT HERO ============ -->
-  <section class="tx-hero">
-    <div class="wrap">
-      <nav class="crumbs" aria-label="Breadcrumb">
-        <a href="/">Home</a>
-        <span aria-hidden="true">/</span>
-        <a href="/services">Treatments</a>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page"><%= service.name %></span>
-      </nav>
-
-      <div class="tx-hero-grid">
-        <div>
-          <% if (service.category_name) { %><span class="eyebrow"><%= service.category_name %></span><% } %>
+  <section class="page-hero page-hero--split">
+    <div class="container">
+      <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Treatments', href: '/services' }, { name: service.name }] }) %>
+      <div class="tx-hero">
+        <div class="tx-hero__copy">
+          <% if (service.category_name) { %><span class="eyebrow-label"><%= service.category_name %></span><% } %>
           <h1><%= service.name %></h1>
-          <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
-          <% if (service.short_desc) { %><p class="tx-hero-lede"><%= service.short_desc %></p><% } %>
-
+          <% if (service.short_desc) { %><p class="page-hero__lede"><%= service.short_desc %></p><% } %>
           <ul class="tx-facts">
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-              <span>About <%= service.duration_min %> minutes</span>
-            </li>
+            <li><%- ic('clock') %><span>Appointment of about <%= service.duration_min %> minutes</span></li>
             <%# The clinic does not publish prices. The admin fields remain so
                 that decision can be reversed, but nothing renders one. %>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg>
-              <span><%= shortAddress %></span>
-            </li>
+            <li><%- ic('pin') %><span><%= shortAddress %></span></li>
           </ul>
-
-          <div class="hero-ctas">
-            <% if (service.bookable) { %>
-            <a href="/#appointment?treatment=<%= service.slug %>" class="btn btn-primary book-service"
-               data-service="<%= service.id %>" data-track="appointment_started">
-              Book <%= service.name %>
-            </a>
-            <% } else { %>
-            <a href="/#appointment" class="btn btn-primary">Book a consultation</a>
-            <% } %>
-            <% if (whatsappUrl) { %>
-            <a href="<%= treatmentWhatsapp %>" target="_blank" rel="noopener" class="btn btn-whatsapp" data-track="whatsapp_clicked">
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.9.5 3.6 1.4 5.1L2 22l5.1-1.3c1.4.8 3.1 1.3 4.9 1.3 5.5 0 10-4.5 10-10S17.5 2 12 2zm5.9 14.2c-.2.7-1.4 1.3-1.9 1.4-.5.1-1.1.1-1.8-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.1.1.3 0 .5-.1.2-.1.3-.3.5-.1.2-.3.4-.4.5-.1.1-.3.3-.1.6.2.3.9 1.5 1.9 2.4 1.3 1.2 2.4 1.5 2.7 1.7.3.2.5.1.7-.1.2-.2.8-.9 1-1.3.2-.3.4-.3.7-.2.3.1 1.8.9 2.1 1 .3.2.5.2.6.3.1.2.1.9-.1 1.6z"/></svg>
-              Ask a question
-            </a>
-            <% } %>
+          <div class="cluster page-hero__actions">
+            <a href="<%= bookHref %>" class="button button--primary" data-track="appointment_started"><%- ic('calendar') %><%= service.bookable ? 'Book ' + service.name : 'Book a consultation' %></a>
+            <% if (tel) { %><a href="<%= tel %>" class="button button--secondary" data-track="call_clicked"><%- ic('phone') %>Call</a><% } %>
+            <% if (whatsappUrl) { %><a href="<%= treatmentWhatsapp %>" target="_blank" rel="noopener" class="button button--secondary" data-track="whatsapp_clicked"><%- ic('whatsapp') %>Ask on WhatsApp</a><% } %>
           </div>
         </div>
-
-        <div class="tx-hero-visual<%= service.image_url ? ' has-photo' : '' %>">
+        <figure class="tx-hero__media">
           <% if (service.image_url) { %>
-            <img src="<%= service.image_url %>"
-                 alt="<%= service.image_alt || (service.name + ' — illustration') %>"
+            <img src="<%= service.image_url %>" alt="<%= service.image_alt || '' %>"
                  width="<%= service.image_width || 1280 %>" height="<%= service.image_height || 720 %>"
                  fetchpriority="high" decoding="async">
             <%# Said plainly where the photograph is largest. A licensed image
                 presented without this reads as the clinic's own work. %>
-            <% if (service.image_is_stock) { %>
-            <span class="img-credit">Illustrative image</span>
-            <% } %>
+            <% if (service.image_is_stock) { %><figcaption>Illustrative image, not a photograph of the clinic</figcaption><% } %>
           <% } else { %>
-            <%- include('partials/treatment-art', { slug: service.slug, name: service.name }) %>
+            <div class="treatment-card__art"><%- include('partials/treatment-art', { slug: service.slug, name: service.name }) %></div>
           <% } %>
-        </div>
+        </figure>
       </div>
     </div>
   </section>
 
   <!-- ============ DETAIL ============ -->
-  <section class="section-pad">
-    <div class="wrap tx-detail">
-      <div class="tx-detail-main">
+  <section class="section">
+    <div class="container tx-detail">
+      <article class="tx-detail__main prose">
         <% if (service.long_desc) { %>
-        <div class="tx-block reveal">
-          <h2 class="section-title">What it is</h2>
-          <p><%= service.long_desc %></p>
-        </div>
+        <h2>What it is</h2>
+        <p><%= service.long_desc %></p>
         <% } %>
 
         <% if (service.who_needs) { %>
-        <div class="tx-block reveal">
-          <h2 class="section-title">When it may be needed</h2>
-          <p><%= service.who_needs %></p>
-        </div>
+        <h2>When it may be needed</h2>
+        <p><%= service.who_needs %></p>
         <% } %>
 
         <% if (service.what_to_expect) { %>
-        <div class="tx-block reveal">
-          <h2 class="section-title">What to expect at your appointment</h2>
-          <p><%= service.what_to_expect %></p>
-        </div>
+        <h2>What the treatment generally involves</h2>
+        <p><%= service.what_to_expect %></p>
         <% } %>
 
         <% if (benefits.length) { %>
-        <div class="tx-block reveal">
-          <h2 class="section-title">What this treatment does for you</h2>
-          <ul class="tx-benefits">
-            <% benefits.forEach(function (b) { %>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
-              <span><%= b %></span>
-            </li>
-            <% }) %>
-          </ul>
-        </div>
+        <h2>What it aims to do</h2>
+        <ul class="tx-benefits">
+          <% benefits.forEach(function (b) { %><li><%- ic('check') %><span><%= b %></span></li><% }) %>
+        </ul>
         <% } %>
 
-        <p class="tx-disclaimer reveal">
-          This page explains the treatment in general terms. What is right for you depends on
-          an examination — <%= clinic.doctor || 'the dentist' %> will go through the options
-          with you before anything is decided.
-        </p>
-      </div>
-
-      <%# Sticky side card: the doctor, the location and the two ways to act. %>
-      <aside class="tx-aside">
-        <div class="tx-aside-card">
-          <div class="tx-aside-doctor">
-            <% if (doctorPhoto) { %>
-              <img src="<%= doctorPhoto.url %>" alt="<%= clinic.doctor %>" width="56" height="56" loading="lazy">
-            <% } else { %>
-              <span class="tx-aside-initials"><%= initials %></span>
-            <% } %>
-            <div>
-              <strong><%= clinic.doctor %></strong>
-              <span><%= clinic.qualification %></span>
-            </div>
+        <h2>What a consultation helps decide</h2>
+        <div class="notice notice--info">
+          <span class="notice__icon"><%- ic('info') %></span>
+          <div class="notice__body">
+            <p>This page explains the treatment in general terms. Whether it is right for you depends on an examination:
+            <%= clinic.doctor || 'the dentist' %> will look at your teeth and gums, explain what is found, and go through the options with you before anything is decided.</p>
           </div>
+        </div>
+      </article>
 
-          <dl class="tx-aside-meta">
-            <div><dt>Clinic</dt><dd><%= clinic.name %></dd></div>
-            <div><dt>Where</dt><dd><%= clinic.address %></dd></div>
-            <div><dt>Right now</dt><dd><%= clinic.today.now.label %></dd></div>
-          </dl>
-
-          <div class="tx-aside-actions">
-            <a href="/#appointment?treatment=<%= service.slug %>" class="btn btn-primary btn-sm book-service"
-               data-service="<%= service.id %>" data-track="appointment_started">Book an appointment</a>
-            <button type="button" class="btn btn-outline-dark btn-sm" data-callback-open
-                    data-service="<%= service.id %>" data-service-name="<%= service.name %>">Request a call back</button>
-            <% if (clinic.phone) { %>
-            <a href="tel:<%= clinic.phone_intl || clinic.phone %>" class="btn btn-outline-dark btn-sm mono" data-track="call_clicked"><%= clinic.phone %></a>
-            <% } %>
+      <%# Sticky contact card: the dentist, where, today's status and the ways to act.
+          Not a bento — this is the one aside the detail body has. %>
+      <aside class="tx-aside" aria-labelledby="asideTitle">
+        <div class="card tx-aside__card">
+          <div class="card__body">
+            <h2 class="visually-hidden-ds" id="asideTitle">Book or ask about <%= service.name %></h2>
+            <div class="tx-aside__doctor">
+              <% if (doctorPhoto) { %>
+                <img src="<%= doctorPhoto.url %>" alt="" width="56" height="56" loading="lazy" decoding="async">
+              <% } %>
+              <div>
+                <strong><%= clinic.doctor %></strong>
+                <span class="text-small text-muted"><%= clinic.qualification %></span>
+              </div>
+            </div>
+            <dl class="tx-aside__meta">
+              <div><dt>Where</dt><dd><%= clinic.address %></dd></div>
+              <div><dt>Today</dt><dd><span class="status-pill status-pill--<%= clinic.today.now.state %>"><span class="status-pill__dot" aria-hidden="true"></span><%= clinic.today.now.label %></span></dd></div>
+            </dl>
+            <div class="tx-aside__actions">
+              <a href="<%= bookHref %>" class="button button--primary button--block" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
+              <button type="button" class="button button--secondary button--block" data-callback-open data-service="<%= service.id %>" data-service-name="<%= service.name %>"><%- ic('callback') %>Request a call back</button>
+              <% if (tel) { %><a href="<%= tel %>" class="button button--text button--block" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
+            </div>
           </div>
         </div>
       </aside>
@@ -160,19 +117,21 @@
 
   <!-- ============ FAQ ============ -->
   <% if (faqs.length) { %>
-  <section class="section-pad alt" id="faq">
-    <div class="wrap">
-      <div class="section-head reveal" style="text-align:center; margin-left:auto; margin-right:auto;">
-        <span class="eyebrow">Good To Know</span>
-        <h2 class="section-title" style="margin-left:auto; margin-right:auto;">Questions patients ask</h2>
+  <section class="section section--surface" id="faq">
+    <div class="container container--narrow">
+      <div class="section-heading">
+        <span class="eyebrow-label">Good to know</span>
+        <h2>Questions patients ask</h2>
       </div>
-      <div class="faq-list reveal">
+      <div class="accordion" data-accordion>
         <% faqs.forEach(function (f, i) { %>
-        <div class="faq-item">
-          <button class="faq-q" aria-expanded="false" aria-controls="faq-a-<%= i %>" id="faq-q-<%= i %>">
-            <span><%= f.question %></span><span class="plus" aria-hidden="true"></span>
-          </button>
-          <div class="faq-a" id="faq-a-<%= i %>" role="region" aria-labelledby="faq-q-<%= i %>">
+        <div class="accordion__item">
+          <h3 class="accordion__heading">
+            <button type="button" class="accordion__trigger" aria-expanded="false" aria-controls="faq-a-<%= i %>" id="faq-q-<%= i %>">
+              <%= f.question %><span class="accordion__icon"><%- ic('plus') %></span>
+            </button>
+          </h3>
+          <div class="accordion__panel" id="faq-a-<%= i %>" role="region" aria-labelledby="faq-q-<%= i %>" data-collapsed>
             <p><%= f.answer %></p>
           </div>
         </div>
@@ -182,41 +141,41 @@
   </section>
   <% } %>
 
-  <!-- ============ OTHER TREATMENTS ============ -->
+  <!-- ============ RELATED ============ -->
   <% if (related.length) { %>
-  <section class="section-pad">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <span class="eyebrow">Also At The Clinic</span>
-        <h2 class="section-title">Other treatments</h2>
-        <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
+  <section class="section" aria-labelledby="relatedTitle">
+    <div class="container">
+      <div class="section-heading">
+        <span class="eyebrow-label">Also at the clinic</span>
+        <h2 id="relatedTitle">Related treatments</h2>
       </div>
-      <div class="reveal">
-        <%- include('partials/treatment-grid', { cards: related }) %>
+      <div class="treatment-grid">
+        <% related.forEach(function (s) { %><%- include('partials/treatment-card', { s: s }) %><% }) %>
       </div>
-      <div class="tx-index-foot">
-        <a class="btn btn-outline-dark" href="/services">See all treatments</a>
-      </div>
+      <p class="section-foot"><a class="button button--secondary" href="/services">See all treatments</a></p>
     </div>
   </section>
+  <% } else { %>
+  <div class="container"><p class="section-foot"><a class="button button--secondary" href="/services">See all treatments</a></p></div>
   <% } %>
 
   <!-- ============ CTA ============ -->
-  <section class="cta-band">
-    <div class="wrap">
-      <span class="eyebrow" style="color:var(--honey);">Ready When You Are</span>
+  <section class="section section--primary cta">
+    <div class="container cta__inner">
+      <span class="eyebrow-label">Ready when you are</span>
       <h2>Talk to <%= clinic.doctor || 'the dentist' %> about <%= service.name.toLowerCase() %></h2>
-      <p>Book online in under a minute, or ask the clinic a question first — whichever you prefer.</p>
-      <div class="hero-ctas">
-        <a href="/#appointment?treatment=<%= service.slug %>" class="btn btn-primary book-service" data-service="<%= service.id %>">Book an Appointment</a>
-        <% if (clinic.phone) { %><a href="tel:<%= clinic.phone_intl || clinic.phone %>" class="btn btn-outline" data-track="call_clicked">Call the Clinic</a><% } %>
+      <p class="cta__body">Book online, or ask the clinic a question first &mdash; whichever you prefer.</p>
+      <div class="cluster cta__actions">
+        <a href="<%= bookHref %>" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
+        <% if (tel) { %><a href="<%= tel %>" class="button button--text cta__call" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
       </div>
     </div>
   </section>
 
 </main>
 
-<%- include('partials/footer') %>
-<script src="/js/site.js" defer></script>
+<%- include('partials/site-footer') %>
+<script src="/js/ds.js" defer></script>
+<script src="/js/site-ds.js" defer></script>
 </body>
 </html>

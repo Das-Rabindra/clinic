@@ -3,25 +3,23 @@
 <head>
 <%- include('partials/head') %>
 </head>
-<body>
-<a class="skip-link" href="#main">Skip to content</a>
-<%- include('partials/header') %>
+<body class="has-action-bar">
+<a class="skip-to-content" href="#main">Skip to content</a>
+<%- include('partials/site-header') %>
 
 <main id="main">
-  <section class="tx-index-hero">
-    <div class="wrap">
-      <nav class="crumbs" aria-label="Breadcrumb">
-        <a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">Privacy</span>
-      </nav>
-      <span class="eyebrow">Your Information</span>
+  <section class="page-hero">
+    <div class="container">
+      <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Privacy' }] }) %>
+      <span class="eyebrow-label">Your information</span>
       <h1>Privacy and appointment policy</h1>
-      <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
-      <p class="tx-index-lede">What <%= clinic.name %> collects through this website, why, and what it is never used for.</p>
+      <p class="page-hero__lede">What <%= clinic.name %> collects through this website, why, and what it is never used for.</p>
     </div>
   </section>
 
-  <section class="section-pad" style="padding-top:0;">
-    <div class="wrap prose">
+  <section class="section section--tight-top">
+    <div class="container">
+    <div class="prose policy">
 
       <h2>What this website collects</h2>
       <p>Only what is needed to arrange your visit. When you book an appointment or request a
@@ -66,17 +64,19 @@
       <p>To ask what the clinic holds about you, to correct it, or to ask for it to be removed,
       contact <%= clinic.name %>:</p>
       <ul>
-        <% if (clinic.phone) { %><li>Phone: <a class="mono" href="tel:<%= clinic.phone_intl || clinic.phone %>"><%= clinic.phone %></a></li><% } %>
+        <% if (clinic.phone) { %><li>Phone: <a href="tel:<%= clinic.phone_intl || clinic.phone %>"><%= clinic.phone %></a></li><% } %>
         <% if (clinic.email) { %><li>Email: <a href="mailto:<%= clinic.email %>"><%= clinic.email %></a></li><% } %>
         <li>In person: <%= clinic.address %></li>
       </ul>
 
-      <p class="prose-note">Last updated <%= updatedAt %>.</p>
+      <p class="text-small text-muted">Last updated <%= updatedAt %>.</p>
+    </div>
     </div>
   </section>
 </main>
 
-<%- include('partials/footer') %>
-<script src="/js/site.js" defer></script>
+<%- include('partials/site-footer') %>
+<script src="/js/ds.js" defer></script>
+<script src="/js/site-ds.js" defer></script>
 </body>
 </html>

@@ -3,44 +3,41 @@
 <head>
 <%- include('partials/head') %>
 </head>
-<body>
-<a class="skip-link" href="#main">Skip to content</a>
-<%- include('partials/header') %>
+<body class="has-action-bar">
+<% var ic = function (n) { return include('partials/icon', { name: n }); }; %>
+<a class="skip-to-content" href="#main">Skip to content</a>
+<%- include('partials/site-header') %>
 
 <main id="main">
-  <section class="tx-index-hero">
-    <div class="wrap">
-      <span class="eyebrow">404</span>
-      <h1>That page isn’t here</h1>
-      <svg class="smile-arc" viewBox="0 0 64 16"><path d="M4 4 Q32 18 60 4"/></svg>
-      <p class="tx-index-lede">The link may be out of date, or the address mistyped. Everything the clinic offers is still one tap away.</p>
-      <div class="hero-ctas" style="margin-top:26px;">
-        <a href="/services" class="btn btn-primary">See all treatments</a>
-        <% if (clinic.phone) { %>
-        <a href="tel:<%= clinic.phone_intl || clinic.phone %>" class="btn btn-outline-dark" data-track="call_clicked">
-          Call <%= clinic.phone %>
-        </a>
-        <% } %>
-        <% if (whatsappUrl) { %>
-        <a href="<%= whatsappUrl %>" target="_blank" rel="noopener" class="btn btn-whatsapp" data-track="whatsapp_clicked">WhatsApp</a>
-        <% } %>
+  <section class="page-hero">
+    <div class="container">
+      <span class="eyebrow-label">Page not found</span>
+      <h1>That page isn&rsquo;t here</h1>
+      <p class="page-hero__lede">The link may be out of date, or the address mistyped. Everything the clinic offers is still one tap away.</p>
+      <div class="cluster page-hero__actions">
+        <a href="/services" class="button button--primary">See all treatments</a>
+        <% if (clinic.phone) { %><a href="tel:<%= clinic.phone_intl || clinic.phone %>" class="button button--secondary" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
+        <% if (whatsappUrl) { %><a href="<%= whatsappUrl %>" target="_blank" rel="noopener" class="button button--secondary" data-track="whatsapp_clicked"><%- ic('whatsapp') %>WhatsApp</a><% } %>
       </div>
     </div>
   </section>
 
-  <section class="section-pad" style="padding-top:0;">
-    <div class="wrap">
-      <div class="section-head">
-        <span class="eyebrow">Popular</span>
-        <h2 class="section-title">Treatments patients look for most</h2>
+  <section class="section section--tight-top" aria-labelledby="popularTitle">
+    <div class="container">
+      <div class="section-heading">
+        <span class="eyebrow-label">Popular</span>
+        <h2 id="popularTitle">Treatments patients look for most</h2>
       </div>
-      <%- include('partials/treatment-grid', { cards: footerServices }) %>
-      <div class="tx-index-foot"><a class="btn btn-outline-dark" href="/">Back to the homepage</a></div>
+      <div class="treatment-grid">
+        <% footerServices.forEach(function (s) { %><%- include('partials/treatment-card', { s: s }) %><% }) %>
+      </div>
+      <p class="section-foot"><a class="button button--secondary" href="/">Back to the homepage</a></p>
     </div>
   </section>
 </main>
 
-<%- include('partials/footer') %>
-<script src="/js/site.js" defer></script>
+<%- include('partials/site-footer') %>
+<script src="/js/ds.js" defer></script>
+<script src="/js/site-ds.js" defer></script>
 </body>
 </html>

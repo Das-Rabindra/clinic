@@ -155,29 +155,7 @@
       <% if (services.length) { %>
         <div class="treatment-grid">
           <% featuredServices.forEach(function (s) { %>
-          <article class="card card--interactive treatment-card">
-            <div class="card__media">
-              <% if (s.image_url) { %>
-                <img src="<%= s.image_url %>" alt="<%= s.image_alt || '' %>"
-                     width="<%= s.image_width || 1280 %>" height="<%= s.image_height || 720 %>" loading="lazy" decoding="async">
-              <% } else { %>
-                <div class="treatment-card__art"><%- include('partials/treatment-art', { slug: s.slug, name: s.name }) %></div>
-              <% } %>
-            </div>
-            <div class="card__body">
-              <% if (s.category_name) { %><span class="eyebrow-label"><%= s.category_name %></span><% } %>
-              <h3 class="card__title">
-                <% if (s.has_detail_page) { %><a class="card__link" href="/services/<%= s.slug %>"><%= s.name %></a><% } else { %><%= s.name %><% } %>
-              </h3>
-              <% if (s.short_desc) { %><p class="card__text"><%= s.short_desc %></p><% } %>
-              <div class="card__footer">
-                <% if (s.bookable) { %>
-                <button type="button" class="button button--primary button--small book-service" data-service="<%= s.id %>" data-service-name="<%= s.name %>" data-track="appointment_started">Book<span class="visually-hidden-ds"> <%= s.name %></span></button>
-                <% } %>
-                <button type="button" class="button button--text button--small" data-callback-open data-service="<%= s.id %>" data-service-name="<%= s.name %>">Request a call back<span class="visually-hidden-ds"> about <%= s.name %></span></button>
-              </div>
-            </div>
-          </article>
+            <%- include('partials/treatment-card', { s: s }) %>
           <% }) %>
         </div>
 

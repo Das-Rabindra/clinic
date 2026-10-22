@@ -88,7 +88,7 @@
   margin-top: var(--space-12); padding-top: var(--space-6);
   border-top: var(--border-width) solid var(--color-border-subtle); color: var(--color-text-muted);
 }
-.site-footer__bottom a { color: inherit; }
+.site-footer__bottom a { display: inline-flex; align-items: center; min-height: var(--target-min); color: inherit; }
 
 /* ── Call-back dialog ── */
 .callback-form { margin-top: var(--space-5); }
@@ -100,3 +100,35 @@
 .callback-form .form-hint { margin-block: var(--space-5) var(--space-4); }
 .callback-done { display: grid; gap: var(--space-5); justify-items: start; }
 .callback-done .notice__title:focus { outline: none; }
+
+/* ══ Shared page components (moved from home.css in Stage 4) ══ */
+
+/* ── Treatments ── */
+.treatment-grid { display: grid; gap: var(--gap-md); grid-template-columns: 1fr; }
+.treatment-grid > * { min-width: 0; }
+@media (min-width: 768px) { .treatment-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .treatment-grid { grid-template-columns: repeat(3, 1fr); } }
+.treatment-card .card__media img { transition: transform var(--duration-slow) var(--ease-out); }
+.treatment-card:hover .card__media img { transform: scale(1.03); }
+.treatment-card__art { display: grid; place-items: center; height: 100%; background: var(--color-accent-sage); }
+.treatment-card__art .tx-art { width: auto; height: 82%; }
+.treatment-card .card__footer { justify-content: space-between; }
+
+.section-foot { margin-top: var(--space-10); text-align: center; }
+/* ── Empty states ── */
+.empty-state {
+  max-width: 40rem; margin-inline: auto; padding: var(--space-10) var(--space-6);
+  text-align: center; border: var(--border-width) dashed var(--color-border-strong); border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+}
+.empty-state > .icon { width: 2rem; height: 2rem; margin: 0 auto var(--space-3); color: var(--color-primary); }
+.empty-state h3 { margin-bottom: var(--space-2); color: var(--color-text); }
+.empty-state p + p { margin-top: var(--space-4); }
+
+/* ── Final CTA ── */
+.cta__inner { max-width: 44rem; text-align: center; }
+.cta__inner > * + * { margin-top: var(--space-4); }
+.cta__body { color: var(--color-on-primary); opacity: 0.92; font-size: var(--text-body-lg); }
+.cta__actions { justify-content: center; margin-top: var(--space-8); }
+.cta__call { color: var(--color-on-primary); }
+.section--primary .eyebrow-label { color: var(--color-accent-sage); }

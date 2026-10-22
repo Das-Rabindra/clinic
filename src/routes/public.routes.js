@@ -171,6 +171,10 @@ async function baseLocals({ navBase = '/' } = {}) {
     .filter(s => s.has_detail_page).slice(0, 6);
 
   return {
+    /* Every public page renders on the design system (ds.css); pages add
+       their own stylesheet, the homepage overriding this default. */
+    ds: true,
+    pageCss: ['/css/pages.css'],
     settings,
     clinic: { ...clinic, youtube_url: settings.youtube_url, today: { ...clinic.today, weekdayIndex: todayIdx } },
     navBase,

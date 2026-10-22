@@ -1,3 +1,5 @@
+<%# Rendered when something has failed — possibly the database — so it needs
+    no clinic data at all: tokens and type only. %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,16 +7,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><%= title %></title>
 <meta name="robots" content="noindex">
-<link rel="stylesheet" href="/fonts/fonts.css">
-<link rel="stylesheet" href="/css/site.css">
+<meta name="theme-color" content="#155E59">
+<link rel="stylesheet" href="/css/ds.css">
 </head>
 <body>
-<main style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:40px 24px;">
-  <div style="text-align:center; max-width:480px;">
-    <svg class="smile-arc" viewBox="0 0 64 16" style="margin:0 auto 20px; width:84px;"><path d="M4 4 Q32 18 60 4"/></svg>
-    <h1 style="font-size:clamp(28px,5vw,40px);"><%= title %></h1>
-    <p style="margin-top:14px; color:#5B665A;"><%= message %></p>
-    <div style="margin-top:28px;"><a href="/" class="btn btn-primary">Back to the website</a></div>
+<main class="container" style="min-height:70vh; display:grid; place-content:center; text-align:center; padding-block:var(--space-16);">
+  <div class="stack" style="max-width:30rem;">
+    <h1><%= title %></h1>
+    <p class="text-muted"><%= message %></p>
+    <p><a href="/" class="button button--primary">Back to the website</a></p>
   </div>
 </main>
 </body>

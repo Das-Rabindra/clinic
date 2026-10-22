@@ -82,17 +82,7 @@
   .clinic-bento__icon { width: 32px; height: 32px; margin-bottom: 0; }
 }
 
-/* ── Treatments ── */
-.treatment-grid { display: grid; gap: var(--gap-md); grid-template-columns: 1fr; }
-.treatment-grid > * { min-width: 0; }
-@media (min-width: 768px) { .treatment-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .treatment-grid { grid-template-columns: repeat(3, 1fr); } }
-.treatment-card .card__media img { transition: transform var(--duration-slow) var(--ease-out); }
-.treatment-card:hover .card__media img { transform: scale(1.03); }
-.treatment-card__art { display: grid; place-items: center; height: 100%; background: var(--color-accent-sage); }
-.treatment-card__art .tx-art { width: auto; height: 82%; }
-.treatment-card .card__footer { justify-content: space-between; }
-
+/* ── Treatments: also treated ── */
 .more-treatments { margin-top: var(--space-12); padding-top: var(--space-8); border-top: var(--border-width) solid var(--color-border-subtle); }
 .more-treatments__title { font-family: var(--font-body); font-size: var(--text-eyebrow); font-weight: var(--weight-semibold); letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-muted); }
 .more-treatments ul { display: grid; gap: 0 var(--gap-md); grid-template-columns: 1fr; list-style: none; margin: var(--space-3) 0 0; padding: 0; }
@@ -106,17 +96,6 @@
 .more-treatments a .icon { width: 1rem; height: 1rem; color: var(--color-primary); transition: transform var(--duration-fast) var(--ease-out); }
 .more-treatments a:hover { color: var(--color-primary); }
 .more-treatments a:hover .icon { transform: translateX(2px); }
-.section-foot { margin-top: var(--space-10); text-align: center; }
-
-/* ── Empty states ── */
-.empty-state {
-  max-width: 40rem; margin-inline: auto; padding: var(--space-10) var(--space-6);
-  text-align: center; border: var(--border-width) dashed var(--color-border-strong); border-radius: var(--radius-md);
-  color: var(--color-text-muted);
-}
-.empty-state > .icon { width: 2rem; height: 2rem; margin: 0 auto var(--space-3); color: var(--color-primary); }
-.empty-state h3 { margin-bottom: var(--space-2); color: var(--color-text); }
-.empty-state p + p { margin-top: var(--space-4); }
 
 /* ── Gallery ── */
 .gallery-feature { max-width: 36rem; margin: 0 auto; }
@@ -190,10 +169,3 @@
   .contact-bento__map { grid-column: 1 / span 2; }
 }
 
-/* ── Final CTA ── */
-.cta__inner { max-width: 44rem; text-align: center; }
-.cta__inner > * + * { margin-top: var(--space-4); }
-.cta__body { color: var(--color-on-primary); opacity: 0.92; font-size: var(--text-body-lg); }
-.cta__actions { justify-content: center; margin-top: var(--space-8); }
-.cta__call { color: var(--color-on-primary); }
-.section--primary .eyebrow-label { color: var(--color-accent-sage); }

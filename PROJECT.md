@@ -3,6 +3,8 @@
 As-built documentation for the clinic website, patient booking platform and
 management console.
 
+> **Redesign (October 2026).** The public site was rebuilt on a new design system; §7's palette and typography describe the original and are superseded by `docs/redesign/design-tokens.md`. The original `site.css` / `site.js` were retired in redesign Stage 4 and remain in git history.
+>
 > **Scope of this document.** `ARCHITECTURE.md` is the *plan* written before
 > implementation and is kept for its reasoning and phase breakdown. This file
 > describes what actually exists and where it diverged. Where the two disagree,
@@ -104,9 +106,12 @@ src/
                    admin/** (13 modules) · admin.pages.js · oauth.routes.js
   views/           public/index.ejs + partials · admin/{app,login}.ejs
 public/
-  css/site.css     the original design, preserved verbatim, then extended
+  css/ds.css       design system: tokens + primitives (see docs/redesign/design-tokens.md)
+  css/layout.css   site chrome (header, footer, call-back dialog, cards)
+  css/home.css · pages.css · booking.css   page styles; booking.css is interim until the wizard redesign
   css/admin.css    admin console
-  js/site.js       nav, FAQ, gallery, lightbox, lazy map, scroll reveal
+  js/ds.js         menu drawer, accordion, dialog, action bar, form validation
+  js/site-ds.js    call-back request, lazy map, carousels, analytics hook
   js/booking.js    the five-step booking wizard
   js/admin/        core.js + app.js (router) + pages/ (11 screens)
   img/             logo assets decoded from the original base64

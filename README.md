@@ -118,7 +118,7 @@ src/
   middleware/     auth · csrf · rate limit · validation · security headers · errors
   routes/         public SSR, public API, auth API, admin API
   views/          EJS templates (public site + admin shell)
-public/           site.css (original design), admin.css, client JS, logo assets
+public/           ds.css (design system) + layout/home/pages/booking.css, admin.css, client JS, images
 test/             availability · booking · security · concurrency · media · api
 ```
 

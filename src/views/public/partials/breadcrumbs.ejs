@@ -1,0 +1,9 @@
+<%# Visible breadcrumb trail. The matching BreadcrumbList JSON-LD is emitted by
+    the route (seo.breadcrumbs), from the same trail. Locals: trail [{name, href?}]. %>
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <ol>
+    <% trail.forEach(function (c, i) { var last = i === trail.length - 1; %>
+    <li><% if (!last && c.href) { %><a href="<%= c.href %>"><%= c.name %></a><% } else { %><span aria-current="page"><%= c.name %></span><% } %></li>
+    <% }) %>
+  </ol>
+</nav>

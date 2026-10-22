@@ -132,3 +132,27 @@ website has no screen for it.**
   - Please supply the plain before and after photographs rather than the
     poster. The poster carries "Safe & Painless Treatment" (claim 3, not yet
     confirmed), plus the phone number and URL as text inside the image.
+
+## 11. Treatment "benefit" lines that promise outcomes (added in Stage 4)
+
+These come from each treatment's admin-editable text. They are still shown
+unchanged; only the heading above them changed, from "What this treatment does
+for you" to the more cautious "What it aims to do". Please reply keep, reword
+or remove for each line. Lines not listed here are statements of process ("an
+examination first", "a written plan") and are fine as they are.
+
+| Treatment | Line | Concern |
+|---|---|---|
+| Root canal | "Relieves the pain that brought you in" · "Stops the infection reaching the surrounding bone" | States an outcome as certain. Suggest "aims to relieve…" / "treats the infection before it reaches…" |
+| Dental cleaning | "Firmer gums that stop bleeding when brushed" · "Fresher breath" | Outcome promised |
+| Dental fillings | "Often avoids the need for a root canal later on" · "Normal biting and chewing restored in a single visit" | The second is a promise of timing and outcome |
+| Crowns & bridges | "Comfortable chewing on that side again" | Outcome promised |
+| Tooth extraction | "Infection stopped from spreading further" | Outcome promised |
+| Dental implants | "Helps preserve the jawbone" · "Chewing and speaking feel closer to a natural tooth" | Clinical claim; generally accepted, but please confirm the wording |
+| Dentures | "Chewing and speech improve as you adapt to it" | Outcome promised |
+| Wisdom tooth | "An end to the cycle of infection and the pain that comes with it" | Outcome promised |
+| Gum treatment | "Bleeding and soreness settle as the inflammation resolves" · "Further bone loss halted" | Outcome promised |
+| Dental emergency | "Open until 10:00 PM every day, Sunday included" · "Same-day appointments kept free for urgent problems" · "Pain and infection dealt with first" | The hours omit the 1–3 PM break (Q1); time held back (Q3c) |
+
+The emergency page's long description and SEO title ("Open till 10 PM") carry
+the same hours wording (audit §11).

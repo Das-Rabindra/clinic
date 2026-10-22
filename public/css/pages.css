@@ -1,0 +1,70 @@
+/* Inner pages: treatments listing, treatment detail, privacy, 404.
+   Built only from ds.css tokens and primitives. */
+
+.section--tight-top { padding-top: 0; }
+
+/* ── Page hero ── */
+.page-hero { padding-block: var(--space-8) var(--space-12); }
+.page-hero > .container > * + * { margin-top: var(--space-4); }
+.page-hero h1 { max-width: 22ch; }
+.page-hero__lede { max-width: 40rem; font-size: var(--text-body-lg); color: var(--color-text-muted); }
+.page-hero__actions { padding-top: var(--space-2); }
+@media (max-width: 479px) {
+  .page-hero__actions .button { flex: 1 1 100%; }
+}
+
+/* ── Breadcrumbs ── */
+.breadcrumbs ol { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-2); list-style: none; margin: 0 0 var(--space-6); padding: 0; font-size: var(--text-small); }
+.breadcrumbs li { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-text-muted); }
+.breadcrumbs li + li::before { content: '/'; color: var(--color-border-strong); }
+.breadcrumbs a { display: inline-flex; align-items: center; min-height: var(--target-min); color: var(--color-primary); }
+.breadcrumbs [aria-current] { color: var(--color-text); font-weight: var(--weight-medium); }
+
+/* ── Listing ── */
+.listing-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2) var(--space-6); margin-bottom: var(--space-6); padding-top: var(--space-6); border-top: var(--border-width) solid var(--color-border-subtle); }
+.listing-head h2 { font-size: var(--text-h3); }
+
+/* ── Treatment detail: hero ── */
+.tx-hero { display: grid; gap: var(--space-8); align-items: center; }
+.tx-hero > * { min-width: 0; }
+.tx-hero__copy > * + * { margin-top: var(--space-4); }
+.tx-facts { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); list-style: none; margin-inline: 0; margin-bottom: 0; padding: 0; color: var(--color-text-muted); font-size: var(--text-small); }
+.tx-facts li { display: inline-flex; align-items: center; gap: var(--space-2); }
+.tx-facts .icon { width: 1.1rem; height: 1.1rem; color: var(--color-primary); }
+.tx-hero__media { margin: 0; }
+.tx-hero__media img, .tx-hero__media .treatment-card__art {
+  width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: var(--radius-md); background: var(--color-accent-sand);
+}
+.tx-hero__media figcaption { margin-top: var(--space-2); font-size: var(--text-small); color: var(--color-text-muted); }
+@media (min-width: 1024px) {
+  .tx-hero { grid-template-columns: 1.1fr 1fr; gap: var(--space-12); }
+}
+
+/* ── Treatment detail: body + sticky contact card ── */
+.tx-detail { display: grid; gap: var(--space-10); align-items: start; }
+.tx-detail > * { min-width: 0; }
+.tx-detail__main > h2:first-child { margin-top: 0; }
+.tx-detail__main h2 { font-size: var(--text-h3); font-weight: var(--weight-semibold); }
+.tx-detail__main .notice { margin-top: var(--space-4); }
+.tx-benefits { list-style: none; padding: 0; }
+.tx-benefits li { display: flex; gap: var(--space-3); align-items: flex-start; padding-block: var(--space-2); }
+.tx-benefits .icon { color: var(--color-primary); margin-top: 0.2rem; }
+.tx-aside__card { box-shadow: var(--shadow-2); }
+.tx-aside__card .card__body { gap: var(--space-5); padding: var(--space-6); }
+.tx-aside__doctor { display: flex; align-items: center; gap: var(--space-3); }
+.tx-aside__doctor img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
+.tx-aside__doctor div { display: flex; flex-direction: column; }
+.tx-aside__meta { margin: 0; display: grid; gap: var(--space-3); }
+.tx-aside__meta div { display: grid; gap: var(--space-1); }
+.tx-aside__meta dt { font-size: var(--text-small); font-weight: var(--weight-semibold); color: var(--color-text-muted); }
+.tx-aside__meta dd { margin: 0; }
+.tx-aside__actions { display: grid; gap: var(--space-2); }
+@media (min-width: 1024px) {
+  .tx-detail { grid-template-columns: minmax(0, 1fr) 22rem; gap: var(--space-16); }
+  .tx-aside { position: sticky; top: calc(var(--header-height) + var(--space-6)); }
+}
+
+/* ── Policy prose ── */
+.policy h2 { font-size: var(--text-h3); font-weight: var(--weight-semibold); }
+.policy ul { padding-left: var(--space-5); }
+.policy li + li { margin-top: var(--space-2); }
