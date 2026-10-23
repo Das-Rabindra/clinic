@@ -70,72 +70,39 @@ const BOOK_SCENE = scenePhoto('dentist-uv-curing', 1600, 1068, [640, 1024, 1600,
    opens on something friendly. Rendered by middleware/error.js. */
 export const NOT_FOUND_SCENE = ABOUT_SCENE;
 
-/* The scene behind each treatment page's title, from the owner's
-   photographs (Oct 2026), instead of the treatment's admin image. That image
-   still appears on the treatment's cards, and is the fallback for any
-   treatment added later and not listed here. Closest depictions first: a
-   check-up, a curing light setting a filling, oral surgery, an implant, and
-   for emergency care (which had no image) the instruments. */
+/* The scene behind a treatment page's title, and its cards. Every treatment
+   has its own treatment-specific image in the admin, and that is the right
+   picture for almost all of them. The owner's photographs replace it only
+   where they show the treatment more exactly than the admin image does, or
+   where there is no admin image, and each is used for one treatment only:
+     - fillings: the curing light that sets a filling (the admin image is a
+       general check-up);
+     - extraction: forceps in use (the admin image is a general procedure);
+     - emergency care: the instruments (no admin image).
+   An earlier version spread six photographs over all fifteen treatments,
+   which left mismatches (an implant for crowns, a curing light for braces)
+   and duplicates; the owner asked for proper, unique matches. */
 const PHOTO = { caption: 'Illustrative photograph' };
-const EXAM = { ...scenePhoto('hero-dental-exam', 1600, 1067, [640, 1024, 1600, 2048]), ...PHOTO };
-const PROCEDURE = { ...scenePhoto('dental-procedure', 1600, 1067, [1024, 1600, 2048]), ...PHOTO };
-/* Mirrored, as on Testimonials, so the smile sits in the lit side. */
-const SMILE = { ...ABOUT_SCENE, ...PHOTO, flip: true, position: '50% 55%' };
-/* The render with its flat blue backdrop extended on the left, so the
-   implant itself sits in the lit side rather than under the words. */
-const IMPLANT = { ...scenePhoto('dental-implant-scene', 1600, 680, [1024, 1600, 2048]), caption: 'Illustration', position: '78% 60%' };
 const TREATMENT_SCENES = {
-  'general-dentistry': { ...EXAM,
-    alt: 'A dentist examining a patient\'s teeth with a mouth mirror (illustrative photograph)' },
   'dental-fillings': { ...BOOK_SCENE, ...PHOTO,
     alt: 'A dentist setting a filling with a curing light (illustrative photograph)' },
-  'tooth-extraction': { ...PROCEDURE,
+  'tooth-extraction': { ...scenePhoto('dental-procedure', 1600, 1067, [1024, 1600, 2048]), ...PHOTO,
     alt: 'A dentist working with forceps during oral surgery (illustrative photograph)' },
-  'wisdom-tooth': { ...PROCEDURE,
-    alt: 'A dentist working with forceps during oral surgery (illustrative photograph)' },
-  'dental-implants': { ...IMPLANT,
-    alt: 'A tooth, a dental implant and a mouth mirror (illustration)' },
   'dental-emergency': { ...PRIVACY_SCENE, ...PHOTO, alt: '', position: '70% 30%' },
-  /* The rest, by what each photograph shows nearest the treatment: a smile
-     for whitening, cleaning and dentures; a mirror at the gums for gum care
-     and aesthetics; a procedure under way for root canals; a crown for
-     crowns; the curing light that bonds brackets for braces. None shows a
-     child, so pediatric care gets the instruments rather than an adult. */
-  'dental-cleaning': { ...SMILE, alt: 'A dentist checking a patient\'s teeth with a probe and mirror (illustrative photograph)' },
-  'teeth-whitening': { ...SMILE, alt: 'A close-up of a bright, white smile (illustrative photograph)' },
-  'dentures': { ...SMILE, alt: 'A close-up of a full, even smile (illustrative photograph)' },
-  'gum-treatment': { ...EXAM, alt: 'A dentist examining a patient\'s teeth and gums with a mouth mirror (illustrative photograph)' },
-  'aesthetic-dentistry': { ...EXAM, alt: 'A close-up of an even smile during an examination (illustrative photograph)' },
-  'root-canal-treatment': { ...PROCEDURE, alt: 'A dental procedure under way (illustrative photograph)' },
-  'crowns-bridges': { ...IMPLANT, alt: 'A tooth and a crowned dental implant (illustration)' },
-  'braces-aligners': { ...BOOK_SCENE, ...PHOTO, alt: 'A dentist using a curing light, as used to bond brackets (illustrative photograph)' },
-  'pediatric-dentistry': { ...PRIVACY_SCENE, ...PHOTO, alt: '', position: '70% 30%' },
 };
 
-/* Treatment cards use the same photograph as the treatment's page, in its
-   natural crop (the scene versions are padded for a wide backdrop). Cards
-   carry no caption of their own; each list of them says once that the
-   photographs are illustrative. */
+/* Cards for the same three, in each photograph's natural crop (the scene
+   versions are padded for a wide backdrop). Cards carry no caption of their
+   own; each list of them says once that the photographs are illustrative. */
 const card = (name, width, height, sizes, extra = {}) => ({
   image_url: `/img/stock/${name}-1024.webp`,
   image_srcset: sizes.map(w => `/img/stock/${name}-${w}.webp ${w}w`).join(', '),
   image_width: width, image_height: height, image_alt: '', image_is_stock: 1, ...extra,
 });
-const CARD = {
-  EXAM: card('hero-dental-exam', 1024, 683, [640, 1024, 1600], { image_position: '70% 50%' }),
-  UV: card('dentist-uv-curing', 1024, 683, [640, 1024, 1600]),
-  PROCEDURE: card('dental-procedure', 1024, 683, [1024, 1600]),
-  SMILE: card('smile-exam', 1024, 910, [640, 1024, 1600], { image_position: '40% 55%' }),
-  IMPLANT: card('dental-implant', 1024, 696, [640, 1024, 1600], { image_position: '62% 60%' }),
-  INSTRUMENTS: card('dental-instruments', 1024, 402, [1024, 1600], { image_position: '80% 50%' }),
-};
 const CARD_FOR = {
-  'general-dentistry': CARD.EXAM, 'gum-treatment': CARD.EXAM, 'aesthetic-dentistry': CARD.EXAM,
-  'dental-fillings': CARD.UV, 'braces-aligners': CARD.UV,
-  'tooth-extraction': CARD.PROCEDURE, 'wisdom-tooth': CARD.PROCEDURE, 'root-canal-treatment': CARD.PROCEDURE,
-  'dental-cleaning': CARD.SMILE, 'teeth-whitening': CARD.SMILE, 'dentures': CARD.SMILE,
-  'dental-implants': CARD.IMPLANT, 'crowns-bridges': CARD.IMPLANT,
-  'dental-emergency': CARD.INSTRUMENTS, 'pediatric-dentistry': CARD.INSTRUMENTS,
+  'dental-fillings': card('dentist-uv-curing', 1024, 683, [640, 1024, 1600]),
+  'tooth-extraction': card('dental-procedure', 1024, 683, [1024, 1600]),
+  'dental-emergency': card('dental-instruments', 1024, 402, [1024, 1600], { image_position: '80% 50%' }),
 };
 /** A service row with its card image swapped for the owner's photograph. */
 export const withCardPhoto = (s) => (CARD_FOR[s.slug] ? { ...s, ...CARD_FOR[s.slug] } : s);

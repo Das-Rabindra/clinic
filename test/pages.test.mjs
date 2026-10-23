@@ -87,9 +87,9 @@ describe('treatment pages', () => {
       assert.ok(art.includes(`'${s.slug}'`) || s.slug === 'general-dentistry',
         `${s.slug} has no artwork branch and would reuse the generic mirror`);
     }
-    // Today every card shows one of the owner's photographs; the artwork is
-    // the fallback for a treatment with neither a mapped photograph nor an
-    // admin image, so the list itself shows photographs.
+    // Treatments with no image here (the test database has none) show their
+    // artwork; the three with an owner's photograph show that.
+    assert.ok(r.body.includes('tx-art'));
     assert.ok(r.body.includes('src="/img/stock/'));
   });
 
@@ -631,10 +631,8 @@ describe('image provenance', () => {
       assert.match(after.alt, /^Illustration:/);
       assert.equal(after.is_stock, 1);
 
-      // The treatment page opens on one of the owner's photographs, captioned;
-      // the admin image now shows only on cards. Neither may carry the claim.
       const page = await srv.call('/services/teeth-whitening');
-      assert.match(page.body, /<p class="page-cine__credit">Illustrative photograph<\/p>/, 'said plainly where a photo is largest');
+      assert.match(page.body, /Illustrative image, not a photograph of the clinic/, 'said plainly where the photo is largest');
       assert.ok(!page.body.includes('Before and after a smile makeover, Samal Dental Care'));
       const list = await srv.call('/services');
       assert.ok(!list.body.includes('Before and after a smile makeover, Samal Dental Care'));

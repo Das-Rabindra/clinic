@@ -996,3 +996,42 @@ chosen by what each shows nearest the treatment:
   The footer now reads "…on Magnific (formerly Freepik)" and links to
   magnific.com, and `CREDITS.md` matches.
 - **Checks:** `npm test` passes 303/303, and the width sweep found nothing.
+
+## Treatment photographs: proper, unique matches (2026-10-23)
+
+The owner pointed out that some treatment photographs did not match their
+treatment and some were repeated. Six photographs had been spread over
+fifteen treatments: the implant render for crowns, the curing light for
+braces, the instruments for pediatric care, the same smile on three pages.
+
+Each treatment's own admin image is a specific match, and it is back on 12
+treatments:
+
+| Treatment | Admin image |
+|---|---|
+| Braces & Aligners | Braces with aligners |
+| Crowns & Bridges | A crown bridge |
+| Dentures | Dentures |
+| Root Canal | A root-canal diagram |
+| Pediatric Dentistry | A child |
+| Teeth Whitening | A shade guide |
+| Wisdom Tooth | Forceps holding a pulled tooth |
+| …and five more | Their own |
+
+The owner's photographs stay only where they show the treatment more
+exactly, or where there is no image, and each is used once among the
+treatments:
+
+| Treatment | Photograph |
+|---|---|
+| Dental Fillings | The curing light that sets a filling (the admin image is a general check-up) |
+| Tooth Extraction | Forceps in use (the admin image is a general procedure) |
+| Emergency Dental Care | The instruments (no admin image) |
+
+- **Cards** follow the same mapping.
+- **Clean-up:** the padded `dental-implant-scene` files are removed (no
+  longer used).
+- **Tests:** a new test asserts the three placements, that every other
+  treatment keeps its own image, and that no two treatments share an
+  image. The provenance and artwork tests are restored to their original
+  intent. `npm test` passes 303/303.

@@ -28,4 +28,3 @@ named where the file's own metadata names one.
 | Files | Description | Licence |
 |---|---|---|
 | `dental-implant-*.webp` | 3D render: a tooth, a dental implant, a mirror and a syringe on blue ("Dental Implants Surgery Concept") | Commercial stock image. The clinic owner confirmed on 23 Oct 2026 that the clinic holds a licence for this use. Keep the licence record with the clinic's documents; re-encoded to WebP, metadata stripped. |
-| `dental-implant-scene-*.webp` | The same render, its flat blue backdrop extended on the left for a page scene | Same licence as above. Used behind the Dental Implants page title. |

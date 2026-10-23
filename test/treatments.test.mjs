@@ -110,20 +110,30 @@ describe('/services/:slug', () => {
 });
 
 describe('treatment page scenes', () => {
-  test('every published treatment opens on one of the owner\'s photographs, captioned', async () => {
+  /* Each treatment's own admin image is the right picture for almost all of
+     them; the owner's photographs replace it only where they show the
+     treatment more exactly, or where there is none, once each. */
+  test('the owner\'s photographs go only where they match, and never twice', async () => {
+    const want = {
+      'dental-fillings': 'dentist-uv-curing',
+      'tooth-extraction': 'dental-procedure',
+      'dental-emergency': 'dental-instruments',
+    };
+    const seen = new Map();
     for (const { slug } of await servicesRepo.publicSlugs()) {
       const body = (await srv.call(`/services/${slug}`)).body;
       const scene = body.slice(body.indexOf('<main'), body.indexOf('CHAPTERS'));
-      assert.match(scene, /<img src="\/img\/stock\/[a-z-]+-1600\.webp"/, `${slug} uses a new photograph`);
-      assert.match(scene, /<p class="page-cine__credit">(Illustrative photograph|Illustration)<\/p>/, `${slug} is captioned`);
-    }
-    // Spot-check the closest depictions.
-    const want = {
-      'dental-fillings': 'dentist-uv-curing', 'tooth-extraction': 'dental-procedure',
-      'dental-implants': 'dental-implant-scene', 'teeth-whitening': 'about-scene',
-    };
-    for (const [slug, file] of Object.entries(want)) {
-      assert.ok((await srv.call(`/services/${slug}`)).body.includes(`/img/stock/${file}-1600.webp`), `${slug} uses ${file}`);
+      const img = (scene.match(/<img src="([^"]+)"/) || [])[1] || null;
+      if (want[slug]) {
+        assert.equal(img, `/img/stock/${want[slug]}-1600.webp`, `${slug} uses ${want[slug]}`);
+        assert.match(scene, /<p class="page-cine__credit">Illustrative photograph<\/p>/, `${slug} is captioned`);
+      } else {
+        assert.ok(!img || !img.startsWith('/img/stock/'), `${slug} keeps its own image, not ${img}`);
+      }
+      if (img) {
+        assert.ok(!seen.has(img), `${slug} repeats the image of ${seen.get(img)}`);
+        seen.set(img, slug);
+      }
     }
   });
 });
