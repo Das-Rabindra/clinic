@@ -43,7 +43,13 @@
       linear-gradient(180deg, rgba(6, 32, 30, 0.75) 0, rgba(6, 32, 30, 0) 120px),
       linear-gradient(180deg, rgba(8, 42, 39, 0) calc(var(--header-height) + 12svh), rgba(8, 42, 39, 0.92) calc(var(--header-height) + 26svh), var(--color-night) calc(var(--header-height) + 36svh));
   }
-  .page-cine--photo .page-cine__credit { top: calc(var(--header-height) + 26svh - 2rem); bottom: auto; color: var(--color-night-ink); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); }
+  /* Anchored by its last line just above the words, so a caption that wraps
+     grows up into the photograph, never down into the breadcrumb. */
+  .page-cine--photo .page-cine__credit {
+    top: auto; bottom: calc(100% - var(--header-height) - 26svh + 0.75rem);
+    left: var(--gutter); right: var(--gutter); text-align: right;
+    color: var(--color-night-ink); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+  }
 }
 /* A faint ring gives the photo-less scenes depth without any decorative
    imagery. */
@@ -324,3 +330,14 @@ html.has-lightbox { overflow: hidden; }
    but not inside the white booking panel the /book scene also holds. */
 .page-cine .button--text { color: var(--color-night-ink); }
 .page-cine :is(.booking, .manage) .button--text { color: var(--color-primary); }
+/* About on a tablet: the portrait stacks under the words, the scene grows
+   tall, and the words run into the lighter middle of the photograph. Shade
+   it evenly there instead (measured: intro 4.45:1 and caption 1.68:1 under
+   the column shade). */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .about-scene .page-cine__shade {
+    background:
+      linear-gradient(180deg, rgba(6, 32, 30, 0.8) 0, rgba(6, 32, 30, 0) 170px),
+      linear-gradient(rgba(8, 42, 39, 0.86), rgba(8, 42, 39, 0.86));
+  }
+}

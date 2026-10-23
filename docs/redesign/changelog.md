@@ -826,3 +826,26 @@ widths) found nothing.
   new scene photo. The first treatment tile still loaded eagerly at
   `fetchpriority="high"` (it was the largest element before the photo) and
   competed with the scene image. It now lazy-loads like the other tiles.
+
+## About and Gallery use the owner's photographs (2026-10-23)
+
+- **Gallery:** the scene behind the title is now the UV-curing photograph.
+  Its caption reads "Illustrative photograph · the clinic's own photographs
+  are below", because a stock image over "Inside the clinic" must not pass as
+  the clinic. The gallery wall is unchanged and stays the clinic's own
+  photographs only.
+- **About:** the scene gets the smile-exam photograph as a darkened
+  backdrop, captioned, behind Dr. Samal's real portrait. "The clinic"
+  section keeps the real treatment-room photograph.
+- **Tablets (768–1023px):** About's portrait stacks under the words, so the
+  scene is shaded evenly there. Under the column shade the intro measured
+  4.45:1; now it is 6.37:1.
+- **Phone captions:** anchored by their last line just above the
+  breadcrumb, inside both margins, so a two-line caption grows up into the
+  photo.
+- **Contrast:** every line in both scenes is ≥ 4.79:1 at every width (the
+  Gallery caption on phones is the lowest).
+- **Encoding:** larger WebP sizes added for the two backdrops (1600/2048).
+  `CREDITS.md` lists the new uses.
+- **Checks:** `npm test` passes 299/299, and the width sweep (4 pages × 8
+  widths) found nothing.

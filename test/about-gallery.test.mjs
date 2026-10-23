@@ -32,7 +32,9 @@ describe('/about', () => {
     const r = await srv.call('/about');
     assert.equal(r.status, 200);
     assertHeadingOrder(r.body, '/about');
-    assert.match(r.body, /class="page-cine about-scene" data-hero/);
+    assert.match(r.body, /class="page-cine page-cine--photo about-scene" data-hero/);
+    // The scene's stock backdrop says what it is.
+    assert.match(r.body, /<p class="page-cine__credit">Illustrative photograph<\/p>/);
     assert.ok(r.body.includes('Kalinga Institute of Dental Science'));
     assert.ok(r.body.includes('/img/clinic/treatment-room-1086.webp'));
     assert.match(r.body, /class="hours-table-ds"/);
@@ -52,6 +54,9 @@ describe('/gallery', () => {
     const shots = (r.body.match(/data-lightbox data-caption=/g) || []).length;
     assert.ok(shots >= published.length + 1);
     assert.match(r.body, /<dialog class="lightbox"/);
+    // A stock backdrop over a page about the clinic says so, and points to
+    // the clinic's own photographs.
+    assert.match(r.body, /Illustrative photograph &middot; the clinic&rsquo;s own photographs are below/);
     assert.ok(r.body.includes('/js/gallery.js'));
   });
 

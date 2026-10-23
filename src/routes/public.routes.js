@@ -46,6 +46,17 @@ const HERO_PHOTO = {
   stock: true,
 };
 
+/* Free stock backdrops (Freepik) for the About and Gallery scenes, chosen by
+   the owner. Captioned as illustrative where they show; the clinic's own
+   photographs stay the content of both pages. */
+const scenePhoto = (name, width, height, sizes) => ({
+  url: `/img/stock/${name}-1600.webp`,
+  srcset: sizes.map(w => `/img/stock/${name}-${w}.webp ${w}w`).join(', '),
+  width, height,
+});
+const GALLERY_SCENE = scenePhoto('dentist-uv-curing', 1600, 1068, [640, 1024, 1600, 2048]);
+const ABOUT_SCENE = scenePhoto('smile-exam', 1600, 1422, [640, 1024, 1600, 2048]);
+
 const CATEGORY_LABELS = {
   clinic: 'Clinic', reception: 'Reception', treatment_room: 'Treatment room',
   exterior: 'Exterior', equipment: 'Equipment', waiting_area: 'Waiting area',
@@ -449,6 +460,7 @@ router.get('/about', async (_req, res) => {
     pageCss: ['/css/home.css', '/css/pages.css'],
     doctor, doctorPhoto,
     clinicPhoto: CLINIC_PHOTO,
+    scenePhoto: ABOUT_SCENE,
     galleryPreview: gallery.slice(0, 3),
     galleryCount: gallery.length + 1,          // + the treatment-room photograph
     weekHours: weekHoursFor(clinic),
@@ -497,9 +509,9 @@ router.get('/gallery', async (_req, res) => {
     ...base,
     groups,
     total: items.length,
-    heroImage: CLINIC_PHOTO,
-    preloadImage: CLINIC_PHOTO.url,
-    preloadSrcset: CLINIC_PHOTO.srcset,
+    heroImage: GALLERY_SCENE,
+    preloadImage: GALLERY_SCENE.url,
+    preloadSrcset: GALLERY_SCENE.srcset,
     preloadSizes: '100vw',
     meta: {
       title: `Gallery: inside the clinic | ${settings.name}`,
