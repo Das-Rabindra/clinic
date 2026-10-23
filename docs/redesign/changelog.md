@@ -822,3 +822,7 @@ replaced to match the owner's decision: the hero is labelled illustrative
 and og:image is the clinic's room. The caption-count test now includes the
 hero caption. `npm test` passes 299/299, and the width sweep (5 pages × 8
 widths) found nothing.
+- **Follow-up:** /services largest content paint was 2.53–2.65s after the
+  new scene photo. The first treatment tile still loaded eagerly at
+  `fetchpriority="high"` (it was the largest element before the photo) and
+  competed with the scene image. It now lazy-loads like the other tiles.

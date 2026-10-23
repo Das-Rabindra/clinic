@@ -47,7 +47,7 @@
         <% var lead = cards.slice(0, 2), rest = cards.slice(2); %>
         <div class="treatments-lead">
           <% lead.forEach(function (s, i) { %>
-            <%- include('partials/treatment-card', { s: s, variant: 'tile', eager: i === 0 }) %>
+            <%- include('partials/treatment-card', { s: s, variant: 'tile' }) %>
           <% }) %>
         </div>
         <% if (rest.length) { %>
