@@ -1,13 +1,11 @@
-/** Process entry point: migrate, seed, start HTTP, start jobs, shut down cleanly. */
+/** Process entry point: bring the database up to date, start HTTP, start jobs, shut down cleanly. */
 import { createApp } from './app.js';
 import { config } from './config/env.js';
-import { migrate } from './db/migrate.js';
-import { seed } from './db/seed.js';
+import { ensureDatabase } from './db/boot.js';
 import { closeDb } from './db/index.js';
 import * as scheduler from './jobs/scheduler.js';
 
-await migrate();
-await seed();
+await ensureDatabase();
 
 const app = createApp();
 const server = app.listen(config.port, '0.0.0.0', () => {

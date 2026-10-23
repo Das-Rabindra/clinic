@@ -624,3 +624,45 @@ They are now pages of their own, in the same cinematic style.
   `booking.js` filled it, so the wizard dropped 35–45px in the first screen.
   CLS was 0.132 on the live site. The row's height (51px, or 65px from 640px
   up) is now reserved in `booking.css`, and the wizard no longer moves.
+
+## Cold-start 504 fix (2026-10-23, approved by the owner)
+
+**Symptom:** the first request after a deploy sometimes returned 504
+(seen on /contact and /book?treatment=…). Every later request was fine.
+
+**Cause:**
+1. Each serverless cold start ran migrations and the full seed: 135
+   sequential queries.
+2. The migration lock was a *session-level* advisory lock, taken and
+   released by separate statements outside a transaction. Through a
+   transaction-mode pooler (Neon's pooled endpoint), those statements can
+   run on different server connections, so the unlock could miss. The lock
+   then stayed held, and the next cold start waited on it until Vercel's
+   30-second limit.
+
+**Fix:**
+- `migrate.js` runs everything in one transaction under a
+  *transaction-level* lock, with one savepoint per file. It uses a new lock
+  key, so a lock leaked under the old key can't block it.
+- New `src/db/boot.js`, `ensureDatabase()`:
+  - **Fast path:** one query compares a stored fingerprint with a hash of
+    the migrations, seed sources, bundled gallery photos and admin-env
+    flag. If they match, boot is done.
+  - **Slow path:** one transaction takes a boot lock (waits at most 15s),
+    checks again, then runs migrate + seed and records the fingerprint.
+    Only the first boot after those files change does this work.
+  - If another instance holds the lock, this one serves instead of
+    waiting for a 504.
+- `api/index.js` and `src/server.js` use `ensureDatabase()` and log how
+  long it took. `npm run seed` still runs the full seed on demand.
+
+**Checks:** new `test/boot.test.mjs` covers:
+- one query on the fast path;
+- re-running after a change;
+- two concurrent boots;
+- serving when another instance holds the lock;
+- a leaked old-key lock not blocking migrations;
+- no session lock left behind.
+
+The slow path was also checked against a single-connection pool, as
+production runs. `npm test` passes 295/295.

@@ -5,8 +5,10 @@
  * app the long-running server uses, so there is one codebase and no divergence
  * between local and deployed behaviour.
  *
- * Migrations run once per cold start behind a Postgres advisory lock, which
- * makes concurrent instances safe.
+ * Cold starts check the database with one query and migrate or seed only
+ * when this build's migrations or seed have changed (src/db/boot.js). That
+ * work runs behind a transaction-level advisory lock, which keeps concurrent
+ * instances safe.
  *
  * Configuration problems are caught and rendered as a setup page rather than
  * being allowed to crash the function: an unconfigured deployment otherwise
@@ -73,10 +75,12 @@ function setupPage(res, problem) {
 
 async function build() {
   const { createApp } = await import('../src/app.js');
-  const { migrate } = await import('../src/db/migrate.js');
-  const { seed } = await import('../src/db/seed.js');
-  await migrate({ log: console.log });
-  await seed({ log: console.log });
+  const { ensureDatabase } = await import('../src/db/boot.js');
+  /* One query when the database is already current for this build; see
+     src/db/boot.js for why this no longer migrates and seeds every time. */
+  const t0 = Date.now();
+  const state = await ensureDatabase({ log: console.log });
+  console.log(`[boot] database ${state} in ${Date.now() - t0}ms`);
   return createApp();
 }
 
