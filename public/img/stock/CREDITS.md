@@ -14,9 +14,9 @@ named where the file's own metadata names one.
 
 | Files | Title (from the file) | Creator | Where |
 |---|---|---|---|
-| `hero-dental-exam-*.webp` | Dentist examining a female patient with tools | Wavebreak Media | Homepage opening scene |
+| `hero-dental-exam-*.webp` | Dentist examining a female patient with tools | Wavebreak Media | Homepage opening scene; Contact page scene |
 | `smile-exam-*.webp` | Dentist examining female patient teeth | Wavebreak Media | Homepage closing scene |
-| `about-scene-*.webp` | Same photograph, lighter encoding for a darkened backdrop | Wavebreak Media | About page scene |
+| `about-scene-*.webp` | Same photograph, lighter encoding for a darkened backdrop | Wavebreak Media | About page scene; Testimonials page scene (mirrored), captioned "not a patient of the clinic" |
 | `dentist-uv-curing-*.webp` | UV lamp in use (dentist curing a filling) | not stated | Homepage booking section; Gallery page scene |
 | `dental-procedure-*.webp` | Patient in dental clinic during an operation | not stated | Treatments page scene |
 | `dental-instruments-*.webp` | Close-up of dentist instruments | not stated | Questions page scene |

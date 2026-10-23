@@ -874,3 +874,20 @@ widths) found nothing.
     Accessibility 100 and CLS 0 everywhere. Fonts now queue behind the
     photo; with `font-display: optional` a slow link may show the
     metric-matched fallback for that visit, never a layout shift.
+
+## Contact and Testimonials use the owner's photographs (2026-10-23)
+
+- **Contact:** the scene's backdrop is the dentist-with-mirror photograph
+  (the homepage hero's), captioned "Illustrative photograph".
+- **Testimonials:** the backdrop is the close-up smile, chosen because it
+  shows no recognisable face. A stock face beside "Words from patients"
+  would read as one of the reviewers.
+  - It is captioned "Illustrative photograph · not a patient of the clinic".
+  - It is mirrored so the smile sits in the lit right-hand side, not under
+    the text. The flip is on the wrapper, because the image's own transform
+    belongs to the push-in animation.
+- **Code:** a new `partials/scene-photo.ejs` (image + shade, optional
+  position and flip) serves both scenes; routes preload the backdrop.
+- **Contrast:** every line in both scenes is ≥ 6.95:1 at every width.
+- **Checks:** tests assert both captions. `npm test` passes 299/299, and the
+  width sweep found nothing.

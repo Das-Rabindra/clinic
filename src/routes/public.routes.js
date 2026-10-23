@@ -58,6 +58,11 @@ const GALLERY_SCENE = scenePhoto('dentist-uv-curing', 1600, 1068, [640, 1024, 16
 /* Its own lighter encoding: it sits under deep shade, so it needs far fewer
    bytes than the bright homepage copy of the same photograph. */
 const ABOUT_SCENE = scenePhoto('about-scene', 1600, 1422, [640, 1024, 1600, 2048]);
+const CONTACT_SCENE = scenePhoto('hero-dental-exam', 1600, 1067, [640, 1024, 1600, 2048]);
+/* A close-up with no recognisable face: beside "Words from patients" a stock
+   face would read as one of the reviewers. Captioned to say it is not. */
+const TESTIMONIALS_SCENE = ABOUT_SCENE;
+const scenePreload = (photo) => ({ preloadImage: photo.url, preloadSrcset: photo.srcset, preloadSizes: '100vw' });
 
 const CATEGORY_LABELS = {
   clinic: 'Clinic', reception: 'Reception', treatment_room: 'Treatment room',
@@ -543,6 +548,8 @@ router.get('/contact', async (req, res) => {
   res.render('public/contact', {
     ...base,
     pageCss: ['/css/home.css', '/css/pages.css'],
+    scenePhoto: CONTACT_SCENE,
+    ...scenePreload(CONTACT_SCENE),
     weekHours: weekHoursFor(clinic),
     hoursSummary: hoursSentence(clinic),
     addressHtml: addressHtmlFor(settings),
@@ -606,6 +613,8 @@ router.get('/testimonials', async (_req, res) => {
   res.render('public/testimonials', {
     ...base,
     pageCss: ['/css/home.css', '/css/pages.css'],
+    scenePhoto: TESTIMONIALS_SCENE,
+    ...scenePreload(TESTIMONIALS_SCENE),
     reviews, starsHtml, formatReviewDate,
     noindex: !reviews.reviews.length,
     meta: {

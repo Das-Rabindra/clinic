@@ -13,7 +13,8 @@
 <main id="main">
 
   <!-- ============ SCENE ============ -->
-  <section class="page-cine" data-hero aria-labelledby="pageTitle">
+  <section class="page-cine page-cine--photo" data-hero aria-labelledby="pageTitle">
+    <%- include('partials/scene-photo', { photo: scenePhoto }) %>
     <div class="container">
       <div class="page-cine__inner">
         <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Contact' }] }) %>
@@ -28,6 +29,7 @@
         </div>
       </div>
     </div>
+    <p class="page-cine__credit">Illustrative photograph</p>
   </section>
 
   <!-- ============ 01 · REACH THE CLINIC ============ -->

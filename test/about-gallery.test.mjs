@@ -73,6 +73,8 @@ describe('/testimonials', () => {
     assert.equal(r.status, 200);
     assertHeadingOrder(r.body, '/testimonials');
     assert.match(r.body, /Testimonials coming soon/);
+    // A stock photograph beside "Words from patients" must not pass as one.
+    assert.match(r.body, /Illustrative photograph &middot; not a patient of the clinic/);
     assert.match(r.body, /<meta name="robots" content="noindex, follow">/);
     assert.ok(!r.body.includes('class="testimony"'), 'no testimony cards');
     assert.ok(!r.body.includes('rating-hero'), 'no rating without reviews');
@@ -115,12 +117,13 @@ describe('/contact', () => {
     const r = await srv.call('/contact');
     assert.equal(r.status, 200);
     assertHeadingOrder(r.body, '/contact');
-    assert.match(r.body, /class="page-cine" data-hero/);
     assert.ok(r.body.includes('href="tel:'), 'call link');
     assert.ok(r.body.includes('data-callback-open'), 'call-back button');
     assert.match(r.body, /<iframe[^>]+data-src="https:\/\/[^"]*google[^"]*"/);
     assert.ok(r.body.includes('Annapurna Market Complex'));
     assert.equal((r.body.match(/<tr[ >]/g) || []).length, 7, 'seven days of hours');
+    assert.match(r.body, /class="page-cine page-cine--photo" data-hero/);
+    assert.match(r.body, /<p class="page-cine__credit">Illustrative photograph<\/p>/);
   });
 });
 
