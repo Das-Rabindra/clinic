@@ -628,9 +628,13 @@ describe('image provenance', () => {
       assert.match(after.alt, /^Illustration:/);
       assert.equal(after.is_stock, 1);
 
+      // The treatment page opens on one of the owner's photographs, captioned;
+      // the admin image now shows only on cards. Neither may carry the claim.
       const page = await srv.call('/services/teeth-whitening');
-      assert.match(page.body, /Illustrative image/, 'said plainly where the photo is largest');
+      assert.match(page.body, /<p class="page-cine__credit">Illustrative photograph<\/p>/, 'said plainly where a photo is largest');
       assert.ok(!page.body.includes('Before and after a smile makeover, Samal Dental Care'));
+      const list = await srv.call('/services');
+      assert.ok(!list.body.includes('Before and after a smile makeover, Samal Dental Care'));
     } finally {
       await servicesRepo.update(svc.id, { image_media_id: null });
       await run('DELETE FROM media WHERE id = ?', m.id);

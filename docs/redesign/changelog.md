@@ -944,3 +944,30 @@ cards.
 - **Checks:** a new test covers each mapping and caption, and confirms an
   unmapped treatment is untouched. `npm test` passes 303/303, and the width
   sweep (6 pages × 8 widths) found nothing.
+
+## Every treatment page uses the owner's photographs (2026-10-23)
+
+The remaining nine treatments now open on the owner's photographs too,
+chosen by what each shows nearest the treatment:
+
+| Treatment | Photograph |
+|---|---|
+| Cleaning, Whitening, Dentures | Smile close-up, mirrored so the smile sits in the lit side |
+| Gum Treatment, Aesthetic Dentistry | Exam with a mirror |
+| Root Canal | Procedure under way |
+| Crowns & Bridges | The implant render with its crown ("Illustration") |
+| Braces & Aligners | The curing light, which bonds brackets |
+| Pediatric Dentistry | The instruments; no photograph shows a child, and an adult would misrepresent the page |
+
+- **Template:** gains a `flip` option, applied on the wrapper because the
+  image's transform belongs to the push-in animation.
+- **Fallback:** the admin image remains on cards and is the scene for any
+  treatment added later. `treatmentScene()` is exported and its fallback is
+  unit-tested (still disclosed as illustrative when stock).
+- **Tests:** "every published treatment opens on a captioned new
+  photograph" replaces the per-slug test. The provenance test now checks
+  that the false clinic claim appears on neither the treatment page nor the
+  list.
+- **Contrast:** every line on all nine pages is ≥ 5.74:1 at every width.
+- **Checks:** `npm test` passes 303/303, and the sweep covered all 15
+  treatment pages × 8 widths.

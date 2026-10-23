@@ -96,36 +96,35 @@ describe('/services/:slug', () => {
     }
   });
 
-  test('a stock image is disclosed as illustrative where it is shown largest', async () => {
-    const { run, one } = await import('../src/db/index.js');
-    await run(`INSERT INTO media (storage,key,url,folder,mime,ext,bytes,width,height,alt,is_stock)
-               VALUES ('local','services/stock1','/media/stock1.webp','services','image/webp','webp',1,1280,720,'Illustration: a tooth',1)`);
-    const m = await one(`SELECT id FROM media WHERE key = 'services/stock1'`);
-    const svc = await servicesRepo.findPublicBySlug('dentures');
-    await servicesRepo.update(svc.id, { image_media_id: m.id });
-    const body = (await srv.call('/services/dentures')).body;
-    assert.match(body, /Illustrative image, not a photograph of the clinic/);
+  /* Every published treatment is mapped to one of the owner's photographs
+     today; a treatment added later falls back to its own admin image, which
+     must still be disclosed when it is stock. */
+  test('a treatment\'s own stock image is disclosed as illustrative where it is shown largest', async () => {
+    const { treatmentScene } = await import('../src/routes/public.routes.js');
+    const later = { slug: 'added-later', image_url: '/media/stock1.webp', image_width: 1280, image_height: 720, image_alt: 'A tooth', image_is_stock: 1 };
+    assert.equal(treatmentScene(later).caption, 'Illustrative image, not a photograph of the clinic');
+    assert.equal(treatmentScene(later).url, '/media/stock1.webp');
+    assert.equal(treatmentScene({ ...later, image_is_stock: 0 }).caption, null);
+    assert.equal(treatmentScene({ slug: 'added-later', image_url: null }), null);
   });
 });
 
 describe('treatment page scenes', () => {
-  test('treatments a new photograph depicts use it, captioned; others keep their own image', async () => {
-    const want = {
-      'general-dentistry': ['hero-dental-exam-1600', 'Illustrative photograph'],
-      'dental-fillings': ['dentist-uv-curing-1600', 'Illustrative photograph'],
-      'tooth-extraction': ['dental-procedure-1600', 'Illustrative photograph'],
-      'wisdom-tooth': ['dental-procedure-1600', 'Illustrative photograph'],
-      'dental-implants': ['dental-implant-scene-1600', 'Illustration'],
-      'dental-emergency': ['dental-instruments-1600', 'Illustrative photograph'],
-    };
-    for (const [slug, [file, caption]] of Object.entries(want)) {
+  test('every published treatment opens on one of the owner\'s photographs, captioned', async () => {
+    for (const { slug } of await servicesRepo.publicSlugs()) {
       const body = (await srv.call(`/services/${slug}`)).body;
-      assert.ok(body.includes(`/img/stock/${file}.webp`), `${slug} uses ${file}`);
-      assert.ok(body.includes(`<p class="page-cine__credit">${caption}</p>`), `${slug} is captioned`);
+      const scene = body.slice(body.indexOf('<main'), body.indexOf('CHAPTERS'));
+      assert.match(scene, /<img src="\/img\/stock\/[a-z-]+-1600\.webp"/, `${slug} uses a new photograph`);
+      assert.match(scene, /<p class="page-cine__credit">(Illustrative photograph|Illustration)<\/p>/, `${slug} is captioned`);
     }
-    // A treatment not on the list is untouched: no new photograph.
-    const rct = (await srv.call('/services/root-canal-treatment')).body;
-    assert.ok(!/\/img\/stock\/(hero-dental-exam|dentist-uv-curing|dental-procedure|dental-instruments)-/.test(rct.slice(rct.indexOf('<main'), rct.indexOf('CHAPTERS'))));
+    // Spot-check the closest depictions.
+    const want = {
+      'dental-fillings': 'dentist-uv-curing', 'tooth-extraction': 'dental-procedure',
+      'dental-implants': 'dental-implant-scene', 'teeth-whitening': 'about-scene',
+    };
+    for (const [slug, file] of Object.entries(want)) {
+      assert.ok((await srv.call(`/services/${slug}`)).body.includes(`/img/stock/${file}-1600.webp`), `${slug} uses ${file}`);
+    }
   });
 });
 

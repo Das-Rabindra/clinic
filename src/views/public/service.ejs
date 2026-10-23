@@ -26,7 +26,9 @@
       presented without that, it reads as the clinic's own work. %>
   <section class="page-cine<%= scene ? ' page-cine--photo' : '' %>" data-hero aria-labelledby="txTitle">
     <% if (scene) { %>
-    <div class="page-cine__media">
+    <%# A flip goes on the wrapper: the image's own transform belongs to the
+        push-in animation, which would override it. %>
+    <div class="page-cine__media"<% if (scene.flip) { %> style="transform: scaleX(-1)"<% } %>>
       <img src="<%= scene.url %>"<% if (scene.srcset) { %> srcset="<%= scene.srcset %>" sizes="100vw"<% } %> alt="<%= scene.alt %>"
            width="<%= scene.width %>" height="<%= scene.height %>"
            fetchpriority="high" decoding="async"<% if (scene.position) { %> style="object-position: <%= scene.position %>"<% } %>>

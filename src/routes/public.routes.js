@@ -70,34 +70,51 @@ const BOOK_SCENE = scenePhoto('dentist-uv-curing', 1600, 1068, [640, 1024, 1600,
    opens on something friendly. Rendered by middleware/error.js. */
 export const NOT_FOUND_SCENE = ABOUT_SCENE;
 
-/* Treatment pages whose own subject one of the owner's photographs actually
-   shows: the scene behind the title uses it instead of the treatment's
-   admin image (which still appears on the treatment's cards). Only where the
-   photograph depicts the treatment: a check-up, a curing light setting a
-   filling, oral surgery, an implant, and, for emergency care (which has no
-   image), the instruments. Every other treatment keeps its own specific
-   image. */
+/* The scene behind each treatment page's title, from the owner's
+   photographs (Oct 2026), instead of the treatment's admin image. That image
+   still appears on the treatment's cards, and is the fallback for any
+   treatment added later and not listed here. Closest depictions first: a
+   check-up, a curing light setting a filling, oral surgery, an implant, and
+   for emergency care (which had no image) the instruments. */
 const PHOTO = { caption: 'Illustrative photograph' };
+const EXAM = { ...scenePhoto('hero-dental-exam', 1600, 1067, [640, 1024, 1600, 2048]), ...PHOTO };
+const PROCEDURE = { ...scenePhoto('dental-procedure', 1600, 1067, [1024, 1600, 2048]), ...PHOTO };
+/* Mirrored, as on Testimonials, so the smile sits in the lit side. */
+const SMILE = { ...ABOUT_SCENE, ...PHOTO, flip: true, position: '50% 55%' };
+/* The render with its flat blue backdrop extended on the left, so the
+   implant itself sits in the lit side rather than under the words. */
+const IMPLANT = { ...scenePhoto('dental-implant-scene', 1600, 680, [1024, 1600, 2048]), caption: 'Illustration', position: '78% 60%' };
 const TREATMENT_SCENES = {
-  'general-dentistry': { ...scenePhoto('hero-dental-exam', 1600, 1067, [640, 1024, 1600, 2048]), ...PHOTO,
+  'general-dentistry': { ...EXAM,
     alt: 'A dentist examining a patient\'s teeth with a mouth mirror (illustrative photograph)' },
   'dental-fillings': { ...BOOK_SCENE, ...PHOTO,
     alt: 'A dentist setting a filling with a curing light (illustrative photograph)' },
-  'tooth-extraction': { ...scenePhoto('dental-procedure', 1600, 1067, [1024, 1600, 2048]), ...PHOTO,
+  'tooth-extraction': { ...PROCEDURE,
     alt: 'A dentist working with forceps during oral surgery (illustrative photograph)' },
-  'wisdom-tooth': { ...scenePhoto('dental-procedure', 1600, 1067, [1024, 1600, 2048]), ...PHOTO,
+  'wisdom-tooth': { ...PROCEDURE,
     alt: 'A dentist working with forceps during oral surgery (illustrative photograph)' },
-  /* The render with its flat blue backdrop extended on the left, so the
-     implant itself sits in the lit side rather than under the words. */
-  'dental-implants': { ...scenePhoto('dental-implant-scene', 1600, 680, [1024, 1600, 2048]),
-    caption: 'Illustration', position: '78% 60%',
+  'dental-implants': { ...IMPLANT,
     alt: 'A tooth, a dental implant and a mouth mirror (illustration)' },
   'dental-emergency': { ...PRIVACY_SCENE, ...PHOTO, alt: '', position: '70% 30%' },
+  /* The rest, by what each photograph shows nearest the treatment: a smile
+     for whitening, cleaning and dentures; a mirror at the gums for gum care
+     and aesthetics; a procedure under way for root canals; a crown for
+     crowns; the curing light that bonds brackets for braces. None shows a
+     child, so pediatric care gets the instruments rather than an adult. */
+  'dental-cleaning': { ...SMILE, alt: 'A dentist checking a patient\'s teeth with a probe and mirror (illustrative photograph)' },
+  'teeth-whitening': { ...SMILE, alt: 'A close-up of a bright, white smile (illustrative photograph)' },
+  'dentures': { ...SMILE, alt: 'A close-up of a full, even smile (illustrative photograph)' },
+  'gum-treatment': { ...EXAM, alt: 'A dentist examining a patient\'s teeth and gums with a mouth mirror (illustrative photograph)' },
+  'aesthetic-dentistry': { ...EXAM, alt: 'A close-up of an even smile during an examination (illustrative photograph)' },
+  'root-canal-treatment': { ...PROCEDURE, alt: 'A dental procedure under way (illustrative photograph)' },
+  'crowns-bridges': { ...IMPLANT, alt: 'A tooth and a crowned dental implant (illustration)' },
+  'braces-aligners': { ...BOOK_SCENE, ...PHOTO, alt: 'A dentist using a curing light, as used to bond brackets (illustrative photograph)' },
+  'pediatric-dentistry': { ...PRIVACY_SCENE, ...PHOTO, alt: '', position: '70% 30%' },
 };
 
 /** The scene behind a treatment page's title: a mapped photograph, or the
     treatment's own image, disclosed as illustrative when it is stock. */
-function treatmentScene(service) {
+export function treatmentScene(service) {
   if (TREATMENT_SCENES[service.slug]) return TREATMENT_SCENES[service.slug];
   if (!service.image_url) return null;
   return {
