@@ -32,6 +32,20 @@ const CLINIC_PHOTO = {
   caption: 'The treatment room, Samal Dental Care',
 };
 
+/* The homepage's opening photograph, chosen by the owner in October 2026:
+   a free stock image (Freepik; credited in the footer), so it is captioned
+   as illustrative wherever it shows. Never used for link previews: a shared
+   link shows the clinic's own room, not stock people. */
+const HERO_PHOTO = {
+  url: '/img/stock/hero-dental-exam-1600.webp',
+  srcset: '/img/stock/hero-dental-exam-640.webp 640w, /img/stock/hero-dental-exam-1024.webp 1024w, /img/stock/hero-dental-exam-1600.webp 1600w, /img/stock/hero-dental-exam-2048.webp 2048w',
+  width: 1600,
+  height: 1067,
+  alt: 'Illustrative photograph: a dentist examining a patient\'s teeth with a mouth mirror',
+  caption: 'Illustrative photograph',
+  stock: true,
+};
+
 const CATEGORY_LABELS = {
   clinic: 'Clinic', reception: 'Reception', treatment_room: 'Treatment room',
   exterior: 'Exterior', equipment: 'Equipment', waiting_area: 'Waiting area',
@@ -251,14 +265,13 @@ router.get('/', async (req, res) => {
   const heroMedia = settings.hero_media_id ? await mediaRepo.findById(settings.hero_media_id) : null;
   const doctorMedia = doctor?.photo_media_id ? await mediaRepo.findById(doctor.photo_media_id) : null;
 
-  /* A genuine photograph of the clinic beats licensed stock. The admin's own
-     hero choice is used unless it is flagged as stock, in which case the
-     clinic's treatment-room photograph (supplied by the clinic, bundled with
-     the site) takes its place. */
-  const heroImage = heroMedia && !heroMedia.is_stock ? heroMedia : CLINIC_PHOTO;
+  /* A hero photograph the clinic uploads itself (not flagged as stock) wins;
+     otherwise the owner's chosen opening photograph. */
+  const heroImage = heroMedia && !heroMedia.is_stock ? heroMedia : HERO_PHOTO;
 
   const metaTags = seo.meta(settings);
-  if (!metaTags.ogImage) metaTags.ogImage = new URL(heroImage.url, metaTags.canonical).toString();
+  /* Link previews show the clinic's own room, never the stock hero. */
+  if (!metaTags.ogImage) metaTags.ogImage = new URL((heroImage.stock ? CLINIC_PHOTO : heroImage).url, metaTags.canonical).toString();
 
   const todayRow = clinic.hours.find(h => h.weekday === clinic.today.weekdayIndex);
   const galleryMode = gallery.length === 0 ? 'empty'
@@ -318,6 +331,9 @@ router.get('/services', async (_req, res) => {
   res.render('public/services', {
     ...base,
     cards,
+    preloadImage: '/img/stock/dental-procedure-1600.webp',
+    preloadSrcset: '/img/stock/dental-procedure-1024.webp 1024w, /img/stock/dental-procedure-1600.webp 1600w, /img/stock/dental-procedure-2048.webp 2048w',
+    preloadSizes: '100vw',
     meta: {
       title: `Dental Treatments${town ? ` in ${town}` : ''} | ${base.settings.name}`,
       description: base.settings.services_lede || base.settings.seo_description || '',
@@ -610,6 +626,9 @@ router.get('/faq', async (_req, res) => {
   res.render('public/faq', {
     ...base,
     groups,
+    preloadImage: '/img/stock/dental-instruments-1600.webp',
+    preloadSrcset: '/img/stock/dental-instruments-1024.webp 1024w, /img/stock/dental-instruments-1600.webp 1600w, /img/stock/dental-instruments-2048.webp 2048w',
+    preloadSizes: '100vw',
     total: groups.reduce((n, g) => n + g.faqs.length, 0),
     meta: {
       title: `Questions patients ask | ${settings.name}`,

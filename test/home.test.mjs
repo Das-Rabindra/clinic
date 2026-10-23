@@ -74,12 +74,15 @@ describe('homepage content', () => {
     assert.match(await home(), /id="appointment" data-bar-yield/);
   });
 
-  test('a stock hero image gives way to the clinic\'s own photograph', async () => {
+  /* The owner chose a stock photograph for the opening scene (Oct 2026).
+     It must say so, and a shared link must still show the clinic itself. */
+  test('the stock hero is labelled illustrative; link previews show the clinic\'s own room', async () => {
     const body = await home();
-    assert.match(body, /src="\/img\/clinic\/treatment-room-1086\.webp"/);
-    assert.match(body, /srcset="\/img\/clinic\/treatment-room-480\.webp 480w/);
-    const img = await srv.call('/img/clinic/treatment-room-720.webp');
-    assert.equal(img.status, 200);
+    assert.match(body, /<img src="\/img\/stock\/hero-dental-exam-1600\.webp" alt="Illustrative photograph: /);
+    assert.match(body, /class="cine-hero__caption"[^>]*>(?:<span[^>]*><\/span>)?Illustrative photograph</);
+    assert.match(body, /<meta property="og:image" content="[^"]*\/img\/clinic\/treatment-room-1086\.webp"/);
+    // The clinic's own photograph is still served for About and the gallery.
+    assert.equal((await srv.call('/img/clinic/treatment-room-720.webp')).status, 200);
   });
 
   test('no rating markup while there are no genuine reviews', async () => {
@@ -267,11 +270,13 @@ describe('cinematic layer', () => {
   test('every stock photograph is captioned as illustrative; the clinic photo carries real alt text', async () => {
     const body = await home();
     const stock = (body.match(/<img src="\/img\/stock\//g) || []).length;
-    // "Illustration" for a render, "Illustrative photograph" for a photo.
-    const notes = (body.match(/class="illustrative-note">(?:Illustrative photograph|Illustration)</g) || []).length;
+    // "Illustration" for a render, "Illustrative photograph" for a photo; the
+    // hero's caption is set like a film still's.
+    const notes = (body.match(/class="(?:illustrative-note|cine-hero__caption)"[^>]*>(?:<span[^>]*><\/span>)?(?:Illustrative photograph|Illustration)</g) || []).length;
     assert.ok(stock > 0);
     assert.equal(notes, stock, 'one caption per stock image');
-    assert.match(body, /<img src="\/img\/clinic\/treatment-room-1086\.webp" alt="The treatment room at Samal Dental Care/);
+    // A shared link shows the clinic's own room, never stock people.
+    assert.match(body, /<meta property="og:image" content="[^"]*\/img\/clinic\/treatment-room-1086\.webp"/);
   });
 
   test('every licence is recorded for the stock images', async () => {
@@ -281,7 +286,6 @@ describe('cinematic layer', () => {
       const base = f.replace(/-\d+\.webp$/, '');
       assert.ok(credits.includes(base), `${base} missing from CREDITS.md`);
     }
-    assert.match(credits, /CC0 1\.0/);
   });
 });
 

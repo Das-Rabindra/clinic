@@ -291,3 +291,5 @@
 .closing__frame img { width: 100%; aspect-ratio: 1; object-fit: cover; }
 @media (min-width: 1024px) { .closing__grid { grid-template-columns: 1.2fr 1fr; gap: var(--space-16); } }
 
+.site-footer__credit { display: block; margin-top: var(--space-1); font-size: 0.75rem; color: var(--color-night-muted); }
+.site-footer__bottom .site-footer__credit a { display: inline; min-height: 0; color: var(--color-night-ink); text-decoration: underline; text-underline-offset: 0.2em; }

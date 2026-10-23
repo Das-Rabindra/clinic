@@ -767,3 +767,58 @@ about 1 run in 6 before). `npm test` passes 295/295.
 - **Clean-up:** the leaf files are removed.
 - **Test:** the caption test accepts either caption, still one per stock
   image.
+
+## Owner's free photographs placed (2026-10-23)
+
+The owner supplied free stock photographs (Freepik; two credit Wavebreak
+Media in their metadata) and chose where three go.
+
+**Placements:**
+
+| Photo | Where |
+|---|---|
+| Dentist examining a female patient with tools | Homepage opening scene (owner's choice) |
+| Dentist curing a filling with UV light | Beside "Book an appointment" (was the dental lamp) |
+| Dentist examining a female patient's teeth | Beside "Your smile deserves attentive, modern care" (was the bamboo toothbrushes) |
+| Patient during a procedure | Treatments page scene |
+| Gloved hand with instruments | Questions page scene; the plain studio backdrop is extended on the left so the instruments sit right, clear of the text |
+
+**Honesty rules:**
+- Every one is captioned "Illustrative photograph", including the hero
+  caption on phones (it had been desktop-only). The hero's alt text also
+  starts "Illustrative photograph:".
+- Link previews (og:image) keep the clinic's own treatment-room photo, so a
+  shared link never shows stock people as the clinic.
+- The real photo still appears on About and in the gallery.
+- A clinic-uploaded (non-stock) hero in the admin still takes priority.
+
+**Attribution:** the Freepik free licence requires it.
+- The footer reads "Illustrative photographs by Wavebreak Media and others
+  on Freepik".
+- `CREDITS.md` has a Freepik section listing each file, its title and
+  creator where the metadata names one.
+- The unused CC0 lamp and toothbrush files are removed.
+
+**Contrast:** photo scenes (Treatments, Questions and every treatment page)
+now use the hero's approach.
+- Desktop: ~90% night over the text column, with the photo clear on the
+  right.
+- Phones: the photo as a band at the top, with the text on solid night
+  below.
+- Measured worst case over the photo:
+
+  | Element | Before | Now |
+  |---|---|---|
+  | Eyebrow on phones | as low as 2.5 | 7.4–9.2 at every width |
+  | Headline on phones | as low as 3.2 | 7.6–11.6 at every width |
+  | Breadcrumbs | — | 7.8–12.8 |
+  | Hero, every line | — | ≥ 5.05 |
+
+**Encoding:** WebP at sizes for each slot, with metadata stripped. The hero
+is 25KB at 1600px.
+
+**Tests:** the old "stock hero gives way to the clinic photo" test is
+replaced to match the owner's decision: the hero is labelled illustrative
+and og:image is the clinic's room. The caption-count test now includes the
+hero caption. `npm test` passes 299/299, and the width sweep (5 pages × 8
+widths) found nothing.

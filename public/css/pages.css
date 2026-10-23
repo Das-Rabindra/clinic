@@ -19,13 +19,31 @@
 .page-cine__media img { width: 100%; height: 100%; object-fit: cover; }
 .motion .page-cine__media img { animation: cine-push 2600ms var(--ease-cinema) both; }
 @keyframes cine-push { from { transform: scale(1.12); } to { transform: scale(1); } }
-/* Strongest where the text sits — same rule as the homepage hero. */
+/* Same rule as the homepage hero: darkness where the words sit (the left
+   column and the foot), light where the photograph shows (the right). The
+   text column stays ≥ ~90% night, so every line holds 4.5:1 over the
+   brightest pixels behind it, whatever the photograph. */
+.page-cine__media img { filter: saturate(0.88) contrast(1.05) brightness(0.92); }
 .page-cine__shade {
   position: absolute; inset: 0; z-index: -1;
   background:
-    linear-gradient(180deg, rgba(12, 57, 54, 0.8) 0, rgba(12, 57, 54, 0) 170px),
-    linear-gradient(0deg, rgba(12, 57, 54, 0.95) 0%, rgba(12, 57, 54, 0.82) 40%, rgba(12, 57, 54, 0.45) 75%, rgba(12, 57, 54, 0.3) 100%),
-    linear-gradient(90deg, rgba(12, 57, 54, 0.6) 0%, rgba(12, 57, 54, 0) 70%);
+    linear-gradient(180deg, rgba(6, 32, 30, 0.8) 0, rgba(6, 32, 30, 0) 170px),
+    radial-gradient(125% 95% at 75% 40%, rgba(6, 32, 30, 0) 35%, rgba(6, 32, 30, 0.55) 100%),
+    linear-gradient(0deg, rgba(8, 42, 39, 0.97) 0%, rgba(8, 42, 39, 0.86) 32%, rgba(8, 42, 39, 0.45) 66%, rgba(8, 42, 39, 0.2) 100%),
+    linear-gradient(90deg, rgba(8, 42, 39, 0.94) 0%, rgba(8, 42, 39, 0.9) 45%, rgba(8, 42, 39, 0.55) 62%, rgba(8, 42, 39, 0) 82%);
+}
+/* Phones: the words fill the width, so the photograph gets the top of the
+   screen to itself, like the homepage's establishing shot, and the words sit
+   below it on deep night. */
+@media (max-width: 767px) {
+  .page-cine--photo { min-height: 0; display: block; padding-top: calc(var(--header-height) + 26svh); }
+  .page-cine--photo .page-cine__media { inset: 0 0 auto 0; height: calc(var(--header-height) + 40svh); }
+  .page-cine--photo .page-cine__shade {
+    background:
+      linear-gradient(180deg, rgba(6, 32, 30, 0.75) 0, rgba(6, 32, 30, 0) 120px),
+      linear-gradient(180deg, rgba(8, 42, 39, 0) calc(var(--header-height) + 12svh), rgba(8, 42, 39, 0.92) calc(var(--header-height) + 26svh), var(--color-night) calc(var(--header-height) + 36svh));
+  }
+  .page-cine--photo .page-cine__credit { top: calc(var(--header-height) + 26svh - 2rem); bottom: auto; color: var(--color-night-ink); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); }
 }
 /* A faint ring gives the photo-less scenes depth without any decorative
    imagery. */

@@ -60,7 +60,11 @@
     <p class="site-footer__wordmark" aria-hidden="true" data-reveal="wordmark"><span class="site-footer__word"><span>Samal</span></span> <span class="site-footer__word"><em>Dental</em></span> <span class="site-footer__word"><span>Care</span></span></p>
 
     <div class="site-footer__bottom">
-      <span>&copy; <%= new Date().getFullYear() %> <%= clinic.name %></span>
+      <span>&copy; <%= new Date().getFullYear() %> <%= clinic.name %>
+        <%# Required by the Freepik free licence. The photographs are
+            illustrative and captioned as such where they appear. %>
+        <span class="site-footer__credit">Illustrative photographs by Wavebreak Media and others on <a href="https://www.freepik.com" target="_blank" rel="noopener">Freepik</a></span>
+      </span>
       <span class="site-footer__bottom-links">
         <a href="/privacy">Privacy &amp; appointment policy</a>
         <a href="#main" class="site-footer__top">Back to top <span aria-hidden="true">&uarr;</span></a>

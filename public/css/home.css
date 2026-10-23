@@ -44,7 +44,7 @@
 @media (max-width: 767px) {
   .cine-hero { min-height: 0; padding-top: calc(var(--header-height) + 30svh); }
   .cine-hero__media { inset: 0 0 auto 0; height: calc(var(--header-height) + 46svh); }
-  .cine-hero__frame img { object-position: 50% 40%; }
+  .cine-hero__frame img { object-position: 76% 45%; }
   .cine-hero__shade {
     background:
       linear-gradient(180deg, rgba(6, 32, 30, 0.75) 0, rgba(6, 32, 30, 0) 120px),
@@ -66,7 +66,13 @@
   font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-night-muted);
 }
 .cine-hero__caption-mark { width: 2.5rem; height: 1px; background: currentColor; opacity: 0.6; }
-@media (max-width: 1023px) { .cine-hero__caption { display: none; } }
+/* Phones: the caption sits at the foot of the photograph band. It must
+   show at every width when the photograph is stock. */
+@media (max-width: 767px) {
+  .cine-hero__caption { top: calc(var(--header-height) + 30svh - 2.25rem); bottom: auto; right: var(--gutter); color: var(--color-night-ink); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); }
+  .cine-hero__caption-mark { display: none; }
+}
+@media (min-width: 768px) and (max-width: 1023px) { .cine-hero__caption { bottom: var(--space-20, 5rem); } }
 .motion .cine-hero__caption { animation: cine-fade 1200ms var(--ease-cinema) 1200ms both; }
 
 .cine-hero__content {
@@ -289,3 +295,4 @@
 .section-foot { margin-top: var(--space-12); text-align: center; }
 .profile__more { margin-top: var(--space-8); }
 .visit__more { margin-top: var(--space-8); }
+.closing__frame img { object-position: 38% 55%; }

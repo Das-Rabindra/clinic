@@ -3,20 +3,22 @@
 These images are **illustrative**. They are not photographs of Samal Dental
 Care, its staff or its patients, and the site never captions them as such.
 
-## Public domain
+## Free licence: Freepik
 
-Each of these is dedicated to the public domain under **CC0 1.0**
-(https://creativecommons.org/publicdomain/zero/1.0/). Commercial use is
-permitted and no attribution is required. They are credited here, and on the
-privacy page, as a courtesy.
+Free photographs from Freepik (https://www.freepik.com), used under the
+Freepik free licence, which requires attribution: the site footer reads
+"Illustrative photographs by Wavebreak Media and others on Freepik". Each is
+captioned "Illustrative photograph" where it appears. Supplied by the clinic
+owner on 23 Oct 2026; re-encoded to WebP, metadata stripped. The creator is
+named where the file's own metadata names one.
 
-| Files | Title | Creator | Source |
+| Files | Title (from the file) | Creator | Where |
 |---|---|---|---|
-| `dental-lamp-*.webp` | Free dentist lamp image | not stated (rawpixel, public domain) | https://www.rawpixel.com/image/5925133/ |
-| `bamboo-toothbrushes-*.webp` | Cozy still life of bamboo toothbrushes with toothpaste on a bamboo mat | Nora Ferreirós | https://wordpress.org/photos/photo/574641d8aa/ |
-
-Found through Openverse (CC0 / public-domain filter), downloaded and
-self-hosted. Nothing is hotlinked. Re-encoded to WebP; no metadata is kept.
+| `hero-dental-exam-*.webp` | Dentist examining a female patient with tools | Wavebreak Media | Homepage opening scene |
+| `smile-exam-*.webp` | Dentist examining female patient teeth | Wavebreak Media | Homepage closing scene |
+| `dentist-uv-curing-*.webp` | UV lamp in use (dentist curing a filling) | not stated | Homepage booking section |
+| `dental-procedure-*.webp` | Patient in dental clinic during an operation | not stated | Treatments page scene |
+| `dental-instruments-*.webp` | Close-up of dentist instruments | not stated | Questions page scene |
 
 ## Licensed
 
