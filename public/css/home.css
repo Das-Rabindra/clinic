@@ -246,18 +246,70 @@
 .carousel__controls .button { min-width: var(--target-min); min-height: var(--target-min); padding: 0; }
 
 /* ── 05 · Words from patients ─────────────────────────────────────────── */
-.rating-summary { display: flex; align-items: center; justify-content: center; gap: var(--space-4); margin-bottom: var(--space-8); }
-.rating-summary__score { font-family: var(--font-display); font-size: 3rem; font-weight: var(--weight-regular); line-height: 1; }
+/* ── 05 · Words from patients: press quotes ───────────────────────────────
+   Light, between two night sections, and cinematic through type: a large
+   rating numeral, then a wall of quotes led by one big pull-quote; or, while
+   there are none, an honest "coming soon" staged around one giant mark. */
 .stars { display: inline-flex; gap: 2px; }
 .stars svg { width: 1.1rem; height: 1.1rem; stroke: var(--color-warning-text); }
 .stars .star-on { fill: var(--color-warning-text); }
 .stars .star-off { fill: none; }
-.review-card { height: 100%; }
-.review-card p { font-family: var(--font-display); font-size: 1.125rem; line-height: 1.6; }
-.review-card__author { display: flex; flex-direction: column; margin-top: auto; padding-top: var(--space-3); }
-.reviews-empty { position: relative; border-style: solid; border-color: var(--color-border-subtle); background: var(--color-surface); padding-top: var(--space-16); }
-.reviews-empty__mark { position: absolute; top: -0.15em; left: 50%; transform: translateX(-50%); font-family: var(--font-display); font-size: 9rem; line-height: 1; color: var(--color-accent-sage); }
-.reviews-empty h3 { font-size: clamp(1.4rem, 1.2rem + 0.8vw, 1.8rem); font-weight: var(--weight-regular); }
+
+.rating-hero-light { display: flex; align-items: center; gap: var(--space-5); margin-bottom: var(--space-10); }
+.rating-hero-light__score { font-family: var(--font-display); font-size: clamp(3.5rem, 2.6rem + 3.6vw, 6rem); line-height: 1; color: var(--color-text); }
+.rating-hero-light p { margin-top: var(--space-1); }
+
+.quote-wall { display: grid; gap: var(--gap-md); grid-template-columns: 1fr; }
+.review-card { position: relative; height: 100%; overflow: hidden; }
+.review-card .card__body { gap: var(--space-4); padding: var(--space-8) var(--space-6) var(--space-6); }
+.review-card__mark { position: absolute; top: -0.1em; right: var(--space-5); font-family: var(--font-display); font-size: 6rem; line-height: 1; color: var(--color-accent-sage); pointer-events: none; }
+.review-card__text { margin: 0; }
+.review-card__text p { font-family: var(--font-display); font-size: 1.125rem; line-height: 1.6; color: var(--color-text); }
+.review-card__author { display: flex; flex-direction: column; margin-top: auto; padding-top: var(--space-4); border-top: 1px solid var(--color-border-subtle); }
+/* The lead quote: the size of a film poster's pull-quote. */
+.quote-wall > .review-card:first-child .review-card__text p { font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.1rem); line-height: 1.4; font-style: italic; }
+.quote-wall > .review-card:first-child .review-card__mark { font-size: 10rem; }
+@media (min-width: 768px) {
+  .quote-wall { grid-template-columns: repeat(2, 1fr); }
+  .quote-wall > .review-card:first-child { grid-column: 1 / -1; }
+}
+@media (min-width: 1024px) {
+  .quote-wall { grid-template-columns: repeat(3, 1fr); }
+  .quote-wall > .review-card:first-child { grid-column: span 2; grid-row: span 2; }
+  .quote-wall > .review-card:first-child .card__body { padding: var(--space-12) var(--space-10) var(--space-8); display: flex; flex-direction: column; justify-content: center; }
+  .quote-wall > .review-card:first-child .review-card__author { margin-top: var(--space-8); }
+}
+.reviews-foot { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--space-4) var(--space-8); }
+
+/* No testimonials yet: the giant mark is the image. */
+.reviews-stage { display: grid; gap: var(--space-12); align-items: start; }
+.reviews-stage > * { min-width: 0; }
+.reviews-stage__soon { position: relative; isolation: isolate; padding-top: clamp(5.5rem, 4rem + 6vw, 9rem); }
+/* Inside its own block, never up into the heading above. */
+.reviews-stage__mark {
+  position: absolute; z-index: -1; top: -0.06em; left: -0.06em;
+  font-family: var(--font-display); font-style: italic; font-size: clamp(12rem, 8rem + 14vw, 22rem); line-height: 1;
+  color: var(--color-accent-sage); pointer-events: none;
+}
+.reviews-stage__soon h3 { font-size: clamp(2rem, 1.5rem + 2vw, 3rem); line-height: 1.1; letter-spacing: -0.015em; font-weight: var(--weight-regular); }
+.reviews-stage__soon p { margin-top: var(--space-5); max-width: 34rem; font-size: var(--text-body-lg); line-height: 1.7; color: var(--color-text-muted); }
+.reviews-stage__share .eyebrow-label { display: block; margin-bottom: var(--space-4); }
+.share-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--color-border-subtle); }
+.share-list > li { display: grid; grid-template-columns: 2.5rem 1fr; gap: var(--space-4); padding-block: var(--space-6); border-bottom: 1px solid var(--color-border-subtle); }
+.share-list__n { font-family: var(--font-display); font-style: italic; font-size: 1.4rem; line-height: 1.2; color: var(--color-primary); }
+.share-list h3 { font-size: 1.35rem; font-weight: var(--weight-regular); }
+.share-list p { margin-top: var(--space-2); }
+.share-list .button, .share-list .cluster { margin-top: var(--space-4); }
+.share-list__qr { grid-column: 2; display: inline-block; width: 128px; }
+.share-list__qr img { width: 128px; height: 128px; border-radius: var(--radius-sm); border: 1px solid var(--color-border-subtle); background: #fff; }
+@media (min-width: 600px) {
+  .share-list > li { grid-template-columns: 2.5rem 1fr auto; align-items: start; }
+  .share-list__qr { grid-column: 3; }
+}
+@media (min-width: 1024px) {
+  .reviews-stage { grid-template-columns: 1.1fr 1fr; gap: var(--space-16); }
+}
+
 .review-qr { display: grid; gap: var(--space-6); align-items: center; max-width: 44rem; margin: var(--space-10) auto 0; padding: var(--space-6); }
 .review-qr__code img { width: 160px; height: 160px; border-radius: var(--radius-sm); border: 1px solid var(--color-border-subtle); }
 .review-qr__text > * + * { margin-top: var(--space-2); }

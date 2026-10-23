@@ -1119,3 +1119,27 @@ illustrative photographs had been used 2–4 times each.
 - **Clean-up:** the old `gallery-grid-ds` and `gallery-feature` styles are
   removed, and the tests now check the new layouts. `npm test` passes
   307/307.
+
+## Homepage testimonials: press quotes (2026-10-23)
+
+- **Stays light:** chapter 05 sits between two night sections, so it is
+  made cinematic by type and composition rather than colour.
+- **Heading:** editorial, with "genuine feedback only… nothing here is
+  written by the clinic" stated beside it.
+- **With reviews:**
+  - A large rating numeral, saying what it is based on.
+  - A wall of quotes: the first is a 2×2 lead pull-quote in large italic,
+    with five more filling the grid exactly (six at most; the rest are on
+    /testimonials).
+  - Each card has a sage quotation mark.
+  - Links to "All testimonials" and the Google reviews.
+- **Without reviews (today):**
+  - "Testimonials coming soon" staged around one giant italic quotation
+    mark, kept inside its block so it never rides into the heading.
+  - Beside it, "Been to the clinic?" gives the two ways to share,
+    numbered: a Google review (button plus the QR code) or telling the
+    clinic (WhatsApp, call), with the permission rule.
+- **Preview:** the same template drives `/_preview/testimonials`, and every
+  sample card is still labelled "Sample".
+- **Checks:** `npm test` passes 307/307. The width sweep (home and preview)
+  found nothing.
