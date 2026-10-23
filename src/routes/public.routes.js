@@ -253,6 +253,8 @@ router.get('/', async (req, res) => {
     galleryMode,
     preloadImage: heroImage.url,
     preloadSrcset: heroImage.srcset || null,
+    preloadSizes: '100vw',      // must match the hero <img sizes>, or the image downloads twice
+    preloadItalic: true,        // the hero headline's last line is set in Lora italic
     emergency: services.find(s => s.slug === 'dental-emergency') || null,
     ...(() => {
       /* The homepage leads with six treatments and lists the rest. Emergency

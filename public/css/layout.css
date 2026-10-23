@@ -154,6 +154,8 @@
 .site-footer__wordmark {
   margin-top: var(--space-12); overflow: hidden;
   font-family: var(--font-display); font-weight: var(--weight-regular); letter-spacing: -0.03em; line-height: 0.9;
-  font-size: clamp(2.6rem, 0.6rem + 9.6vw, 10rem); color: var(--color-accent-sage); white-space: nowrap;
+  /* Large text: 3:1 is the floor even for a decorative wordmark — #64958C
+     is 3.37:1 on white; the italic word is the brand primary, 7.56:1. */
+  font-size: clamp(2.6rem, 0.6rem + 9.6vw, 10rem); color: #64958C; white-space: nowrap;
 }
-.site-footer__wordmark em { font-style: italic; color: color-mix(in srgb, var(--color-primary) 30%, var(--color-accent-sage)); }
+.site-footer__wordmark em { font-style: italic; color: var(--color-primary); }

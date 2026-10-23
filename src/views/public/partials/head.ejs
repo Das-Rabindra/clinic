@@ -31,7 +31,7 @@
     because the swap to Fraunces changed the header's height and shifted the
     whole page. The two faces used above the fold are preloaded. %>
 <link rel="preload" href="/fonts/lora-var-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/lora-italic-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+<% if (typeof preloadItalic !== 'undefined' && preloadItalic) { %><link rel="preload" href="/fonts/lora-italic-var-latin.woff2" as="font" type="font/woff2" crossorigin><% } %>
 <link rel="preload" href="/fonts/inter-400-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/ds.css">
 <link rel="stylesheet" href="/css/layout.css">
@@ -46,7 +46,7 @@
 <%# The hero is the LCP element on desktop and was discovered only when the
     parser reached it. Preloading pulls it forward by roughly a round trip. %>
 <% if (typeof preloadImage !== 'undefined' && preloadImage) { %>
-<link rel="preload" as="image" href="<%= preloadImage %>" fetchpriority="high"<% if (typeof preloadSrcset !== 'undefined' && preloadSrcset) { %> imagesrcset="<%= preloadSrcset %>" imagesizes="(min-width: 1024px) 560px, calc(100vw - 32px)"<% } %>>
+<link rel="preload" as="image" href="<%= preloadImage %>" fetchpriority="high"<% if (typeof preloadSrcset !== 'undefined' && preloadSrcset) { %> imagesrcset="<%= preloadSrcset %>" imagesizes="<%= typeof preloadSizes !== 'undefined' && preloadSizes ? preloadSizes : '100vw' %>"<% } %>>
 <% } %>
 <%# Marks the document as scripted before first paint, so the FAQ answers can
     be collapsed only where a script exists to reopen them. Without this the

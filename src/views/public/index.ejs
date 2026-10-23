@@ -209,7 +209,11 @@
           <% gallery.forEach(function (g, i) { %>
           <figure class="gallery-grid-ds__item">
             <div class="gallery-grid-ds__frame" data-reveal="image">
-              <img src="<%= g.image_url %>" alt="<%= g.image_alt || g.title %>" width="<%= g.width || 1200 %>" height="<%= g.height || 1200 %>" loading="lazy" decoding="async">
+              <%# The lead photo is shown large; the rest are small square cells, so
+                  the 480px thumbnail is the right size for them. %>
+              <% var big = i === 0 || !g.thumb_url; %>
+              <img src="<%= big ? g.image_url : g.thumb_url %>" alt="<%= g.image_alt || g.title %>"
+                   width="<%= big ? (g.width || 1200) : 480 %>" height="<%= big ? (g.height || 1200) : 480 %>" loading="lazy" decoding="async">
             </div>
             <figcaption><span class="gallery-grid-ds__n" aria-hidden="true"><%= String(i + 1).padStart(2, '0') %></span><%= g.title %></figcaption>
           </figure>
