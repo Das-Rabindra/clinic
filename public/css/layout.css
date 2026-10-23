@@ -214,7 +214,10 @@
 .treatment-card__tile-media img { width: 100%; height: 100%; object-fit: cover; }
 .treatment-card--tile::before {
   content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background: linear-gradient(0deg, rgba(12, 57, 54, 0.95) 0%, rgba(12, 57, 54, 0.78) 38%, rgba(12, 57, 54, 0.08) 75%);
+  /* Deep across the whole text block (the bottom half), so every line holds
+     4.5:1 over the brightest pixels behind it — close-ups of white teeth
+     sat behind the title at 1.6:1 under the old, shallower gradient. */
+  background: linear-gradient(0deg, rgba(8, 42, 39, 0.97) 0%, rgba(8, 42, 39, 0.93) 54%, rgba(8, 42, 39, 0.8) 64%, rgba(8, 42, 39, 0.2) 86%, rgba(8, 42, 39, 0.05) 100%);
 }
 .treatment-card--tile { display: flex; flex-direction: column; justify-content: flex-end; }
 .treatment-card__tile-body { position: relative; z-index: 2; flex: 0 0 auto; margin-top: auto; padding: var(--space-8); gap: var(--space-2); }
@@ -293,3 +296,4 @@
 
 .site-footer__credit { display: block; margin-top: var(--space-1); font-size: 0.75rem; color: var(--color-night-muted); }
 .site-footer__bottom .site-footer__credit a { display: inline; min-height: 0; color: var(--color-night-ink); text-decoration: underline; text-underline-offset: 0.2em; }
+.cards-note { margin-top: var(--space-3); text-align: right; }

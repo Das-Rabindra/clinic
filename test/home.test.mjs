@@ -269,7 +269,12 @@ describe('paper-card testimonials', () => {
 describe('cinematic layer', () => {
   test('every stock photograph is captioned as illustrative; the clinic photo carries real alt text', async () => {
     const body = await home();
-    const stock = (body.match(/<img src="\/img\/stock\//g) || []).length;
+    // Treatment cards are covered by one note per list (checked below); every
+    // other stock image carries its own caption.
+    const cards = [...body.matchAll(/<article[^>]*data-treatment-card[\s\S]*?<\/article>/g)].map((m) => m[0]);
+    const cardStock = cards.filter((c) => c.includes('src="/img/stock/')).length;
+    const stock = (body.match(/<img src="\/img\/stock\//g) || []).length - cardStock;
+    if (cardStock) assert.match(body, /<p class="illustrative-note cards-note">Photographs are illustrative<\/p>/);
     // "Illustration" for a render, "Illustrative photograph" for a photo; the
     // hero's caption is set like a film still's.
     const notes = (body.match(/class="(?:illustrative-note|cine-hero__caption)"[^>]*>(?:<span[^>]*><\/span>)?(?:Illustrative photograph|Illustration)</g) || []).length;

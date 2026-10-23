@@ -971,3 +971,28 @@ chosen by what each shows nearest the treatment:
 - **Contrast:** every line on all nine pages is ≥ 5.74:1 at every width.
 - **Checks:** `npm test` passes 303/303, and the sweep covered all 15
   treatment pages × 8 widths.
+
+## Treatment cards use the owner's photographs; credit names Magnific (2026-10-23)
+
+- **Cards:** every treatment card (homepage, treatments list, "Related
+  treatments", 404 list) now shows the same photograph as the treatment's
+  page, in its natural crop with a per-photo crop position. The scene
+  versions are padded for wide backdrops. `withCardPhoto()` is applied
+  where each list is built, and the card partial now takes a responsive
+  `srcset`/`sizes` per variant.
+- **Disclosure:** cards carry no caption of their own. Each card list ends
+  with "Photographs are illustrative" in the muted text colour (AA on light
+  backgrounds). The homepage caption test now counts card images as covered
+  by that note, and every other stock image still needs its own caption.
+- **Tile contrast:** the tile overlay was shallow (0.78 at 38%), so the
+  titles over these close-ups of white teeth measured as low as 1.6:1. The
+  overlay is now ~0.93 night across the whole text block and fades out
+  above it. Every line on the tiles is ≥ 5.95:1 at 390/768/1440px.
+- **Artwork test:** the drawn tooth artwork stays as the fallback for a
+  treatment with no photograph, and the test still checks that every
+  treatment has one; /services itself now shows photographs.
+- **Credit:** Freepik has renamed itself Magnific; existing licences stay
+  valid. Free use must be attributed to the website (Terms of Use §8.1).
+  The footer now reads "…on Magnific (formerly Freepik)" and links to
+  magnific.com, and `CREDITS.md` matches.
+- **Checks:** `npm test` passes 303/303, and the width sweep found nothing.

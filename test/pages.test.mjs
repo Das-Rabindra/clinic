@@ -87,7 +87,10 @@ describe('treatment pages', () => {
       assert.ok(art.includes(`'${s.slug}'`) || s.slug === 'general-dentistry',
         `${s.slug} has no artwork branch and would reuse the generic mirror`);
     }
-    assert.ok(r.body.includes('tx-art'));
+    // Today every card shows one of the owner's photographs; the artwork is
+    // the fallback for a treatment with neither a mapped photograph nor an
+    // admin image, so the list itself shows photographs.
+    assert.ok(r.body.includes('src="/img/stock/'));
   });
 
   test('renders a treatment page with its own title and markup', async () => {

@@ -112,6 +112,34 @@ const TREATMENT_SCENES = {
   'pediatric-dentistry': { ...PRIVACY_SCENE, ...PHOTO, alt: '', position: '70% 30%' },
 };
 
+/* Treatment cards use the same photograph as the treatment's page, in its
+   natural crop (the scene versions are padded for a wide backdrop). Cards
+   carry no caption of their own; each list of them says once that the
+   photographs are illustrative. */
+const card = (name, width, height, sizes, extra = {}) => ({
+  image_url: `/img/stock/${name}-1024.webp`,
+  image_srcset: sizes.map(w => `/img/stock/${name}-${w}.webp ${w}w`).join(', '),
+  image_width: width, image_height: height, image_alt: '', image_is_stock: 1, ...extra,
+});
+const CARD = {
+  EXAM: card('hero-dental-exam', 1024, 683, [640, 1024, 1600], { image_position: '70% 50%' }),
+  UV: card('dentist-uv-curing', 1024, 683, [640, 1024, 1600]),
+  PROCEDURE: card('dental-procedure', 1024, 683, [1024, 1600]),
+  SMILE: card('smile-exam', 1024, 910, [640, 1024, 1600], { image_position: '40% 55%' }),
+  IMPLANT: card('dental-implant', 1024, 696, [640, 1024, 1600], { image_position: '62% 60%' }),
+  INSTRUMENTS: card('dental-instruments', 1024, 402, [1024, 1600], { image_position: '80% 50%' }),
+};
+const CARD_FOR = {
+  'general-dentistry': CARD.EXAM, 'gum-treatment': CARD.EXAM, 'aesthetic-dentistry': CARD.EXAM,
+  'dental-fillings': CARD.UV, 'braces-aligners': CARD.UV,
+  'tooth-extraction': CARD.PROCEDURE, 'wisdom-tooth': CARD.PROCEDURE, 'root-canal-treatment': CARD.PROCEDURE,
+  'dental-cleaning': CARD.SMILE, 'teeth-whitening': CARD.SMILE, 'dentures': CARD.SMILE,
+  'dental-implants': CARD.IMPLANT, 'crowns-bridges': CARD.IMPLANT,
+  'dental-emergency': CARD.INSTRUMENTS, 'pediatric-dentistry': CARD.INSTRUMENTS,
+};
+/** A service row with its card image swapped for the owner's photograph. */
+export const withCardPhoto = (s) => (CARD_FOR[s.slug] ? { ...s, ...CARD_FOR[s.slug] } : s);
+
 /** The scene behind a treatment page's title: a mapped photograph, or the
     treatment's own image, disclosed as illustrative when it is stock. */
 export function treatmentScene(service) {
@@ -286,7 +314,7 @@ async function baseLocals({ navBase = '/' } = {}) {
   /* A short list for the footer: the treatments patients most often look for,
      taken from the clinic's own ordering rather than hardcoded. */
   const footerServices = (await servicesRepo.list({ activeOnly: true, featuredFirst: true }))
-    .filter(s => s.has_detail_page).slice(0, 6);
+    .filter(s => s.has_detail_page).slice(0, 6).map(withCardPhoto);
 
   return {
     /* Every public page renders on the design system (ds.css); pages add
@@ -325,7 +353,7 @@ router.get('/', async (req, res) => {
   const base = await baseLocals({ navBase: '' });
   const { settings, clinic } = base;
 
-  const services = await servicesRepo.list({ activeOnly: true });
+  const services = (await servicesRepo.list({ activeOnly: true })).map(withCardPhoto);
   const doctor = await doctorsRepo.primary();
   const gallery = await galleryRepo.listPublic();
   const faqs = (await contentRepo.listFaqs({ publishedOnly: true }))
@@ -404,7 +432,7 @@ router.get('/', async (req, res) => {
 /* ── Treatments ──────────────────────────────────────────────────────────── */
 router.get('/services', async (_req, res) => {
   const base = await baseLocals();
-  const cards = await servicesRepo.list({ activeOnly: true, featuredFirst: true });
+  const cards = (await servicesRepo.list({ activeOnly: true, featuredFirst: true })).map(withCardPhoto);
   const canonical = seo.canonicalUrl(base.settings);
   const town = base.settings.city || base.settings.area || '';
 
@@ -449,7 +477,7 @@ router.get('/services/:slug', async (req, res, next) => {
   const doctor = await doctorsRepo.primary();
   const doctorPhoto = doctor?.photo_media_id ? await mediaRepo.findById(doctor.photo_media_id) : null;
 
-  const related = await servicesRepo.relatedFor(service, 3);
+  const related = (await servicesRepo.relatedFor(service, 3)).map(withCardPhoto);
 
   /*
    * The treatment's own questions. Every page used to carry the same five
