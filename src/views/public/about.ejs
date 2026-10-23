@@ -21,7 +21,7 @@
   <section class="page-cine page-cine--photo about-scene" data-hero aria-labelledby="pageTitle">
     <div class="page-cine__media">
       <img src="<%= scenePhoto.url %>" srcset="<%= scenePhoto.srcset %>" sizes="100vw" alt=""
-           width="<%= scenePhoto.width %>" height="<%= scenePhoto.height %>" decoding="async">
+           width="<%= scenePhoto.width %>" height="<%= scenePhoto.height %>" fetchpriority="high" decoding="async">
     </div>
     <div class="page-cine__shade" aria-hidden="true"></div>
     <div class="container about-scene__grid">
@@ -37,7 +37,7 @@
       </div>
       <% if (doctorPhoto) { %>
       <figure class="about-scene__portrait">
-        <img src="<%= doctorPhoto.url %>" alt="<%= clinic.doctor %>" width="<%= doctorPhoto.width %>" height="<%= doctorPhoto.height %>" fetchpriority="high" decoding="async">
+        <img src="<%= doctorPhoto.url %>" alt="<%= clinic.doctor %>" width="<%= doctorPhoto.width %>" height="<%= doctorPhoto.height %>" decoding="async">
       </figure>
       <% } %>
     </div>

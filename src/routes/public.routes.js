@@ -467,7 +467,11 @@ router.get('/about', async (_req, res) => {
     hoursSummary: hoursSentence(clinic),
     showDoctorBio: saysSomethingNew(doctor?.bio, settings.about_body),
     addressHtml: addressHtmlFor(settings),
-    preloadImage: doctorPhoto?.url || null,
+    /* The scene's backdrop is the largest thing on screen, so it is the one
+       to fetch first; the portrait loads normally beside it. */
+    preloadImage: ABOUT_SCENE.url,
+    preloadSrcset: ABOUT_SCENE.srcset,
+    preloadSizes: '100vw',
     meta: {
       title: `About ${name} | ${settings.name}`,
       description: settings.about_body || `About ${name} and ${settings.name}.`,
