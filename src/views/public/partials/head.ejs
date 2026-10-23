@@ -26,6 +26,13 @@
 <% } %>
 <link rel="icon" type="image/png" href="<%= faviconUrl %>">
 <link rel="apple-touch-icon" href="<%= logoUrl %>">
+<%# The opening photograph is the LCP element on most pages and was
+    discovered only when the parser reached it. Preloaded, and first in the
+    queue: placed after the fonts and stylesheets, its request started 1–1.7s
+    late on /about under Lighthouse's throttling. %>
+<% if (typeof preloadImage !== 'undefined' && preloadImage) { %>
+<link rel="preload" as="image" href="<%= preloadImage %>" fetchpriority="high"<% if (typeof preloadSrcset !== 'undefined' && preloadSrcset) { %> imagesrcset="<%= preloadSrcset %>" imagesizes="<%= typeof preloadSizes !== 'undefined' && preloadSizes ? preloadSizes : '100vw' %>"<% } %>>
+<% } %>
 <%# Self-hosted. Loading these from fonts.googleapis.com was the entire cause
     of the site's 0.21 CLS — blocking the font hosts dropped it to exactly 0,
     because the swap to Fraunces changed the header's height and shifted the
@@ -43,11 +50,6 @@
 <link rel="stylesheet" href="<%= href %>" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="<%= href %>"></noscript>
 <% }) %>
-<%# The hero is the LCP element on desktop and was discovered only when the
-    parser reached it. Preloading pulls it forward by roughly a round trip. %>
-<% if (typeof preloadImage !== 'undefined' && preloadImage) { %>
-<link rel="preload" as="image" href="<%= preloadImage %>" fetchpriority="high"<% if (typeof preloadSrcset !== 'undefined' && preloadSrcset) { %> imagesrcset="<%= preloadSrcset %>" imagesizes="<%= typeof preloadSizes !== 'undefined' && preloadSizes ? preloadSizes : '100vw' %>"<% } %>>
-<% } %>
 <%# Marks the document as scripted before first paint, so the FAQ answers can
     be collapsed only where a script exists to reopen them. Without this the
     accordion would hide its own content from anyone browsing without
