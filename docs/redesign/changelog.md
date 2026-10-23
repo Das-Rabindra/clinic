@@ -699,3 +699,27 @@ production runs. `npm test` passes 295/295.
   - One run had two time-dependent booking-UI failures: late in the day,
     today's few remaining slots get used up. They pass alone and on rerun,
     so this is a pre-existing flake, not this change.
+
+## Booking test flake fixed (2026-10-23)
+
+**Correction:** the hero entry above called the two booking-UI failures
+"time-dependent" (today's slots running out). That was wrong. Two time-based
+theories were tested and both disproved:
+- Today cut down to one slot: tests still passed with the old helper.
+- A live probe across the 2-hour lead-time cutoff at 18:30 IST: the booking
+  still succeeded.
+
+**Real cause:** instrumented runs caught a failure stuck on the Review step,
+with no booking request ever sent. The Confirm click had not landed. On each
+step change the wizard smooth-scrolls itself into view, and a scripted click
+straight after a step change can hit where the button *was* while the page
+is still moving. Nothing happens, the next wait times out after 30 seconds,
+and a different test fails on each unlucky run (about 1 run in 6).
+
+**Fix:** the booking UI tests open pages with `prefers-reduced-motion:
+reduce`, a path the wizard already supports, so the scroll is instant.
+Nothing on the site changed; people are unaffected, since they wait for the
+page to settle before tapping.
+
+**Checks:** `test/booking-ui.test.mjs` passed 30 runs in a row (it failed
+about 1 run in 6 before). `npm test` passes 295/295.

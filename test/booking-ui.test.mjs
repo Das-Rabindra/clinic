@@ -34,9 +34,23 @@ const btest = (name, fn) => test(name, async (t) => {
 });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * A page with reduced motion, so the wizard's scroll on each step change is
+ * instant. With smooth scrolling, a click straight after a step change could
+ * land where a button *was* while the page was still moving; nothing
+ * happened, the next wait timed out after 30 seconds, and a different test
+ * failed on each unlucky run. Instant scrolling is a path the wizard already
+ * supports, so nothing is mocked.
+ */
+async function newPage() {
+  const p = await browser.newPage();
+  await p.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  return p;
+}
+
 /** Open the homepage with optional request mocks: [{ match(req) -> bool, respond: {status, body} | 'abort' }]. */
 async function open(mocks = [], width = 390) {
-  const p = await browser.newPage();
+  const p = await newPage();
   const posts = [];
   await p.setRequestInterception(true);
   p.on('request', (req) => {
@@ -344,7 +358,7 @@ describe('find or cancel a booking', () => {
 
 describe('the /book page', () => {
   btest('runs the same wizard, and ?treatment= arrives with the treatment chosen', async () => {
-    const p = await browser.newPage();
+    const p = await newPage();
     await p.setRequestInterception(true);
     p.on('request', (req) => (req.method() === 'POST' ? req.abort() : req.continue()));
     await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
@@ -358,7 +372,7 @@ describe('the /book page', () => {
   });
 
   btest('without a treatment it opens on step 1', async () => {
-    const p = await browser.newPage();
+    const p = await newPage();
     await p.goto(srv.base + '/book', { waitUntil: 'networkidle0' });
     await p.waitForSelector('input[name="bkService"]');
     await p.close();
