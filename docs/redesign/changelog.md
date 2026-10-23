@@ -440,3 +440,52 @@ Vercel had blocked six commits: "GitHub couldn't verify an account for the commi
 - the password-reset fix (an invalid token now returns `INVALID_TOKEN`)
 - the security updates
 - booking (mocked confirmation)
+
+## Cinematic redesign: "Quiet confidence" (2026-10-23, `64c001e` → `04edd7e`)
+
+**What changed**
+
+- **Opening scene:** the real treatment room full-bleed, with a slow push-in
+  and gentle parallax. The Lora headline is revealed line by line, its last
+  line in mint italic. A rail carries credentials and today's open-now
+  status. The header is transparent over the hero and solid below it.
+- **Numbered chapters:** 01 dentist · 02 clinic · 03 treatments · 04 inside
+  the clinic · 05 words from patients · 06 questions · 07 book (night) ·
+  08 visit · closing scene (night) · footer wordmark. Each has its own
+  composition: no repeated card grids.
+- **Treatment variety:** large image tiles for the lead two, numbered
+  editorial rows for the next four, then the index.
+- **Motion:** reveals and image wipes using transform, opacity and clip-path
+  only. Everything is off under reduced motion, and nothing is ever hidden
+  without JS.
+- **Imagery:** three CC0 images via Openverse, credited in
+  `public/img/stock/CREDITS.md` and captioned "Illustrative photograph".
+  No stock image represents the clinic, its dentist or its patients. No
+  hero video.
+
+**Verified on production**
+
+| Page | Perf | A11y | LCP (median of 3) | CLS |
+|---|---|---|---|---|
+| `/` | 98–99 | 100 | 2.15 s | 0 |
+| `/services` | 98–100 | 100 | 2.35 s | ~0 |
+| `/services/root-canal-treatment` | 97–98 | 100 | 2.42 s | 0 |
+| `/privacy` | 100 | 100 | 1.52 s | 0 |
+
+- Best practices and SEO are 100 on all four. 5 pages × 8 widths: no
+  overflow, no errors.
+- Booking on production, with the final submission mocked: deep link, step
+  focus, confirmation and WhatsApp all work.
+- `npm test`: 271/271.
+
+**Issues found and fixed during the pass**
+
+- Chrome's IntersectionObserver honours `clip-path`, so image reveals never
+  fired. They are now observed through their parent.
+- Images waiting to reveal widened the page on phones by 1–5 px. Reveal
+  frames now clip.
+- The hero preload `imagesizes` didn't match the `<img sizes>`, so the
+  photo downloaded twice.
+- The footer wordmark was under 3:1.
+- The night chapter's heading colour leaked into the white booking card.
+- The tall gallery cell cropped a poster's text.
