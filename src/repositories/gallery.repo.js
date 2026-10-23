@@ -87,3 +87,8 @@ export async function reorder(ids) {
 export const categoriesInUse = async () =>
   await all(`SELECT category, COUNT(*) AS c FROM gallery_items
        WHERE deleted_at IS NULL AND is_published = 1 GROUP BY category`);
+
+/** When the published gallery last changed, for the sitemap's lastmod. */
+export const newestUpdate = async () =>
+  (await one(`SELECT MAX(updated_at) AS t FROM gallery_items
+     WHERE deleted_at IS NULL AND is_published = 1`))?.t ?? null;

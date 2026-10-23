@@ -510,3 +510,36 @@ homepage's visual language.
   `home.css` to `layout.css` so every page can use them.
 - **Checks:** `npm test` passes 271/271. The local width sweep across
   320–1920 px found no overflow and one h1 per page.
+
+## About and Gallery pages (2026-10-23)
+
+About and Gallery used to be homepage sections that the menu scrolled to.
+They are now pages of their own, in the same cinematic style.
+
+- **/about:** the page opens on a night scene with the dentist's portrait
+  framed beside the name. Below it come four chapters:
+  1. The dentist: About copy, credentials and languages.
+  2. The clinic: story text and the clinic's real treatment-room photo
+     shown wide.
+  3. Inside the clinic: three gallery photos.
+  4. Find us: address, phone numbers and the weekly hours with the break.
+
+  It ends on a closing night scene. All of this comes from what the clinic
+  has entered; nothing new is claimed.
+- **/gallery:**
+  - The treatment-room photo is the scene behind the title.
+  - Every published photo is grouped into a numbered chapter by its
+    category, shown uncropped in columns.
+  - "Before & after" carries the consent note.
+  - A small `<dialog>` lightbox (`public/js/gallery.js`) opens each photo.
+    It supports arrow keys and Escape, returns focus afterwards, and falls
+    back to a plain link without JS.
+- **Links:**
+  - The menu's About goes to /about. The menu item "Clinic" is renamed
+    "Gallery" and goes to /gallery.
+  - The footer links and the JSON-LD dentist `url` now point to /about.
+  - The homepage sections stay, with links to the new pages.
+- **Sitemap:** both pages are added. Gallery lastmod comes from the newest
+  published photo.
+- **Checks:** `npm test` passes 280/280 (new `about-gallery.test.mjs`). The
+  local width sweep found nothing.

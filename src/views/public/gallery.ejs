@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head') %>
+</head>
+<body class="has-action-bar">
+<% var ic = function (n) { return include('partials/icon', { name: n }); }; %>
+<% var tel = clinic.phone ? 'tel:' + (clinic.phone_intl || clinic.phone) : null; %>
+<% var chapter = function (num, name) { %><p class="chapter" data-reveal><span class="chapter__index"><%= num %></span><span class="chapter__rule" aria-hidden="true"></span><span class="chapter__name"><%= name %></span></p><% }; %>
+<%# One photograph, opened full size by gallery.js; without JS the link
+    simply opens the image. Shown uncropped: a poster or a before-and-after
+    loses its meaning when trimmed to a square. %>
+<% var shot = function (url, alt, w, h, caption, srcset) { %>
+  <a class="gallery-wall__frame" href="<%= url %>" data-lightbox data-caption="<%= caption %>" data-reveal="image">
+    <img src="<%= url %>"<% if (srcset) { %> srcset="<%= srcset %>" sizes="(min-width: 1024px) 40vw, (min-width: 768px) 50vw, 100vw"<% } %> alt="<%= alt %>"
+         width="<%= w || 1200 %>" height="<%= h || 1200 %>" loading="lazy" decoding="async">
+    <span class="gallery-wall__zoom" aria-hidden="true"><%- ic('plus') %></span>
+  </a>
+<% }; %>
+<a class="skip-to-content" href="#main">Skip to content</a>
+<%- include('partials/site-header') %>
+
+<main id="main">
+
+  <!-- ============ SCENE ============ -->
+  <section class="page-cine page-cine--photo" data-hero aria-labelledby="pageTitle">
+    <div class="page-cine__media">
+      <img src="<%= heroImage.url %>" srcset="<%= heroImage.srcset %>" sizes="100vw" alt=""
+           width="<%= heroImage.width %>" height="<%= heroImage.height %>" fetchpriority="high" decoding="async">
+    </div>
+    <div class="page-cine__shade" aria-hidden="true"></div>
+    <div class="container">
+      <div class="page-cine__inner">
+        <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Gallery' }] }) %>
+        <p class="eyebrow-label">Gallery</p>
+        <h1 id="pageTitle">Inside the <em class="display-em">clinic</em></h1>
+        <% if (settings.gallery_lede) { %><p class="page-cine__lede"><%= settings.gallery_lede %></p><% } %>
+        <ul class="tx-facts">
+          <li><%- ic('camera') %><span><%= total %> photograph<%= total === 1 ? '' : 's' %></span></li>
+          <li><%- ic('pin') %><span><%= shortAddress %></span></li>
+        </ul>
+      </div>
+    </div>
+    <p class="page-cine__credit">The clinic&rsquo;s treatment room</p>
+  </section>
+
+  <!-- ============ CHAPTERS, ONE PER CATEGORY ============ -->
+  <% groups.forEach(function (grp, gi) { %>
+  <section class="section<%= gi % 2 ? ' section--surface' : '' %> chapter-section" aria-labelledby="grp-<%= gi %>">
+    <div class="container">
+      <div class="index-head" data-reveal-group>
+        <div>
+          <% chapter(String(gi + 1).padStart(2, '0'), grp.items.length + ' photograph' + (grp.items.length === 1 ? '' : 's')); %>
+          <h2 id="grp-<%= gi %>" data-reveal><%= grp.label %></h2>
+        </div>
+        <% if (grp.key === 'treatment') { %>
+        <p class="text-muted gallery-note" data-reveal>Published with the patient&rsquo;s consent. Results differ from one patient to the next.</p>
+        <% } %>
+      </div>
+      <div class="gallery-wall gallery-wall--<%= Math.min(grp.items.length, 3) %>">
+        <% grp.items.forEach(function (g, i) { var cap = g.title + (g.description ? ' — ' + g.description : ''); %>
+        <figure class="gallery-wall__item">
+          <% if (g.after_url) { %>
+          <div class="gallery-pair">
+            <div><% shot(g.image_url, (g.image_alt || g.title) + ' (before)', g.width, g.height, g.title + ' — before'); %><span class="gallery-pair__tag">Before</span></div>
+            <div><% shot(g.after_url, g.title + ' (after)', g.width, g.height, g.title + ' — after'); %><span class="gallery-pair__tag">After</span></div>
+          </div>
+          <% } else { shot(g.image_url, g.image_alt || g.title, g.width, g.height, cap, g.srcset); } %>
+          <figcaption>
+            <span class="gallery-wall__n" aria-hidden="true"><%= String(i + 1).padStart(2, '0') %></span>
+            <span><strong><%= g.title %></strong><% if (g.description) { %><span class="gallery-wall__desc"><%= g.description %></span><% } %></span>
+          </figcaption>
+        </figure>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+  <% }) %>
+
+  <!-- ============ CLOSING SCENE ============ -->
+  <section class="section section--night closing" aria-labelledby="closingTitle">
+    <div class="container closing__grid closing__grid--solo">
+      <div class="closing__copy" data-reveal-group>
+        <p class="eyebrow-label" data-reveal>See it for yourself</p>
+        <h2 id="closingTitle" class="closing__title" data-reveal>Visit the clinic <em class="display-em">in person</em></h2>
+        <p class="closing__body" data-reveal><%= clinic.address %></p>
+        <div class="cluster closing__actions" data-reveal>
+          <a href="/#appointment" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
+          <% if (clinic.directions_url) { %><a href="<%= clinic.directions_url %>" target="_blank" rel="noopener" class="button button--ghost-light" data-track="directions_clicked"><%- ic('directions') %>Get directions</a><% } %>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<dialog class="lightbox" data-lightbox-dialog aria-label="Photograph">
+  <figure class="lightbox__figure">
+    <img class="lightbox__img" alt="">
+    <figcaption class="lightbox__caption" aria-live="polite"></figcaption>
+  </figure>
+  <button type="button" class="lightbox__btn lightbox__close" data-lightbox-close aria-label="Close"><%- ic('close') %></button>
+  <button type="button" class="lightbox__btn lightbox__prev" data-lightbox-prev aria-label="Previous photograph"><%- ic('chevronLeft') %></button>
+  <button type="button" class="lightbox__btn lightbox__next" data-lightbox-next aria-label="Next photograph"><%- ic('chevronRight') %></button>
+</dialog>
+
+<%- include('partials/site-footer') %>
+<script src="/js/ds.js" defer></script>
+<script src="/js/site-ds.js" defer></script>
+<script src="/js/motion.js" defer></script>
+<script src="/js/gallery.js" defer></script>
+</body>
+</html>

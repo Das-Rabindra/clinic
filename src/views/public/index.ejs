@@ -105,6 +105,7 @@
           <% if (doctor && doctor.specialization) { %><div><dt>Focus</dt><dd><%= doctor.specialization %></dd></div><% } %>
           <% if (doctor && doctor.languages) { %><div><dt>Languages</dt><dd><%= doctor.languages %></dd></div><% } %>
         </dl>
+        <p class="profile__more" data-reveal><a class="link link--arrow" href="/about">More about the dentist and the clinic <%- ic('arrow') %></a></p>
       </div>
     </div>
   </section>
@@ -238,6 +239,7 @@
           </div>
         </div>
       <% } %>
+      <p class="section-foot"><a class="button button--secondary" href="/gallery">See the full gallery</a></p>
     </div>
   </section>
 

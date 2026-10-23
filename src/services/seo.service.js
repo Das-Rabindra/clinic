@@ -8,6 +8,7 @@ import * as reviewsRepo from '../repositories/reviews.repo.js';
 import * as doctorsRepo from '../repositories/doctors.repo.js';
 import * as servicesRepo from '../repositories/services.repo.js';
 import * as mediaRepo from '../repositories/media.repo.js';
+import * as galleryRepo from '../repositories/gallery.repo.js';
 import { config } from '../config/env.js';
 import { minToHHMM } from '../utils/time.js';
 
@@ -169,7 +170,7 @@ export async function structuredData() {
       '@type': 'Physician',
       '@id': dentistId(url),
       name: doctor.name,
-      url: `${url}/#about`,
+      url: `${url}/about`,
       ...(doctorPhoto ? { image: absolute(doctorPhoto.url) } : {}),
       medicalSpecialty: 'Dentistry',
       ...(doctor.qualification ? { hasCredential: doctor.qualification } : {}),
@@ -260,6 +261,10 @@ export async function sitemapXml(canonical) {
       lastmod: day(sv.updated_at), changefreq: 'monthly', priority: '0.7',
     });
   }
+  /* About and the gallery are built from settings and published photographs. */
+  const galleryNewest = day(await galleryRepo.newestUpdate());
+  entries.push({ loc: `${canonical}/about`, lastmod: day(settings.updated_at), changefreq: 'monthly', priority: '0.6' });
+  entries.push({ loc: `${canonical}/gallery`, lastmod: [day(settings.updated_at), galleryNewest].filter(Boolean).sort().pop() || null, changefreq: 'monthly', priority: '0.5' });
   entries.push({ loc: `${canonical}/privacy`, lastmod: PRIVACY_UPDATED, changefreq: 'yearly', priority: '0.2' });
 
   const body = entries.map(e =>

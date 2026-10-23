@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head') %>
+</head>
+<body class="has-action-bar">
+<% var ic = function (n) { return include('partials/icon', { name: n }); }; %>
+<% var tel = clinic.phone ? 'tel:' + (clinic.phone_intl || clinic.phone) : null; %>
+<% var chapter = function (num, name) { %><p class="chapter" data-reveal><span class="chapter__index"><%= num %></span><span class="chapter__rule" aria-hidden="true"></span><span class="chapter__name"><%= name %></span></p><% }; %>
+<%# The dentist's name split so its last word can take the italic accent. %>
+<% var who = clinic.doctor || settings.name; var cut = who.lastIndexOf(' '); %>
+<a class="skip-to-content" href="#main">Skip to content</a>
+<%- include('partials/site-header') %>
+
+<main id="main">
+
+  <!-- ============ SCENE ============ -->
+  <%# The dentist's portrait framed beside the name — a portrait does not
+      survive being stretched behind text the way a room does. %>
+  <section class="page-cine about-scene" data-hero aria-labelledby="pageTitle">
+    <div class="container about-scene__grid">
+      <div class="page-cine__inner">
+        <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'About' }] }) %>
+        <p class="eyebrow-label">About the clinic</p>
+        <h1 id="pageTitle"><% if (cut > 0) { %><%= who.slice(0, cut) %> <em class="display-em"><%= who.slice(cut + 1) %></em><% } else { %><%= who %><% } %></h1>
+        <p class="page-cine__lede"><%= [clinic.qualification, clinic.institution].filter(Boolean).join(' · ') %><% if (clinic.qualification || clinic.institution) { %><br><% } %><%= settings.name %>, <%= shortAddress %></p>
+        <div class="page-cine__actions">
+          <a href="/#appointment" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
+          <% if (tel) { %><a href="<%= tel %>" class="button button--ghost-light" data-track="call_clicked"><%- ic('phone') %>Call</a><% } %>
+        </div>
+      </div>
+      <% if (doctorPhoto) { %>
+      <figure class="about-scene__portrait">
+        <img src="<%= doctorPhoto.url %>" alt="<%= clinic.doctor %>" width="<%= doctorPhoto.width %>" height="<%= doctorPhoto.height %>" fetchpriority="high" decoding="async">
+      </figure>
+      <% } %>
+    </div>
+  </section>
+
+  <!-- ============ 01 · THE DENTIST ============ -->
+  <section class="section chapter-section" aria-labelledby="dentistTitle">
+    <div class="container about-dentist" data-reveal-group>
+      <div class="about-dentist__lead">
+        <% chapter('01', 'The dentist'); %>
+        <h2 id="dentistTitle" class="profile__title" data-reveal><%= settings.about_title || clinic.doctor %></h2>
+      </div>
+      <div class="about-dentist__body">
+        <% if (settings.about_body) { %><blockquote class="profile__quote" data-reveal><p><%= settings.about_body %></p></blockquote><% } %>
+        <% if (showDoctorBio) { %><p class="prose about-dentist__bio" data-reveal><%= doctor.bio %></p><% } %>
+        <dl class="facts-list" data-reveal>
+          <% if (clinic.qualification) { %><div><dt>Qualification</dt><dd><%= clinic.qualification %></dd></div><% } %>
+          <% if (clinic.institution) { %><div><dt>Institution</dt><dd><%= clinic.institution %></dd></div><% } %>
+          <% if (clinic.registration) { %><div><dt>Registration</dt><dd><%= clinic.registration %></dd></div><% } %>
+          <% if (doctor && doctor.specialization) { %><div><dt>Focus</dt><dd><%= doctor.specialization %></dd></div><% } %>
+          <% if (doctor && doctor.languages) { %><div><dt>Languages</dt><dd><%= doctor.languages %></dd></div><% } %>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 · THE CLINIC ============ -->
+  <%# The clinic's own photograph, full width — the one real room on the site. %>
+  <section class="section section--sage chapter-section" aria-labelledby="clinicTitle">
+    <div class="container">
+      <div class="split-heading" data-reveal-group>
+        <div>
+          <% chapter('02', 'The clinic'); %>
+          <h2 id="clinicTitle" data-reveal><%= settings.story_title || 'The clinic' %></h2>
+        </div>
+        <% if (settings.story_body) { %><p class="clinic__story" data-reveal><%= settings.story_body %></p><% } %>
+      </div>
+      <figure class="about-room">
+        <div class="about-room__frame" data-reveal="image">
+          <img src="<%= clinicPhoto.url %>" srcset="<%= clinicPhoto.srcset %>" sizes="(min-width: 1280px) 1200px, calc(100vw - 32px)"
+               alt="<%= clinicPhoto.alt %>" width="<%= clinicPhoto.width %>" height="<%= clinicPhoto.height %>" loading="lazy" decoding="async">
+        </div>
+        <figcaption>The treatment room</figcaption>
+      </figure>
+      <ol class="clinic__facts about-room__facts" data-reveal-group>
+        <li data-reveal><span class="clinic__num" aria-hidden="true">i.</span><div><h3>Opening hours</h3><p>Open <%= hoursSummary %>.</p></div></li>
+        <li data-reveal><span class="clinic__num" aria-hidden="true">ii.</span><div><h3>Book online</h3><p>Choose a treatment, a day and a time from the clinic's live availability.</p><a class="link link--arrow" href="/#appointment">Book an appointment <%- ic('arrow') %></a></div></li>
+        <% if (doctor && doctor.languages) { %>
+        <li data-reveal><span class="clinic__num" aria-hidden="true">iii.</span><div><h3>Languages</h3><p><%= doctor.languages %></p></div></li>
+        <% } %>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ 03 · INSIDE ============ -->
+  <% if (galleryPreview.length) { %>
+  <section class="section chapter-section" aria-labelledby="insideTitle">
+    <div class="container">
+      <div class="index-head" data-reveal-group>
+        <div>
+          <% chapter('03', 'Inside the clinic'); %>
+          <h2 id="insideTitle" data-reveal>From the gallery</h2>
+        </div>
+        <a class="link link--arrow" href="/gallery" data-reveal>All <%= galleryCount %> photographs <%- ic('arrow') %></a>
+      </div>
+      <div class="about-strip">
+        <% galleryPreview.forEach(function (g) { %>
+        <figure class="about-strip__item">
+          <a class="about-strip__frame" href="/gallery" data-reveal="image" tabindex="-1" aria-hidden="true">
+            <img src="<%= g.thumb_url || g.image_url %>" alt="" width="<%= g.thumb_url ? 480 : (g.width || 1200) %>" height="<%= g.thumb_url ? 480 : (g.height || 1200) %>" loading="lazy" decoding="async">
+          </a>
+          <figcaption><%= g.title %></figcaption>
+        </figure>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+  <% } %>
+
+  <!-- ============ 04 · FIND US ============ -->
+  <section class="section section--surface chapter-section" aria-labelledby="findTitle">
+    <div class="container about-find">
+      <div data-reveal-group>
+        <% chapter(galleryPreview.length ? '04' : '03', 'Find us'); %>
+        <h2 id="findTitle" class="profile__title" data-reveal><%= settings.location_title || 'Visit the clinic' %></h2>
+        <% if (settings.location_body) { %><p class="text-muted about-find__lede" data-reveal><%= settings.location_body %></p><% } %>
+        <div class="visit__block" data-reveal>
+          <h3 class="visit__label"><%- ic('pin') %>Address</h3>
+          <address class="contact-bento__lines"><%- addressHtml %></address>
+          <div class="cluster">
+            <a class="button button--primary button--small" href="<%= clinic.directions_url %>" target="_blank" rel="noopener" data-track="directions_clicked"><%- ic('directions') %>Get directions</a>
+          </div>
+        </div>
+        <div class="visit__block" data-reveal>
+          <h3 class="visit__label"><%- ic('phone') %>Call or message</h3>
+          <ul class="contact-list">
+            <% if (tel) { %><li><a href="<%= tel %>" data-track="call_clicked"><%= clinic.phone %></a><span class="text-small text-muted">Main line<% if (whatsappUrl) { %> and WhatsApp<% } %></span></li><% } %>
+            <% if (clinic.phone_secondary) { %><li><a href="tel:<%= clinic.phone_secondary_intl || clinic.phone_secondary %>" data-track="call_clicked"><%= clinic.phone_secondary %></a><span class="text-small text-muted">Second line</span></li><% } %>
+          </ul>
+        </div>
+      </div>
+      <div class="visit__block about-find__hours" data-reveal>
+        <h3 class="visit__label"><%- ic('clock') %>Opening hours</h3>
+        <p class="status-pill status-pill--<%= clinic.today.now.state %>"><span class="status-pill__dot" aria-hidden="true"></span><%= clinic.today.now.label %></p>
+        <table class="hours-table-ds">
+          <caption class="visually-hidden-ds">Weekly opening hours</caption>
+          <tbody>
+          <% weekHours.forEach(function (h) { var d = h.display; var isToday = h.weekday === clinic.today.weekdayIndex; %>
+            <tr<% if (isToday) { %> class="is-today" aria-current="date"<% } %>>
+              <th scope="row"><%= h.day %><% if (isToday) { %> <span class="badge">Today</span><% } %></th>
+              <td>
+                <% if (d.closed) { %>Closed<% } else { %>
+                  <% d.sessions.forEach(function (sess, i) { %><span class="hours-table-ds__session"><% if (i) { %><span class="visually-hidden-ds">and </span><% } %><%= sess %></span><% }) %>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CLOSING SCENE ============ -->
+  <section class="section section--night closing" aria-labelledby="closingTitle">
+    <div class="container closing__grid closing__grid--solo">
+      <div class="closing__copy" data-reveal-group>
+        <p class="eyebrow-label" data-reveal>Ready when you are</p>
+        <h2 id="closingTitle" class="closing__title" data-reveal>Meet <%= clinic.doctor || 'the dentist' %> <em class="display-em">in person</em></h2>
+        <p class="closing__body" data-reveal>Book online, or ask the clinic a question first &mdash; whichever you prefer.</p>
+        <div class="cluster closing__actions" data-reveal>
+          <a href="/#appointment" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
+          <button type="button" class="button button--ghost-light" data-callback-open><%- ic('callback') %>Request a call back</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<%- include('partials/site-footer') %>
+<script src="/js/ds.js" defer></script>
+<script src="/js/site-ds.js" defer></script>
+<script src="/js/motion.js" defer></script>
+</body>
+</html>

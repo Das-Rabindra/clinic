@@ -393,6 +393,96 @@ router.get('/privacy', async (_req, res) => {
   });
 });
 
+/* ── About ───────────────────────────────────────────────────────────────── */
+/* The dentist and the clinic, from what the clinic itself has entered:
+   About and story copy, the doctor record, the weekly hours. Nothing on the
+   page is written as a claim for it. */
+router.get('/about', async (_req, res) => {
+  const base = await baseLocals();
+  const { settings, clinic } = base;
+  const canonical = seo.canonicalUrl(settings);
+
+  const doctor = await doctorsRepo.primary();
+  const doctorPhoto = doctor?.photo_media_id ? await mediaRepo.findById(doctor.photo_media_id) : null;
+  const gallery = await galleryRepo.listPublic();
+  const orderedHours = [1, 2, 3, 4, 5, 6, 0]
+    .map(w => clinic.hours.find(h => h.weekday === w))
+    .filter(Boolean);
+  const name = clinic.doctor || settings.name;
+
+  res.render('public/about', {
+    ...base,
+    pageCss: ['/css/home.css', '/css/pages.css'],
+    doctor, doctorPhoto,
+    clinicPhoto: CLINIC_PHOTO,
+    galleryPreview: gallery.slice(0, 3),
+    galleryCount: gallery.length + 1,          // + the treatment-room photograph
+    weekHours: orderedHours.map(h => ({ ...h, display: dayHours(h) })),
+    hoursSummary: hoursSentence(clinic),
+    showDoctorBio: saysSomethingNew(doctor?.bio, settings.about_body),
+    addressHtml: [settings.name, settings.address_line1, settings.address_line2,
+      settings.area, [settings.city, settings.state].filter(Boolean).join(', '), settings.postal_code]
+      .filter(Boolean).map(esc).join('<br>'),
+    preloadImage: doctorPhoto?.url || null,
+    meta: {
+      title: `About ${name} | ${settings.name}`,
+      description: settings.about_body || `About ${name} and ${settings.name}.`,
+      canonical: `${canonical}/about`,
+      ogTitle: `About ${name} | ${settings.name}`,
+      ogDescription: settings.about_body || '',
+      ogUrl: `${canonical}/about`,
+      ogImage: doctorPhoto ? new URL(doctorPhoto.url, canonical).toString() : null,
+    },
+    ogType: 'profile',
+    schemas: [seo.breadcrumbs(canonical, [{ name: 'Home', path: '/' }, { name: 'About', path: '/about' }])],
+  });
+});
+
+/* ── Gallery ─────────────────────────────────────────────────────────────── */
+/* Every published photograph, grouped by the category the clinic gave it.
+   The treatment-room photograph bundled with the site leads the clinic
+   group; patient photographs appear only because the admin published them,
+   which requires recorded consent. */
+router.get('/gallery', async (_req, res) => {
+  const base = await baseLocals();
+  const { settings } = base;
+  const canonical = seo.canonicalUrl(settings);
+
+  const items = [
+    { image_url: CLINIC_PHOTO.url, srcset: CLINIC_PHOTO.srcset, width: CLINIC_PHOTO.width, height: CLINIC_PHOTO.height,
+      image_alt: CLINIC_PHOTO.alt, title: 'The treatment room', category: 'clinic' },
+    ...(await galleryRepo.listPublic()),
+  ];
+  const groups = [];
+  for (const g of items) {
+    const label = CATEGORY_LABELS[g.category] || g.category;
+    let group = groups.find(x => x.label === label);
+    if (!group) groups.push(group = { key: g.category, label, items: [] });
+    group.items.push(g);
+  }
+
+  res.render('public/gallery', {
+    ...base,
+    groups,
+    total: items.length,
+    heroImage: CLINIC_PHOTO,
+    preloadImage: CLINIC_PHOTO.url,
+    preloadSrcset: CLINIC_PHOTO.srcset,
+    preloadSizes: '100vw',
+    meta: {
+      title: `Gallery: inside the clinic | ${settings.name}`,
+      description: settings.gallery_lede || `Photographs of ${settings.name}.`,
+      canonical: `${canonical}/gallery`,
+      ogTitle: `Gallery | ${settings.name}`,
+      ogDescription: settings.gallery_lede || '',
+      ogUrl: `${canonical}/gallery`,
+      ogImage: new URL(CLINIC_PHOTO.url, canonical).toString(),
+    },
+    ogType: 'website',
+    schemas: [seo.breadcrumbs(canonical, [{ name: 'Home', path: '/' }, { name: 'Gallery', path: '/gallery' }])],
+  });
+});
+
 /* ── Design-system preview ───────────────────────────────────────────────────
    Internal review page for the redesign's tokens and primitives. Unlinked,
    noindex by meta and header, and absent from the sitemap (which lists routes
