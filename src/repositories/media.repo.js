@@ -32,6 +32,26 @@ export const list = async ({ folder, limit = 100, offset = 0 } = {}) =>
 export const variants = async (id) => await all('SELECT * FROM media WHERE variant_of = ?', id);
 export const thumbFor = async (id) =>
   await one(`SELECT * FROM media WHERE variant_of = ? AND variant_kind = 'thumb'`, id);
+export const mediumFor = async (id) =>
+  await one(`SELECT * FROM media WHERE variant_of = ? AND variant_kind = 'medium' AND deleted_at IS NULL`, id);
+
+/** Originals wider than `width` that have no mid-size variant yet: the
+    doctor's portrait first (it is the largest thing on /about), then the
+    images pages show at screen size, then the rest. */
+export const missingMedium = async (width, limit) =>
+  await all(`SELECT m.* FROM media m
+       WHERE m.deleted_at IS NULL AND m.variant_of IS NULL AND m.width > ?
+         AND NOT EXISTS (SELECT 1 FROM media v WHERE v.variant_of = m.id AND v.variant_kind = 'medium')
+       ORDER BY CASE m.folder WHEN 'doctor' THEN 0 WHEN 'clinic' THEN 1 WHEN 'treatment-results' THEN 1
+                              WHEN 'services' THEN 2 ELSE 3 END, m.id
+       LIMIT ?`, width, limit);
+
+/** A media row with its mid-size variant attached as medium_url/medium_width, if one exists. */
+export async function withMedium(row) {
+  if (!row) return row;
+  const md = await mediumFor(row.id);
+  return md ? { ...row, medium_url: md.url, medium_width: md.width } : row;
+}
 
 export const setAlt = async (id, alt) =>
   (await run(`UPDATE media SET alt = ?, updated_at = NOW() WHERE id = ?`, alt, id)).changes;

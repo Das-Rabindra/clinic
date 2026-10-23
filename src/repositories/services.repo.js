@@ -12,11 +12,12 @@ const FIELDS = ['name','category_id','short_desc','long_desc','icon','image_medi
 const BASE = `SELECT s.*, c.name AS category_name,
     m.url AS image_url, m.alt AS image_alt, m.width AS image_width, m.height AS image_height,
     m.is_stock AS image_is_stock,
-    t.url AS thumb_url
+    t.url AS thumb_url, md.url AS medium_url, md.width AS medium_width
   FROM services s
   LEFT JOIN service_categories c ON c.id = s.category_id
   LEFT JOIN media m ON m.id = s.image_media_id
-  LEFT JOIN media t ON t.variant_of = m.id AND t.variant_kind = 'thumb' AND t.deleted_at IS NULL`;
+  LEFT JOIN media t ON t.variant_of = m.id AND t.variant_kind = 'thumb' AND t.deleted_at IS NULL
+  LEFT JOIN media md ON md.variant_of = m.id AND md.variant_kind = 'medium' AND md.deleted_at IS NULL`;
 
 export const list = async ({ activeOnly = false, bookableOnly = false, featuredFirst = false } = {}) =>
   await all(`${BASE} WHERE s.deleted_at IS NULL

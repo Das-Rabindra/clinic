@@ -95,7 +95,7 @@
       <figure class="profile__photo">
         <div class="profile__frame" data-reveal="image">
           <% if (doctorPhoto) { %>
-            <img src="<%= doctorPhoto.url %>" alt="<%= clinic.doctor %>" width="<%= doctorPhoto.width %>" height="<%= doctorPhoto.height %>" loading="lazy" decoding="async">
+            <img src="<%= doctorPhoto.url %>"<% var ss = mediaSrcset(doctorPhoto.url, doctorPhoto.width, doctorPhoto.medium_url, doctorPhoto.medium_width); if (ss) { %> srcset="<%= ss %>" sizes="(min-width: 1024px) 480px, (min-width: 480px) 26rem, calc(100vw - 32px)"<% } %> alt="<%= clinic.doctor %>" width="<%= doctorPhoto.width %>" height="<%= doctorPhoto.height %>" loading="lazy" decoding="async">
           <% } else { %>
             <div class="profile__placeholder"><%- ic('camera') %><span>Photograph of <%= clinic.doctor || 'the dentist' %> coming soon</span></div>
           <% } %>
@@ -212,7 +212,7 @@
         <div class="empty-state"><%- ic('camera') %><h3>Photographs coming soon</h3><p>Photographs of the clinic will appear here.</p></div>
       <% } else if (galleryMode === 'single') { var g = gallery[0]; %>
         <figure class="gallery-feature">
-          <div data-reveal="image"><img src="<%= g.image_url %>" alt="<%= g.image_alt || g.title %>" width="<%= g.width || 1200 %>" height="<%= g.height || 1200 %>" loading="lazy" decoding="async"></div>
+          <div data-reveal="image"><img src="<%= g.image_url %>"<% var gs = mediaSrcset(g.image_url, g.width, g.medium_url, g.medium_width); if (gs) { %> srcset="<%= gs %>" sizes="(min-width: 768px) 40rem, 100vw"<% } %> alt="<%= g.image_alt || g.title %>" width="<%= g.width || 1200 %>" height="<%= g.height || 1200 %>" loading="lazy" decoding="async"></div>
           <figcaption><%= g.title %><% if (g.description) { %> — <%= g.description %><% } %></figcaption>
         </figure>
       <% } else if (galleryMode === 'grid') { %>
@@ -223,7 +223,8 @@
               <%# The lead photo is shown large; the rest are small square cells, so
                   the 480px thumbnail is the right size for them. %>
               <% var big = i === 0 || !g.thumb_url; %>
-              <img src="<%= big ? g.image_url : g.thumb_url %>" alt="<%= g.image_alt || g.title %>"
+              <% var bs = big ? mediaSrcset(g.image_url, g.width, g.medium_url, g.medium_width) : ''; %>
+              <img src="<%= big ? g.image_url : g.thumb_url %>"<% if (bs) { %> srcset="<%= bs %>" sizes="(min-width: 768px) 55vw, 100vw"<% } %> alt="<%= g.image_alt || g.title %>"
                    width="<%= big ? (g.width || 1200) : 480 %>" height="<%= big ? (g.height || 1200) : 480 %>" loading="lazy" decoding="async">
             </div>
             <figcaption><span class="gallery-grid-ds__n" aria-hidden="true"><%= String(i + 1).padStart(2, '0') %></span><%= g.title %></figcaption>
@@ -236,7 +237,7 @@
             <% gallery.forEach(function (g) { %>
             <li class="carousel__item">
               <figure>
-                <img src="<%= g.image_url %>" alt="<%= g.image_alt || g.title %>" width="<%= g.width || 1200 %>" height="<%= g.height || 900 %>" loading="lazy" decoding="async">
+                <img src="<%= g.image_url %>"<% var cs = mediaSrcset(g.image_url, g.width, g.medium_url, g.medium_width); if (cs) { %> srcset="<%= cs %>" sizes="(min-width: 768px) 40vw, 85vw"<% } %> alt="<%= g.image_alt || g.title %>" width="<%= g.width || 1200 %>" height="<%= g.height || 900 %>" loading="lazy" decoding="async">
                 <figcaption><%= g.title %></figcaption>
               </figure>
             </li>

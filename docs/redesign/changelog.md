@@ -1071,3 +1071,25 @@ illustrative photographs had been used 2–4 times each.
   failed with "dental-procedure is used 2 times: /services, /contact".
 - **Checks:** `npm test` passes 304/304, and the width sweep (11 pages × 8
   widths) found nothing.
+
+## Mid-size image variant (D30) (2026-10-23)
+
+- **Why:** /about's largest element is the doctor's portrait, served as its
+  114KB full-size original in a ~350px frame (LCP 2.6–3.1s).
+- **Media service:** new uploads wider than 800px also get an 800px WebP
+  (`variant_kind = 'medium'`, quality 78), alongside the 480px thumb.
+- **Display:**
+  - The repositories return `medium_url` and `medium_width` (services and
+    gallery joins; `mediaRepo.withMedium()` for the portrait).
+  - `mediaSrcset()` builds `medium 800w, full Nw` for the portrait (About,
+    homepage), the gallery wall and homepage gallery, treatment cards, and
+    treatment scenes from admin images.
+  - The 56px avatar on treatment pages uses the mid-size copy.
+- **Backfill:** `backfillMediums()` runs from the scheduled job (/api/cron
+  on Vercel, daily at 03:00 UTC). It does 12 images per run within 20s,
+  portrait first, is idempotent, and logs and skips any image whose bytes are
+  missing.
+- **Tests:** new tests cover the medium copy (made for wide uploads, not
+  narrow ones), the backfill (made once, a missing file survived), and the
+  portrait being served with the 800px copy on About and the homepage.
+  `npm test` passes 307/307.

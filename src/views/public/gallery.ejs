@@ -61,7 +61,7 @@
             <div><% shot(g.image_url, (g.image_alt || g.title) + ' (before)', g.width, g.height, g.title + ' — before'); %><span class="gallery-pair__tag">Before</span></div>
             <div><% shot(g.after_url, g.title + ' (after)', g.width, g.height, g.title + ' — after'); %><span class="gallery-pair__tag">After</span></div>
           </div>
-          <% } else { shot(g.image_url, g.image_alt || g.title, g.width, g.height, cap, g.srcset); } %>
+          <% } else { shot(g.image_url, g.image_alt || g.title, g.width, g.height, cap, g.srcset || mediaSrcset(g.image_url, g.width, g.medium_url, g.medium_width)); } %>
           <figcaption>
             <span class="gallery-wall__n" aria-hidden="true"><%= String(i + 1).padStart(2, '0') %></span>
             <span><strong><%= g.title %></strong><% if (g.description) { %><span class="gallery-wall__desc"><%= g.description %></span><% } %></span>

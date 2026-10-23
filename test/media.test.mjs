@@ -162,3 +162,43 @@ describe('patient photo consent (spec §14)', () => {
     }
   });
 });
+
+describe('mid-size variant', () => {
+  test('a wide upload gets an 800px copy; a narrow one does not', async () => {
+    const wide = await mediaService.ingestImage({ buffer: await jpeg({ w: 1800, h: 1200 }), originalname: 'wide.jpg' }, { folder: 'clinic', userId });
+    assert.ok(wide.medium, 'mid-size variant created');
+    assert.equal(wide.medium.variant_kind, 'medium');
+    assert.equal(wide.medium.width, 800);
+    assert.ok(await storage.exists(wide.medium.key));
+    assert.ok(wide.medium.bytes < wide.bytes, 'smaller than the full image');
+
+    const narrow = await mediaService.ingestImage({ buffer: await jpeg({ w: 700, h: 500 }), originalname: 'narrow.jpg' }, { folder: 'clinic', userId });
+    assert.equal(narrow.medium, null, 'nothing to shrink');
+  });
+
+  test('the scheduled backfill gives older uploads one, once, and survives a missing file', async () => {
+    const { run } = await import('../src/db/index.js');
+    // An upload from before mid-size variants existed.
+    const old = await mediaService.ingestImage({ buffer: await jpeg({ w: 1600, h: 1000 }), originalname: 'old.jpg' }, { folder: 'clinic', userId });
+    await run(`DELETE FROM media WHERE variant_of = ? AND variant_kind = 'medium'`, old.id);
+    assert.equal(await mediaRepo.mediumFor(old.id), undefined);
+    // And one whose bytes are gone from storage.
+    await run(`INSERT INTO media (storage,key,url,folder,mime,ext,bytes,width,height)
+               VALUES ('local','clinic/gone.webp','/media/clinic/gone.webp','clinic','image/webp','webp',1,1500,900)`);
+
+    const logs = [];
+    const first = await mediaService.backfillMediums({ limit: 50, log: (m) => logs.push(m) });
+    assert.ok(first.made >= 1, 'made the missing copy');
+    assert.equal(first.failed, 1, 'the missing file is reported, not thrown');
+    const md = await mediaRepo.mediumFor(old.id);
+    assert.ok(md && md.width === 800 && await storage.exists(md.key));
+
+    const second = await mediaService.backfillMediums({ limit: 50, log: () => {} });
+    assert.equal(second.made, 0, 'nothing left to do but the missing file');
+    assert.equal((await mediaRepo.variants(old.id)).filter((v) => v.variant_kind === 'medium').length, 1);
+
+    const withMd = await mediaRepo.withMedium(await mediaRepo.findById(old.id));
+    assert.equal(withMd.medium_url, md.url);
+    assert.equal(withMd.medium_width, 800);
+  });
+});

@@ -38,3 +38,16 @@
 | D34 | 2026-10-22 | Client phone rule = the server's `normalisePhone()` (6–9 + 9 digits, optional 91 or 0 prefix) | The old client rule rejected 0-prefixed numbers the server accepts | Final |
 | D35 | 2026-10-22 | Hover styles on slots and calendar days apply only under `(hover: hover)` and never to a selected item | On touch screens `:hover` stuck to the tapped slot and washed out its selected state (white text on a pale background) | Final |
 | D36 | 2026-10-22 | Invented testimonials are not added, even with real people's names supplied | Fabricated reviews mislead patients, contradict the page's own "genuine feedback only" statement, and fall under India's CCPA rules on fake reviews. Genuine testimonials go through Admin → Reviews ("Shared with the clinic"), with the patient's own words and consent | Final |
+
+**D30 — resolved 2026-10-23 (owner approved the backend change).** The
+media service now also stores an 800px `medium` variant of every upload
+wider than 800px. Pages that show an uploaded image at screen size (the
+doctor's portrait, gallery photographs, treatment images and cards) offer
+`srcset="<medium> 800w, <full> Nw"`, and the browser picks the size it
+needs.
+
+Images uploaded before this get their variant from the scheduled job, never
+at boot: a cold start must stay fast, after the 504s. The job runs
+`backfillMediums()` each cron tick: 12 per run within a 20s budget, the
+doctor's portrait first. Until an image has its variant, pages keep using
+the full image.

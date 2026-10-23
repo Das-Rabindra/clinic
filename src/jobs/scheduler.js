@@ -17,6 +17,7 @@ import * as sessionsRepo from '../repositories/sessions.repo.js';
 import * as notifications from '../services/notification/index.js';
 import { config } from '../config/env.js';
 import { handlers } from './handlers/index.js';
+import { backfillMediums } from '../services/media.service.js';
 
 const workerId = `${process.pid}-${crypto.randomBytes(3).toString('hex')}`;
 let timer = null;
@@ -58,6 +59,8 @@ async function tick() {
     if (config.isServerless || ++ticks % every === 0) {
       await sessionsRepo.purgeExpired();
       await jobsRepo.purgeDone(14);
+      /* Mid-size copies for images uploaded before they existed. */
+      summary.media = await backfillMediums({ limit: 12, budgetMs: 20000 });
     }
   } catch (err) {
     console.error('[jobs] tick error:', err.message);

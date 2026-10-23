@@ -44,6 +44,26 @@ describe('/about', () => {
   });
 });
 
+describe('the doctor\'s portrait', () => {
+  test('is served as its mid-size copy where the page shows it at screen size', async () => {
+    const sharp = (await import('sharp')).default;
+    const mediaService = await import('../src/services/media.service.js');
+    const doctorsRepo = await import('../src/repositories/doctors.repo.js');
+    const buffer = await sharp({ create: { width: 1600, height: 2000, channels: 3, background: '#7C9885' } }).jpeg().toBuffer();
+    const m = await mediaService.ingestImage({ buffer, originalname: 'portrait.jpg' }, { folder: 'doctor' });
+    const doctor = await doctorsRepo.primary();
+    await doctorsRepo.update(doctor.id, { photo_media_id: m.id });
+    try {
+      const about = (await srv.call('/about')).body;
+      assert.ok(about.includes(`srcset="${m.medium.url} 800w, ${m.url} 1600w"`), 'About offers the 800px copy');
+      const home = (await srv.call('/')).body;
+      assert.ok(home.includes(`${m.medium.url} 800w`), 'the homepage too');
+    } finally {
+      await doctorsRepo.update(doctor.id, { photo_media_id: null });
+    }
+  });
+});
+
 describe('/gallery', () => {
   test('shows every published photograph uncropped, grouped, with a lightbox', async () => {
     const galleryRepo = await import('../src/repositories/gallery.repo.js');

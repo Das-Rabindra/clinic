@@ -89,7 +89,8 @@ export function treatmentScene(service) {
   if (TREATMENT_SCENES[service.slug]) return TREATMENT_SCENES[service.slug];
   if (!service.image_url) return null;
   return {
-    url: service.image_url, srcset: null,
+    url: service.image_url,
+    srcset: service.medium_url ? `${service.medium_url} ${service.medium_width}w, ${service.image_url} ${service.image_width}w` : null,
     width: service.image_width || 1280, height: service.image_height || 720,
     alt: service.image_alt || '',
     caption: service.image_is_stock ? 'Illustrative image, not a photograph of the clinic' : null,
@@ -290,6 +291,10 @@ async function baseLocals({ navBase = '/' } = {}) {
     jsonForScript,
     /* Pages render the plain night scene unless their route gives a photo. */
     scenePhoto: null,
+    /* srcset for an uploaded image: its mid-size variant and the full image,
+       or '' before the scheduled job has made the variant. */
+    mediaSrcset: (url, width, mediumUrl, mediumWidth) =>
+      (url && mediumUrl && width && mediumWidth ? `${mediumUrl} ${mediumWidth}w, ${url} ${width}w` : ''),
   };
 }
 
@@ -316,7 +321,7 @@ router.get('/', async (req, res) => {
     .filter(Boolean);
 
   const heroMedia = settings.hero_media_id ? await mediaRepo.findById(settings.hero_media_id) : null;
-  const doctorMedia = doctor?.photo_media_id ? await mediaRepo.findById(doctor.photo_media_id) : null;
+  const doctorMedia = doctor?.photo_media_id ? await mediaRepo.withMedium(await mediaRepo.findById(doctor.photo_media_id)) : null;
 
   /* A hero photograph the clinic uploads itself (not flagged as stock) wins;
      otherwise the owner's chosen opening photograph. */
@@ -419,7 +424,7 @@ router.get('/services/:slug', async (req, res, next) => {
   const canonical = seo.canonicalUrl(settings);
 
   const doctor = await doctorsRepo.primary();
-  const doctorPhoto = doctor?.photo_media_id ? await mediaRepo.findById(doctor.photo_media_id) : null;
+  const doctorPhoto = doctor?.photo_media_id ? await mediaRepo.withMedium(await mediaRepo.findById(doctor.photo_media_id)) : null;
 
   const related = (await servicesRepo.relatedFor(service, 3)).map(withCardPhoto);
 
@@ -494,7 +499,7 @@ router.get('/about', async (_req, res) => {
   const canonical = seo.canonicalUrl(settings);
 
   const doctor = await doctorsRepo.primary();
-  const doctorPhoto = doctor?.photo_media_id ? await mediaRepo.findById(doctor.photo_media_id) : null;
+  const doctorPhoto = doctor?.photo_media_id ? await mediaRepo.withMedium(await mediaRepo.findById(doctor.photo_media_id)) : null;
   const gallery = await galleryRepo.listPublic();
   const name = clinic.doctor || settings.name;
 

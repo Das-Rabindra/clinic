@@ -32,7 +32,8 @@
       </div>
       <% if (doctorPhoto) { %>
       <figure class="about-scene__portrait">
-        <img src="<%= doctorPhoto.url %>" alt="<%= clinic.doctor %>" width="<%= doctorPhoto.width %>" height="<%= doctorPhoto.height %>" fetchpriority="high" decoding="async">
+        <% var ss = mediaSrcset(doctorPhoto.url, doctorPhoto.width, doctorPhoto.medium_url, doctorPhoto.medium_width); %>
+        <img src="<%= doctorPhoto.url %>"<% if (ss) { %> srcset="<%= ss %>" sizes="(min-width: 1024px) 352px, calc(100vw - 32px)"<% } %> alt="<%= clinic.doctor %>" width="<%= doctorPhoto.width %>" height="<%= doctorPhoto.height %>" fetchpriority="high" decoding="async">
       </figure>
       <% } %>
     </div>

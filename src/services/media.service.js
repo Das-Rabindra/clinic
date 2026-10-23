@@ -32,9 +32,21 @@ function sniff(buf) {
   return null;
 }
 
+/* The mid-size copy pages fetch instead of the full image wherever it is
+   shown at screen size (a portrait, a gallery photograph, a treatment card):
+   the full image is up to 2000px, and the doctor's portrait alone was 114KB
+   for a 350px frame, the slowest thing on /about. */
+export const MEDIUM_WIDTH = 800;
+const encodeMedium = (buffer) => sharp(buffer)
+  .rotate()
+  .resize({ width: MEDIUM_WIDTH, height: MEDIUM_WIDTH * 2, fit: 'inside', withoutEnlargement: true })
+  .webp({ quality: 78 })
+  .toBuffer();
+
 /**
- * Store an uploaded image plus a thumbnail variant.
- * @returns the original media row (with `thumb` attached).
+ * Store an uploaded image plus a thumbnail and, when it is wider than
+ * MEDIUM_WIDTH, a mid-size variant.
+ * @returns the original media row (with `thumb` and `medium` attached).
  */
 export async function ingestImage(file, { folder = 'clinic', alt = null, userId = null } = {}) {
   if (!file?.buffer?.length) throw new MediaError('NO_FILE', 'No file was uploaded.');
@@ -105,7 +117,49 @@ export async function ingestImage(file, { folder = 'clinic', alt = null, userId 
     variant_of: row.id, variant_kind: 'thumb', uploaded_by: userId,
   });
 
-  return { ...row, thumb: thumbRow };
+  let mediumRow = null;
+  if (displayMeta.width > MEDIUM_WIDTH) mediumRow = await storeMedium(row, display);
+
+  return { ...row, thumb: thumbRow, medium: mediumRow };
+}
+
+/** Encode, store and record the mid-size variant of an original. */
+async function storeMedium(row, sourceBuffer) {
+  const medium = await encodeMedium(sourceBuffer);
+  const mediumMeta = await sharp(medium).metadata();
+  const stored = await storage.put(row.key.replace(/\.webp$/, '') + `-${MEDIUM_WIDTH}.webp`, medium, 'image/webp');
+  return await mediaRepo.create({
+    storage: storage.driverName(),
+    key: stored.key, url: stored.url, folder: row.folder,
+    mime: 'image/webp', ext: 'webp', bytes: medium.length,
+    width: mediumMeta.width, height: mediumMeta.height,
+    checksum: row.checksum, original_name: row.original_name,
+    variant_of: row.id, variant_kind: 'medium', uploaded_by: row.uploaded_by ?? null,
+  });
+}
+
+/**
+ * Give images uploaded before the mid-size variant existed one now. Run by
+ * the scheduled job (never at boot: a cold start must stay fast), a few at a
+ * time within a time budget, so it finishes over a run or two however many
+ * images there are. One image failing (bytes missing in storage, say) is
+ * logged and skipped; pages keep using the full image until it succeeds.
+ */
+export async function backfillMediums({ limit = 8, budgetMs = 20000, log = console.log } = {}) {
+  const started = Date.now();
+  let made = 0, failed = 0;
+  for (const row of await mediaRepo.missingMedium(MEDIUM_WIDTH, limit)) {
+    if (Date.now() - started > budgetMs) break;
+    try {
+      await storeMedium(row, await storage.get(row.key));
+      made++;
+    } catch (err) {
+      failed++;
+      log(`[media] no mid-size copy for #${row.id}: ${err.message}`);
+    }
+  }
+  if (made || failed) log(`[media] mid-size copies: ${made} made, ${failed} failed`);
+  return { made, failed };
 }
 
 /** Remove the stored bytes of a media row and its variants, then soft-delete. */

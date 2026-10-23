@@ -22,7 +22,8 @@
       <%# The owner's photographs come as a responsive set with a crop
           position (see withCardPhoto in the route); admin images as one file. %>
       <% var sizes = v === 'tile' ? '(min-width: 768px) 55vw, 100vw' : v === 'row' ? '(min-width: 768px) 224px, 1px' : '(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw'; %>
-      <img src="<%= s.image_url %>"<% if (s.image_srcset) { %> srcset="<%= s.image_srcset %>" sizes="<%= sizes %>"<% } %> alt="<%= s.image_alt || '' %>"
+      <% var cardSet = s.image_srcset || mediaSrcset(s.image_url, s.image_width, s.medium_url, s.medium_width); %>
+      <img src="<%= s.image_url %>"<% if (cardSet) { %> srcset="<%= cardSet %>" sizes="<%= sizes %>"<% } %> alt="<%= s.image_alt || '' %>"
            width="<%= s.image_width || 1280 %>" height="<%= s.image_height || 720 %>"
            <%- lazy ? 'loading="lazy"' : 'fetchpriority="high"' %> decoding="async"<% if (s.image_position) { %> style="object-position: <%= s.image_position %>"<% } %>>
     <% } else { %>

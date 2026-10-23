@@ -5,10 +5,12 @@ const FIELDS = ['title', 'description', 'category', 'taken_on', 'display_order',
   'is_published', 'after_media_id', 'consent_note'];
 
 const BASE = `SELECT g.*, m.url AS image_url, m.alt AS image_alt, m.width, m.height,
-    t.url AS thumb_url, am.url AS after_url, at.url AS after_thumb_url
+    t.url AS thumb_url, md.url AS medium_url, md.width AS medium_width,
+    am.url AS after_url, at.url AS after_thumb_url
   FROM gallery_items g
   JOIN media m ON m.id = g.media_id
   LEFT JOIN media t ON t.variant_of = m.id AND t.variant_kind = 'thumb'
+  LEFT JOIN media md ON md.variant_of = m.id AND md.variant_kind = 'medium' AND md.deleted_at IS NULL
   LEFT JOIN media am ON am.id = g.after_media_id
   LEFT JOIN media at ON at.variant_of = am.id AND at.variant_kind = 'thumb'`;
 
