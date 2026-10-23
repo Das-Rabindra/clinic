@@ -62,6 +62,10 @@ const CONTACT_SCENE = scenePhoto('hero-dental-exam', 1600, 1067, [640, 1024, 160
 /* A close-up with no recognisable face: beside "Words from patients" a stock
    face would read as one of the reviewers. Captioned to say it is not. */
 const TESTIMONIALS_SCENE = ABOUT_SCENE;
+/* No people on the policy page: the instruments, already set clear of the
+   text column. The booking page reuses the homepage's booking photograph. */
+const PRIVACY_SCENE = scenePhoto('dental-instruments', 1600, 628, [1024, 1600, 2048]);
+const BOOK_SCENE = scenePhoto('dentist-uv-curing', 1600, 1068, [640, 1024, 1600, 2048]);
 const scenePreload = (photo) => ({ preloadImage: photo.url, preloadSrcset: photo.srcset, preloadSizes: '100vw' });
 
 const CATEGORY_LABELS = {
@@ -431,6 +435,8 @@ router.get('/privacy', async (_req, res) => {
   const canonical = seo.canonicalUrl(base.settings);
   res.render('public/privacy', {
     ...base,
+    scenePhoto: PRIVACY_SCENE,
+    ...scenePreload(PRIVACY_SCENE),
     meta: {
       title: `Privacy & Appointment Policy | ${base.settings.name}`,
       description: `How ${base.settings.name} handles the information you give through this website, and how to change or cancel an appointment.`,
@@ -583,6 +589,8 @@ router.get('/book', async (req, res) => {
     /* booking.css blocks render on purpose, as on the homepage: the wizard
        is the first thing on the page and must not flash unstyled. */
     pageCss: ['/css/home.css', '/css/booking.css', '/css/pages.css'],
+    scenePhoto: BOOK_SCENE,
+    ...scenePreload(BOOK_SCENE),
     servicesJson: servicesJsonFor(services),
     hoursSummary: hoursSentence(clinic),
     meta: {

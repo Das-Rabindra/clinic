@@ -341,3 +341,15 @@ html.has-lightbox { overflow: hidden; }
       linear-gradient(rgba(8, 42, 39, 0.86), rgba(8, 42, 39, 0.86));
   }
 }
+/* /book on a phone: the form is the page's purpose, so the photograph gets
+   a shorter band than other scenes and the form stays close to the top. */
+@media (max-width: 767px) {
+  .book-scene.page-cine--photo { padding-top: calc(var(--header-height) + 16svh); }
+  .book-scene.page-cine--photo .page-cine__media { height: calc(var(--header-height) + 28svh); }
+  .book-scene.page-cine--photo .page-cine__shade {
+    background:
+      linear-gradient(180deg, rgba(6, 32, 30, 0.75) 0, rgba(6, 32, 30, 0) 120px),
+      linear-gradient(180deg, rgba(8, 42, 39, 0) calc(var(--header-height) + 5svh), rgba(8, 42, 39, 0.92) calc(var(--header-height) + 16svh), var(--color-night) calc(var(--header-height) + 24svh));
+  }
+  .book-scene.page-cine--photo .page-cine__credit { bottom: calc(100% - var(--header-height) - 16svh + 0.75rem); }
+}

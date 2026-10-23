@@ -8,7 +8,8 @@
 <%- include('partials/site-header') %>
 
 <main id="main">
-  <section class="page-cine" data-hero aria-labelledby="pageTitle">
+  <section class="page-cine page-cine--photo" data-hero aria-labelledby="pageTitle">
+    <%- include('partials/scene-photo', { photo: scenePhoto, position: '70% 30%' }) %>
     <div class="container">
       <div class="page-cine__inner">
         <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Privacy' }] }) %>
@@ -17,6 +18,7 @@
         <p class="page-cine__lede">What <%= clinic.name %> collects through this website, why, and what it is never used for.</p>
       </div>
     </div>
+    <p class="page-cine__credit">Illustrative photograph</p>
   </section>
 
   <section class="section">

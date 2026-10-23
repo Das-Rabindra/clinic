@@ -127,6 +127,16 @@ describe('/contact', () => {
   });
 });
 
+describe('privacy and book scenes', () => {
+  for (const page of ['/privacy', '/book']) {
+    test(`${page} has a captioned illustrative backdrop`, async () => {
+      const body = (await srv.call(page)).body;
+      assert.match(body, /class="page-cine page-cine--photo[^"]*"[^>]*data-hero/);
+      assert.match(body, /<p class="page-cine__credit">Illustrative photograph<\/p>/);
+    });
+  }
+});
+
 describe('navigation to the new pages', () => {
   for (const page of ['/', '/services', '/privacy', '/about', '/gallery', '/testimonials', '/faq', '/contact']) {
     test(`${page} links every section page`, async () => {

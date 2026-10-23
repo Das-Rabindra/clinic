@@ -891,3 +891,18 @@ widths) found nothing.
 - **Contrast:** every line in both scenes is ≥ 6.95:1 at every width.
 - **Checks:** tests assert both captions. `npm test` passes 299/299, and the
   width sweep found nothing.
+
+## Privacy and Book use the owner's photographs (2026-10-23)
+
+- **Privacy:** the instruments photograph (no people) behind the title,
+  captioned "Illustrative photograph".
+- **Book:** the UV-curing photograph, the same one that sits beside "Book an
+  appointment" on the homepage, behind the scene that holds the booking
+  form, captioned.
+  - Desktop: the form keeps its place; the photograph shows around it.
+  - Phones: the band is shorter than on other pages (16svh, against 26), so
+    the form stays close to the top.
+- **Contrast:** every line in both scenes is ≥ 5.74:1 at every width.
+- **Checks:** a test per page asserts the captioned backdrop. `npm test`
+  passes 301/301, and the width sweep found nothing.
+- Every main page now opens on a captioned photograph, except the 404 page.
