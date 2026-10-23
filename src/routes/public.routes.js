@@ -308,6 +308,8 @@ router.get('/', async (req, res) => {
   const gallery = await galleryRepo.listPublic();
   const faqs = (await contentRepo.listFaqs({ publishedOnly: true }))
     .map(f => ({ question: resolveFaq(f.question, clinic), answer: resolveFaq(f.answer, clinic) }));
+  /* Everything /faq answers: these plus every treatment's own questions. */
+  const faqTotal = faqs.length + (await servicesRepo.publishedFaqsWithService()).length;
   const reviews = await reviewsService.publicReviews();
 
   // Ensure a CSRF token exists before the booking form needs one.
@@ -360,7 +362,7 @@ router.get('/', async (req, res) => {
       const leadIds = new Set(lead.map(s => s.id));
       return { featuredServices: lead, otherServices: grid.filter(s => !leadIds.has(s.id)) };
     })(),
-    services, doctor, gallery, faqs, reviews, orderedHours,
+    services, doctor, gallery, faqs, faqTotal, reviews, orderedHours,
     galleryCategories: categoryKeys.map(k => ({ key: k, label: CATEGORY_LABELS[k] || k })),
     meta: metaTags,
     schemas: [await seo.structuredData(), seo.faqStructuredData(faqs)],

@@ -372,3 +372,40 @@
 .profile__more { margin-top: var(--space-8); }
 .visit__more { margin-top: var(--space-8); }
 .closing__frame img { object-position: 38% 55%; }
+
+/* ── 06 · Questions: numbered, set large ─────────────────────────────────
+   Light before the night booking scene; cinematic through type. A giant
+   question mark sits behind the heading as the section's image, every
+   question is numbered and set in the display face, and the open answer
+   hangs from a rule aligned with the question text. */
+.qa-section .faq-split__head { isolation: isolate; }
+.qa-section__mark {
+  position: absolute; z-index: -1; top: -0.42em; right: 0;
+  font-family: var(--font-display); font-style: italic; font-size: clamp(11rem, 7rem + 12vw, 19rem); line-height: 1;
+  color: var(--color-accent-sage); pointer-events: none;
+}
+.faq-split__head { position: relative; }
+.qa-section__count { display: flex; align-items: center; gap: var(--space-4); margin-top: var(--space-8) !important; padding-top: var(--space-6); border-top: 1px solid var(--color-border-subtle); }
+.qa-section__total { font-family: var(--font-display); font-size: clamp(2.6rem, 2rem + 2vw, 3.5rem); line-height: 1; color: var(--color-primary); }
+.qa-section__count > span:last-child { font-size: var(--text-small); color: var(--color-text-muted); line-height: 1.6; }
+.qa .accordion__trigger {
+  justify-content: flex-start; gap: var(--space-5); min-height: 76px; padding-block: var(--space-5);
+  font-size: clamp(1.15rem, 1.02rem + 0.55vw, 1.45rem); font-weight: var(--weight-regular); letter-spacing: -0.005em;
+}
+.qa__n { flex: 0 0 2.5rem; font-style: italic; font-size: 1.05rem; color: var(--color-primary); }
+.qa__q { flex: 1; }
+.qa .accordion__icon {
+  display: grid; place-items: center; width: 2.25rem; height: 2.25rem; padding: 0.5rem; border-radius: 50%;
+  border: 1px solid var(--color-border-strong); color: var(--color-primary);
+  transition: transform var(--duration-base) var(--ease-out), background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+.qa .accordion__trigger[aria-expanded='true'] .accordion__icon { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); }
+.qa .accordion__trigger[aria-expanded='true'] .qa__q { color: var(--color-primary); }
+.qa .accordion__panel {
+  margin-left: calc(2.5rem + var(--space-5)); padding: 0 0 var(--space-6) var(--space-5);
+  border-left: 2px solid var(--color-primary); font-size: var(--text-body-lg); line-height: 1.7; color: var(--color-text-muted);
+}
+@media (max-width: 479px) {
+  .qa__n { flex-basis: 1.75rem; }
+  .qa .accordion__panel { margin-left: calc(1.75rem + var(--space-5)); padding-left: var(--space-4); }
+}

@@ -1143,3 +1143,23 @@ illustrative photographs had been used 2–4 times each.
   sample card is still labelled "Sample".
 - **Checks:** `npm test` passes 307/307. The width sweep (home and preview)
   found nothing.
+
+## Homepage FAQ: numbered, set large (2026-10-23)
+
+- **Stays light:** chapter 06 sits before the night booking scene, so it is
+  cinematic through type.
+- **Heading:** a giant italic sage "?" sits behind it as the section's
+  image.
+- **Total:** a large count of every answer the site gives ("64 answers in
+  all, including each treatment's own", `faqTotal` from the route) links to
+  /faq.
+- **Questions:**
+  - Every question is numbered (01–12, italic, primary) and set larger in
+    the display face. The numbers are `aria-hidden`, so accessible names
+    stay the question alone.
+  - The plus is a ringed button that fills primary when open, and the open
+    question turns primary.
+  - The answer hangs from a 2px rule aligned with the question text.
+- **All 12 stay:** the homepage FAQPage markup must match what is visible.
+- **Checks:** `npm test` passes 307/307, and the homepage sweep found
+  nothing.

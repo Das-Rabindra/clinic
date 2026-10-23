@@ -251,23 +251,29 @@
   <%- include('partials/reviews', { chapterNum: '05' }) %>
 
   <!-- ============ 06 · QUESTIONS ============ -->
+  <%# Light, before the night booking scene, and cinematic through type: a
+      giant question mark behind the heading, every question numbered and
+      set large, the open answer marked by a rule. All of them stay here —
+      the FAQPage markup must match what is visible. %>
   <% if (faqs.length) { %>
-  <section class="section section--surface chapter-section" id="faq" aria-labelledby="faqTitle">
+  <section class="section section--surface chapter-section qa-section" id="faq" aria-labelledby="faqTitle">
     <div class="container faq-split">
       <div class="faq-split__head" data-reveal-group>
+        <span class="qa-section__mark" aria-hidden="true">?</span>
         <% chapter('06', 'Good to know'); %>
         <h2 id="faqTitle" data-reveal>Frequently asked questions</h2>
         <p class="text-muted" data-reveal>Something not covered here?
           <% if (tel) { %><a class="link" href="<%= tel %>" data-track="call_clicked">Call <%= clinic.phone %></a><% } %>
           <% if (whatsappUrl) { %> or <a class="link" href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked">message on WhatsApp</a><% } %>.</p>
-        <p data-reveal><a class="link link--arrow" href="/faq">All questions, including each treatment <%- ic('arrow') %></a></p>
+        <p class="qa-section__count" data-reveal><span class="qa-section__total"><%= faqTotal %></span>
+          <span>answers in all, including each treatment&rsquo;s own<br><a class="link link--arrow" href="/faq">All questions <%- ic('arrow') %></a></span></p>
       </div>
-      <div class="accordion" data-accordion>
+      <div class="accordion qa" data-accordion>
         <% faqs.forEach(function (f, i) { %>
         <div class="accordion__item">
           <h3 class="accordion__heading">
             <button type="button" class="accordion__trigger" aria-expanded="false" aria-controls="faq-a-<%= i %>" id="faq-q-<%= i %>">
-              <%= f.question %><span class="accordion__icon"><%- ic('plus') %></span>
+              <span class="qa__n" aria-hidden="true"><%= String(i + 1).padStart(2, '0') %></span><span class="qa__q"><%= f.question %></span><span class="accordion__icon"><%- ic('plus') %></span>
             </button>
           </h3>
           <div class="accordion__panel" id="faq-a-<%= i %>" role="region" aria-labelledby="faq-q-<%= i %>" data-collapsed>
