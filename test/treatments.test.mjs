@@ -110,15 +110,10 @@ describe('/services/:slug', () => {
 });
 
 describe('treatment page scenes', () => {
-  /* Each treatment's own admin image is the right picture for almost all of
-     them; the owner's photographs replace it only where they show the
-     treatment more exactly, or where there is none, once each. */
+  /* Each treatment's own admin image is its picture; the one treatment with
+     none (emergency care) gets one of the owner's photographs. */
   test('the owner\'s photographs go only where they match, and never twice', async () => {
-    const want = {
-      'dental-fillings': 'dentist-uv-curing',
-      'tooth-extraction': 'dental-procedure',
-      'dental-emergency': 'dental-instruments',
-    };
+    const want = { 'dental-emergency': 'dental-instruments' };
     const seen = new Map();
     for (const { slug } of await servicesRepo.publicSlugs()) {
       const body = (await srv.call(`/services/${slug}`)).body;

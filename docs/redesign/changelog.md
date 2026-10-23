@@ -1035,3 +1035,39 @@ treatments:
   treatment keeps its own image, and that no two treatments share an
   image. The provenance and artwork tests are restored to their original
   intent. `npm test` passes 303/303.
+
+## Each illustrative photograph used once across the site (2026-10-23)
+
+The owner asked for each photograph to be used only once. The six
+illustrative photographs had been used 2–4 times each.
+
+| Photograph | Its one place |
+|---|---|
+| Dentist examining with a mirror | Homepage opening scene |
+| Implant render (licensed) | Homepage "A calm, modern clinic" |
+| UV curing light | Homepage, beside "Book an appointment" |
+| Smile close-up | Homepage, beside "Your smile deserves…" |
+| Procedure | Treatments page scene |
+| Instruments | Emergency Dental Care, the one treatment without its own image (its page and its card) |
+
+- **Plain scenes:** About (with the real portrait), Gallery, Contact,
+  Testimonials, FAQ, Privacy, Book and 404 are back on the plain night
+  scene.
+- **Treatments:** Dental Fillings and Tooth Extraction are back on their
+  own admin images.
+- **Templates:** a scene photograph is now optional. A route passes
+  `scenePhoto` (`{ url, srcset, caption, position?, flip? }`); otherwise the
+  shared default is `null`, and the page renders the plain scene with no
+  caption.
+- **Clean-up:** the unused `about-scene-*` and the large curing-light sizes
+  are removed. `CREDITS.md` lists each photograph's one place.
+- **Not counted as repeats:**
+  - A treatment's card and its page are one subject.
+  - The clinic's own photographs (treatment room, poster, before & after)
+    also appear in the gallery and the small previews linking to it.
+- **Guard:** a new test crawls every public page (homepage, lists, all
+  treatments, every scene page, 404) and fails if any illustrative
+  photograph appears in two places. Checked by planting a duplicate: it
+  failed with "dental-procedure is used 2 times: /services, /contact".
+- **Checks:** `npm test` passes 304/304, and the width sweep (11 pages × 8
+  widths) found nothing.

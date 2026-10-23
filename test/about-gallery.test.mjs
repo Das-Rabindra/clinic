@@ -32,9 +32,10 @@ describe('/about', () => {
     const r = await srv.call('/about');
     assert.equal(r.status, 200);
     assertHeadingOrder(r.body, '/about');
-    assert.match(r.body, /class="page-cine page-cine--photo about-scene" data-hero/);
-    // The scene's stock backdrop says what it is.
-    assert.match(r.body, /<p class="page-cine__credit">Illustrative photograph<\/p>/);
+    // Each illustrative photograph is used once across the site; this page
+    // opens on the plain night scene.
+    assert.match(r.body, /class="page-cine[^"]*" [^>]*data-hero/);
+    assert.ok(!/class="page-cine page-cine--photo/.test(r.body), 'no scene photograph');
     assert.ok(r.body.includes('Kalinga Institute of Dental Science'));
     assert.ok(r.body.includes('/img/clinic/treatment-room-1086.webp'));
     assert.match(r.body, /class="hours-table-ds"/);
@@ -54,9 +55,10 @@ describe('/gallery', () => {
     const shots = (r.body.match(/data-lightbox data-caption=/g) || []).length;
     assert.ok(shots >= published.length + 1);
     assert.match(r.body, /<dialog class="lightbox"/);
-    // A stock backdrop over a page about the clinic says so, and points to
-    // the clinic's own photographs.
-    assert.match(r.body, /Illustrative photograph &middot; the clinic&rsquo;s own photographs are below/);
+    // Each illustrative photograph is used once across the site; this page
+    // opens on the plain night scene.
+    assert.match(r.body, /class="page-cine[^"]*" [^>]*data-hero/);
+    assert.ok(!/class="page-cine page-cine--photo/.test(r.body), 'no scene photograph');
     assert.ok(r.body.includes('/js/gallery.js'));
   });
 
@@ -73,8 +75,10 @@ describe('/testimonials', () => {
     assert.equal(r.status, 200);
     assertHeadingOrder(r.body, '/testimonials');
     assert.match(r.body, /Testimonials coming soon/);
-    // A stock photograph beside "Words from patients" must not pass as one.
-    assert.match(r.body, /Illustrative photograph &middot; not a patient of the clinic/);
+    // Each illustrative photograph is used once across the site; this page
+    // opens on the plain night scene.
+    assert.match(r.body, /class="page-cine[^"]*" [^>]*data-hero/);
+    assert.ok(!/class="page-cine page-cine--photo/.test(r.body), 'no scene photograph');
     assert.match(r.body, /<meta name="robots" content="noindex, follow">/);
     assert.ok(!r.body.includes('class="testimony"'), 'no testimony cards');
     assert.ok(!r.body.includes('rating-hero'), 'no rating without reviews');
@@ -122,26 +126,57 @@ describe('/contact', () => {
     assert.match(r.body, /<iframe[^>]+data-src="https:\/\/[^"]*google[^"]*"/);
     assert.ok(r.body.includes('Annapurna Market Complex'));
     assert.equal((r.body.match(/<tr[ >]/g) || []).length, 7, 'seven days of hours');
-    assert.match(r.body, /class="page-cine page-cine--photo" data-hero/);
-    assert.match(r.body, /<p class="page-cine__credit">Illustrative photograph<\/p>/);
+    // Each illustrative photograph is used once across the site; this page
+    // opens on the plain night scene.
+    assert.match(r.body, /class="page-cine[^"]*" [^>]*data-hero/);
+    assert.ok(!/class="page-cine page-cine--photo/.test(r.body), 'no scene photograph');
   });
 });
 
 describe('privacy, book and 404 scenes', () => {
-  test('the 404 page has a captioned backdrop and still answers 404', async () => {
+  test('the 404 page still answers 404, on the plain scene', async () => {
     const r = await srv.call('/no-such-page');
     assert.equal(r.status, 404);
-    assert.match(r.body, /class="page-cine page-cine--photo"[^>]*data-hero/);
-    assert.match(r.body, /<p class="page-cine__credit">Illustrative photograph<\/p>/);
+    // Each illustrative photograph is used once across the site; this page
+    // opens on the plain night scene.
+    assert.match(r.body, /class="page-cine[^"]*" [^>]*data-hero/);
+    assert.ok(!/class="page-cine page-cine--photo/.test(r.body), 'no scene photograph');
   });
 
   for (const page of ['/privacy', '/book']) {
-    test(`${page} has a captioned illustrative backdrop`, async () => {
-      const body = (await srv.call(page)).body;
-      assert.match(body, /class="page-cine page-cine--photo[^"]*"[^>]*data-hero/);
-      assert.match(body, /<p class="page-cine__credit">Illustrative photograph<\/p>/);
+    test(`${page} opens on the plain scene`, async () => {
+      const r = await srv.call(page);
+    // Each illustrative photograph is used once across the site; this page
+    // opens on the plain night scene.
+    assert.match(r.body, /class="page-cine[^"]*" [^>]*data-hero/);
+    assert.ok(!/class="page-cine page-cine--photo/.test(r.body), 'no scene photograph');
     });
   }
+});
+
+describe('each illustrative photograph is used once across the site', () => {
+  /* The owner's request. A treatment's card is the same subject as its page,
+     so cards are not counted; a <link rel="preload"> is not shown, so only
+     <img> elements count. */
+  test('no stock photograph appears in two places', async () => {
+    const servicesRepo = await import('../src/repositories/services.repo.js');
+    const pages = ['/', '/services', '/about', '/gallery', '/contact', '/testimonials',
+      '/faq', '/privacy', '/book', '/no-such-page',
+      ...(await servicesRepo.publicSlugs()).map((s) => `/services/${s.slug}`)];
+    const uses = new Map();
+    for (const page of pages) {
+      const body = (await srv.call(page)).body
+        .replace(/<article[^>]*data-treatment-card[\s\S]*?<\/article>/g, '');
+      for (const m of body.matchAll(/<img [^>]*src="\/img\/stock\/([a-z-]+)-\d+\.webp"/g)) {
+        if (!uses.has(m[1])) uses.set(m[1], []);
+        uses.get(m[1]).push(page);
+      }
+    }
+    assert.ok(uses.size >= 5, `expected the photographs to be in use, saw ${[...uses.keys()]}`);
+    for (const [photo, where] of uses) {
+      assert.equal(where.length, 1, `${photo} is used ${where.length} times: ${where.join(', ')}`);
+    }
+  });
 });
 
 describe('navigation to the new pages', () => {

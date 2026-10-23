@@ -23,12 +23,8 @@
 <main id="main">
 
   <!-- ============ SCENE ============ -->
-  <section class="page-cine page-cine--photo" data-hero aria-labelledby="pageTitle">
-    <div class="page-cine__media">
-      <img src="<%= heroImage.url %>" srcset="<%= heroImage.srcset %>" sizes="100vw" alt=""
-           width="<%= heroImage.width %>" height="<%= heroImage.height %>" fetchpriority="high" decoding="async">
-    </div>
-    <div class="page-cine__shade" aria-hidden="true"></div>
+  <section class="page-cine<%= scenePhoto ? ' page-cine--photo' : '' %>" data-hero aria-labelledby="pageTitle">
+    <% if (scenePhoto) { %><%- include('partials/scene-photo', { photo: scenePhoto }) %><% } %>
     <div class="container">
       <div class="page-cine__inner">
         <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Gallery' }] }) %>
@@ -41,9 +37,7 @@
         </ul>
       </div>
     </div>
-    <%# Stock, over a page about the clinic itself: the caption says so, and
-        says where the clinic's own photographs are. %>
-    <p class="page-cine__credit">Illustrative photograph &middot; the clinic&rsquo;s own photographs are below</p>
+    <% if (scenePhoto && scenePhoto.caption) { %><p class="page-cine__credit"><%= scenePhoto.caption %></p><% } %>
   </section>
 
   <!-- ============ CHAPTERS, ONE PER CATEGORY ============ -->

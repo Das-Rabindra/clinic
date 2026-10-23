@@ -11,12 +11,8 @@
 
 <main id="main">
   <!-- ============ SCENE ============ -->
-  <section class="page-cine page-cine--photo" data-hero aria-labelledby="pageTitle">
-    <div class="page-cine__media">
-      <img src="/img/stock/dental-procedure-1600.webp" srcset="/img/stock/dental-procedure-1024.webp 1024w, /img/stock/dental-procedure-1600.webp 1600w, /img/stock/dental-procedure-2048.webp 2048w"
-           sizes="100vw" alt="" width="1600" height="1067" fetchpriority="high" decoding="async" style="object-position: 70% 50%">
-    </div>
-    <div class="page-cine__shade" aria-hidden="true"></div>
+  <section class="page-cine<%= scenePhoto ? ' page-cine--photo' : '' %>" data-hero aria-labelledby="pageTitle">
+    <% if (scenePhoto) { %><%- include('partials/scene-photo', { photo: scenePhoto }) %><% } %>
     <div class="container">
       <div class="page-cine__inner">
         <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Treatments' }] }) %>
@@ -30,7 +26,7 @@
         </div>
       </div>
     </div>
-    <p class="page-cine__credit">Illustrative photograph</p>
+    <% if (scenePhoto && scenePhoto.caption) { %><p class="page-cine__credit"><%= scenePhoto.caption %></p><% } %>
   </section>
 
   <!-- ============ INDEX ============ -->

@@ -46,62 +46,38 @@ const HERO_PHOTO = {
   stock: true,
 };
 
-/* Free stock backdrops (Freepik) for the About and Gallery scenes, chosen by
-   the owner. Captioned as illustrative where they show; the clinic's own
-   photographs stay the content of both pages. */
-const scenePhoto = (name, width, height, sizes) => ({
+/* The owner's six illustrative photographs are each used once across the
+   site (owner's request, Oct 2026). Four are on the homepage, set by
+   index.ejs: the opening scene, "A calm, modern clinic", beside "Book an
+   appointment", and beside the closing line. The other two are below:
+   the treatments list's scene, and emergency care, the one treatment with no
+   image of its own (its page and its card, one subject). Every other page
+   scene is the plain night scene; any route can give one a photograph again
+   by passing scenePhoto. */
+const scenePhoto = (name, width, height, sizes, extra = {}) => ({
   url: `/img/stock/${name}-1600.webp`,
   srcset: sizes.map(w => `/img/stock/${name}-${w}.webp ${w}w`).join(', '),
-  width, height,
+  width, height, caption: 'Illustrative photograph', ...extra,
 });
-const GALLERY_SCENE = scenePhoto('dentist-uv-curing', 1600, 1068, [640, 1024, 1600, 2048]);
-/* Its own lighter encoding: it sits under deep shade, so it needs far fewer
-   bytes than the bright homepage copy of the same photograph. */
-const ABOUT_SCENE = scenePhoto('about-scene', 1600, 1422, [640, 1024, 1600, 2048]);
-const CONTACT_SCENE = scenePhoto('hero-dental-exam', 1600, 1067, [640, 1024, 1600, 2048]);
-/* A close-up with no recognisable face: beside "Words from patients" a stock
-   face would read as one of the reviewers. Captioned to say it is not. */
-const TESTIMONIALS_SCENE = ABOUT_SCENE;
-/* No people on the policy page: the instruments, already set clear of the
-   text column. The booking page reuses the homepage's booking photograph. */
-const PRIVACY_SCENE = scenePhoto('dental-instruments', 1600, 628, [1024, 1600, 2048]);
-const BOOK_SCENE = scenePhoto('dentist-uv-curing', 1600, 1068, [640, 1024, 1600, 2048]);
-/* The 404 page: the smile, mirrored as on Testimonials, so a dead end still
-   opens on something friendly. Rendered by middleware/error.js. */
-export const NOT_FOUND_SCENE = ABOUT_SCENE;
+const SERVICES_SCENE = scenePhoto('dental-procedure', 1600, 1067, [1024, 1600, 2048], { position: '70% 50%' });
 
-/* The scene behind a treatment page's title, and its cards. Every treatment
-   has its own treatment-specific image in the admin, and that is the right
-   picture for almost all of them. The owner's photographs replace it only
-   where they show the treatment more exactly than the admin image does, or
-   where there is no admin image, and each is used for one treatment only:
-     - fillings: the curing light that sets a filling (the admin image is a
-       general check-up);
-     - extraction: forceps in use (the admin image is a general procedure);
-     - emergency care: the instruments (no admin image).
-   An earlier version spread six photographs over all fifteen treatments,
-   which left mismatches (an implant for crowns, a curing light for braces)
-   and duplicates; the owner asked for proper, unique matches. */
-const PHOTO = { caption: 'Illustrative photograph' };
+/* The scene behind a treatment page's title, and its card. Every treatment
+   but emergency care has its own treatment-specific image in the admin,
+   and that is the right picture: an earlier version spread six photographs
+   over all fifteen, which left mismatches and duplicates. */
 const TREATMENT_SCENES = {
-  'dental-fillings': { ...BOOK_SCENE, ...PHOTO,
-    alt: 'A dentist setting a filling with a curing light (illustrative photograph)' },
-  'tooth-extraction': { ...scenePhoto('dental-procedure', 1600, 1067, [1024, 1600, 2048]), ...PHOTO,
-    alt: 'A dentist working with forceps during oral surgery (illustrative photograph)' },
-  'dental-emergency': { ...PRIVACY_SCENE, ...PHOTO, alt: '', position: '70% 30%' },
+  'dental-emergency': { ...scenePhoto('dental-instruments', 1600, 628, [1024, 1600, 2048]), alt: '', position: '70% 30%' },
 };
 
-/* Cards for the same three, in each photograph's natural crop (the scene
-   versions are padded for a wide backdrop). Cards carry no caption of their
-   own; each list of them says once that the photographs are illustrative. */
+/* Its card, in the photograph's natural crop. Cards carry no caption of
+   their own; each list of them says once that the photographs are
+   illustrative. */
 const card = (name, width, height, sizes, extra = {}) => ({
   image_url: `/img/stock/${name}-1024.webp`,
   image_srcset: sizes.map(w => `/img/stock/${name}-${w}.webp ${w}w`).join(', '),
   image_width: width, image_height: height, image_alt: '', image_is_stock: 1, ...extra,
 });
 const CARD_FOR = {
-  'dental-fillings': card('dentist-uv-curing', 1024, 683, [640, 1024, 1600]),
-  'tooth-extraction': card('dental-procedure', 1024, 683, [1024, 1600]),
   'dental-emergency': card('dental-instruments', 1024, 402, [1024, 1600], { image_position: '80% 50%' }),
 };
 /** A service row with its card image swapped for the owner's photograph. */
@@ -312,6 +288,8 @@ async function baseLocals({ navBase = '/' } = {}) {
     initials: (settings.doctor_name || settings.name || '')
       .split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'SD',
     jsonForScript,
+    /* Pages render the plain night scene unless their route gives a photo. */
+    scenePhoto: null,
   };
 }
 
@@ -406,9 +384,8 @@ router.get('/services', async (_req, res) => {
   res.render('public/services', {
     ...base,
     cards,
-    preloadImage: '/img/stock/dental-procedure-1600.webp',
-    preloadSrcset: '/img/stock/dental-procedure-1024.webp 1024w, /img/stock/dental-procedure-1600.webp 1600w, /img/stock/dental-procedure-2048.webp 2048w',
-    preloadSizes: '100vw',
+    scenePhoto: SERVICES_SCENE,
+    ...scenePreload(SERVICES_SCENE),
     meta: {
       title: `Dental Treatments${town ? ` in ${town}` : ''} | ${base.settings.name}`,
       description: base.settings.services_lede || base.settings.seo_description || '',
@@ -490,8 +467,6 @@ router.get('/privacy', async (_req, res) => {
   const canonical = seo.canonicalUrl(base.settings);
   res.render('public/privacy', {
     ...base,
-    scenePhoto: PRIVACY_SCENE,
-    ...scenePreload(PRIVACY_SCENE),
     meta: {
       title: `Privacy & Appointment Policy | ${base.settings.name}`,
       description: `How ${base.settings.name} handles the information you give through this website, and how to change or cancel an appointment.`,
@@ -528,18 +503,13 @@ router.get('/about', async (_req, res) => {
     pageCss: ['/css/home.css', '/css/pages.css'],
     doctor, doctorPhoto,
     clinicPhoto: CLINIC_PHOTO,
-    scenePhoto: ABOUT_SCENE,
     galleryPreview: gallery.slice(0, 3),
     galleryCount: gallery.length + 1,          // + the treatment-room photograph
     weekHours: weekHoursFor(clinic),
     hoursSummary: hoursSentence(clinic),
     showDoctorBio: saysSomethingNew(doctor?.bio, settings.about_body),
     addressHtml: addressHtmlFor(settings),
-    /* The scene's backdrop is the largest thing on screen, so it is the one
-       to fetch first; the portrait loads normally beside it. */
-    preloadImage: ABOUT_SCENE.url,
-    preloadSrcset: ABOUT_SCENE.srcset,
-    preloadSizes: '100vw',
+    preloadImage: doctorPhoto?.url || null,
     meta: {
       title: `About ${name} | ${settings.name}`,
       description: settings.about_body || `About ${name} and ${settings.name}.`,
@@ -581,10 +551,6 @@ router.get('/gallery', async (_req, res) => {
     ...base,
     groups,
     total: items.length,
-    heroImage: GALLERY_SCENE,
-    preloadImage: GALLERY_SCENE.url,
-    preloadSrcset: GALLERY_SCENE.srcset,
-    preloadSizes: '100vw',
     meta: {
       title: `Gallery: inside the clinic | ${settings.name}`,
       description: settings.gallery_lede || `Photographs of ${settings.name}.`,
@@ -609,8 +575,6 @@ router.get('/contact', async (req, res) => {
   res.render('public/contact', {
     ...base,
     pageCss: ['/css/home.css', '/css/pages.css'],
-    scenePhoto: CONTACT_SCENE,
-    ...scenePreload(CONTACT_SCENE),
     weekHours: weekHoursFor(clinic),
     hoursSummary: hoursSentence(clinic),
     addressHtml: addressHtmlFor(settings),
@@ -644,8 +608,6 @@ router.get('/book', async (req, res) => {
     /* booking.css blocks render on purpose, as on the homepage: the wizard
        is the first thing on the page and must not flash unstyled. */
     pageCss: ['/css/home.css', '/css/booking.css', '/css/pages.css'],
-    scenePhoto: BOOK_SCENE,
-    ...scenePreload(BOOK_SCENE),
     servicesJson: servicesJsonFor(services),
     hoursSummary: hoursSentence(clinic),
     meta: {
@@ -676,8 +638,6 @@ router.get('/testimonials', async (_req, res) => {
   res.render('public/testimonials', {
     ...base,
     pageCss: ['/css/home.css', '/css/pages.css'],
-    scenePhoto: TESTIMONIALS_SCENE,
-    ...scenePreload(TESTIMONIALS_SCENE),
     reviews, starsHtml, formatReviewDate,
     noindex: !reviews.reviews.length,
     meta: {
@@ -716,9 +676,6 @@ router.get('/faq', async (_req, res) => {
   res.render('public/faq', {
     ...base,
     groups,
-    preloadImage: '/img/stock/dental-instruments-1600.webp',
-    preloadSrcset: '/img/stock/dental-instruments-1024.webp 1024w, /img/stock/dental-instruments-1600.webp 1600w, /img/stock/dental-instruments-2048.webp 2048w',
-    preloadSizes: '100vw',
     total: groups.reduce((n, g) => n + g.faqs.length, 0),
     meta: {
       title: `Questions patients ask | ${settings.name}`,

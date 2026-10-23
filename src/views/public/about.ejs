@@ -15,15 +15,10 @@
 <main id="main">
 
   <!-- ============ SCENE ============ -->
-  <%# The dentist's portrait framed beside the name, over a darkened
-      illustrative photograph — a portrait does not survive being stretched
-      behind text the way a scene does. %>
-  <section class="page-cine page-cine--photo about-scene" data-hero aria-labelledby="pageTitle">
-    <div class="page-cine__media">
-      <img src="<%= scenePhoto.url %>" srcset="<%= scenePhoto.srcset %>" sizes="100vw" alt=""
-           width="<%= scenePhoto.width %>" height="<%= scenePhoto.height %>" fetchpriority="high" decoding="async">
-    </div>
-    <div class="page-cine__shade" aria-hidden="true"></div>
+  <%# The dentist's portrait framed beside the name — a portrait does not
+      survive being stretched behind text the way a room does. %>
+  <section class="page-cine<%= scenePhoto ? ' page-cine--photo' : '' %> about-scene" data-hero aria-labelledby="pageTitle">
+    <% if (scenePhoto) { %><%- include('partials/scene-photo', { photo: scenePhoto }) %><% } %>
     <div class="container about-scene__grid">
       <div class="page-cine__inner">
         <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'About' }] }) %>
@@ -37,13 +32,11 @@
       </div>
       <% if (doctorPhoto) { %>
       <figure class="about-scene__portrait">
-        <%# Low priority: a 114KB original that, fetched alongside the backdrop,
-            fonts and stylesheets, slowed the backdrop (the LCP) on slow links. %>
-        <img src="<%= doctorPhoto.url %>" alt="<%= clinic.doctor %>" width="<%= doctorPhoto.width %>" height="<%= doctorPhoto.height %>" fetchpriority="low" decoding="async">
+        <img src="<%= doctorPhoto.url %>" alt="<%= clinic.doctor %>" width="<%= doctorPhoto.width %>" height="<%= doctorPhoto.height %>" fetchpriority="high" decoding="async">
       </figure>
       <% } %>
     </div>
-    <p class="page-cine__credit">Illustrative photograph</p>
+    <% if (scenePhoto && scenePhoto.caption) { %><p class="page-cine__credit"><%= scenePhoto.caption %></p><% } %>
   </section>
 
   <!-- ============ 01 · THE DENTIST ============ -->

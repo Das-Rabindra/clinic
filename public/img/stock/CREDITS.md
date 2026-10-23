@@ -10,18 +10,18 @@ Free photographs from Freepik, which renamed itself Magnific
 Used under the free licence, which requires attribution to the website
 (Terms of Use §8.1): the site footer reads "Illustrative photographs by
 Wavebreak Media and others on Magnific (formerly Freepik)". Each is
-captioned "Illustrative photograph" where it appears. Supplied by the clinic
+captioned "Illustrative photograph" where it appears, and each is used in
+one place only (owner's request). Supplied by the clinic
 owner on 23 Oct 2026; re-encoded to WebP, metadata stripped. The creator is
 named where the file's own metadata names one.
 
 | Files | Title (from the file) | Creator | Where |
 |---|---|---|---|
-| `hero-dental-exam-*.webp` | Dentist examining a female patient with tools | Wavebreak Media | Homepage opening scene; Contact page scene |
+| `hero-dental-exam-*.webp` | Dentist examining a female patient with tools | Wavebreak Media | Homepage opening scene |
 | `smile-exam-*.webp` | Dentist examining female patient teeth | Wavebreak Media | Homepage closing scene |
-| `about-scene-*.webp` | Same photograph, lighter encoding for a darkened backdrop | Wavebreak Media | About page scene; Testimonials page scene (mirrored), captioned "not a patient of the clinic"; 404 page scene (mirrored) |
-| `dentist-uv-curing-*.webp` | UV lamp in use (dentist curing a filling) | not stated | Homepage booking section; Gallery and Book page scenes |
+| `dentist-uv-curing-*.webp` | UV lamp in use (dentist curing a filling) | not stated | Homepage booking section |
 | `dental-procedure-*.webp` | Patient in dental clinic during an operation | not stated | Treatments page scene |
-| `dental-instruments-*.webp` | Close-up of dentist instruments | not stated | Questions and Privacy page scenes |
+| `dental-instruments-*.webp` | Close-up of dentist instruments | not stated | Emergency Dental Care (page and card) |
 
 ## Licensed
 

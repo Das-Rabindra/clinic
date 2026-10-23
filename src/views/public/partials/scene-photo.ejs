@@ -1,15 +1,15 @@
 <%#
   The photograph behind a page scene (.page-cine--photo) and its shade.
-  Locals: photo { url, srcset, width, height }, position (optional
-  object-position), flip (optional: mirror it, to bring a subject that sits
-  behind the text column out into the lit right-hand side). It is the page's
-  largest element, so it is fetched first; routes preload the same url and
-  srcset.
+  Locals: photo { url, srcset, width, height, position?, flip? }. position is
+  an object-position; flip mirrors it, to bring a subject that sits behind
+  the text column out into the lit right-hand side. It is the page's largest
+  element, so it is fetched first; routes preload the same url and srcset.
 %>
+<% var pos = photo.position; %>
 <%# The flip goes on the wrapper: the image's own transform belongs to the
     push-in animation, which would override it. %>
-<div class="page-cine__media"<% if (typeof flip !== 'undefined' && flip) { %> style="transform: scaleX(-1)"<% } %>>
+<div class="page-cine__media"<% if (photo.flip) { %> style="transform: scaleX(-1)"<% } %>>
   <img src="<%= photo.url %>" srcset="<%= photo.srcset %>" sizes="100vw" alt=""
-       width="<%= photo.width %>" height="<%= photo.height %>" fetchpriority="high" decoding="async"<% if (typeof position !== 'undefined' && position) { %> style="object-position: <%= position %>"<% } %>>
+       width="<%= photo.width %>" height="<%= photo.height %>" fetchpriority="high" decoding="async"<% if (pos) { %> style="object-position: <%= pos %>"<% } %>>
 </div>
 <div class="page-cine__shade" aria-hidden="true"></div>

@@ -14,8 +14,8 @@
 <main id="main">
 
   <!-- ============ SCENE ============ -->
-  <section class="page-cine page-cine--photo" data-hero aria-labelledby="pageTitle">
-    <%- include('partials/scene-photo', { photo: scenePhoto, flip: true, position: '50% 55%' }) %>
+  <section class="page-cine<%= scenePhoto ? ' page-cine--photo' : '' %>" data-hero aria-labelledby="pageTitle">
+    <% if (scenePhoto) { %><%- include('partials/scene-photo', { photo: scenePhoto }) %><% } %>
     <div class="container">
       <div class="page-cine__inner">
         <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Testimonials' }] }) %>
@@ -35,7 +35,7 @@
         <% } %>
       </div>
     </div>
-    <p class="page-cine__credit">Illustrative photograph &middot; not a patient of the clinic</p>
+    <% if (scenePhoto && scenePhoto.caption) { %><p class="page-cine__credit"><%= scenePhoto.caption %></p><% } %>
   </section>
 
   <% if (has) { %>
