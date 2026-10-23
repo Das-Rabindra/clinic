@@ -222,7 +222,10 @@
   .gallery-grid-ds { grid-template-columns: repeat(2, 1fr); }
   .gallery-grid-ds--3 { grid-template-columns: 1.3fr 1fr; grid-template-rows: auto auto; }
   .gallery-grid-ds--3 .gallery-grid-ds__item:first-child { grid-row: span 2; }
-  .gallery-grid-ds--3 .gallery-grid-ds__item:first-child .gallery-grid-ds__frame { height: calc(100% - 2.5rem); }
+  .gallery-grid-ds--3 .gallery-grid-ds__item:first-child .gallery-grid-ds__frame { height: calc(100% - 2.5rem); background: var(--color-surface); border: 1px solid var(--color-border-subtle); }
+  /* The tall lead cell shows the whole image: clinic uploads are often
+     posters, and cropping a poster cuts its words in half. */
+  .gallery-grid-ds--3 .gallery-grid-ds__item:first-child img { object-fit: contain; }
 }
 
 /* Carousel (gallery ≥5, testimonials) */
