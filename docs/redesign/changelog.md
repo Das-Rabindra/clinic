@@ -749,3 +749,21 @@ about 1 run in 6 before). `npm test` passes 295/295.
   clipped by 2px. The divisor is now 8.4. Measured on four pages at seven
   widths, first and cached visits: at least 10px to spare everywhere.
 - **Checks:** `npm test` passes 299/299.
+
+## Homepage clinic image: the owner's dental illustration (2026-10-23)
+
+- **New image:** the owner supplied `dental.jpg` to replace the leaf in "A
+  calm, modern clinic". It is a 3D render (a tooth, an implant, a mirror and
+  a syringe on blue), so the caption is "Illustration" rather than
+  "Illustrative photograph".
+- **Licence:** the image's metadata marks it as commercial stock. The owner
+  confirmed the clinic holds a licence, and that is recorded in
+  `public/img/stock/CREDITS.md` under a new "Licensed" section. The CC0
+  images stay under "Public domain".
+- **Encoding:** re-encoded to WebP at 640/1024/1600px, with all metadata
+  stripped (the Photoshop and stock-description fields too).
+- **Crop:** biased to 64% 55% so the tooth, implant and mirror stay in frame
+  in the square desktop crop.
+- **Clean-up:** the leaf files are removed.
+- **Test:** the caption test accepts either caption, still one per stock
+  image.

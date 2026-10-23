@@ -267,7 +267,8 @@ describe('cinematic layer', () => {
   test('every stock photograph is captioned as illustrative; the clinic photo carries real alt text', async () => {
     const body = await home();
     const stock = (body.match(/<img src="\/img\/stock\//g) || []).length;
-    const notes = (body.match(/class="illustrative-note">Illustrative photograph</g) || []).length;
+    // "Illustration" for a render, "Illustrative photograph" for a photo.
+    const notes = (body.match(/class="illustrative-note">(?:Illustrative photograph|Illustration)</g) || []).length;
     assert.ok(stock > 0);
     assert.equal(notes, stock, 'one caption per stock image');
     assert.match(body, /<img src="\/img\/clinic\/treatment-room-1086\.webp" alt="The treatment room at Samal Dental Care/);
