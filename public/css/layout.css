@@ -297,3 +297,21 @@
 .site-footer__credit { display: block; margin-top: var(--space-1); font-size: 0.75rem; color: var(--color-night-muted); }
 .site-footer__bottom .site-footer__credit a { display: inline; min-height: 0; color: var(--color-night-ink); text-decoration: underline; text-underline-offset: 0.2em; }
 .cards-note { margin-top: var(--space-3); text-align: right; }
+
+/* ── Photograph viewer (partials/lightbox.ejs, js/gallery.js) ── shared by
+   the gallery page and the homepage. */
+.lightbox { width: 100vw; height: 100svh; max-width: none; max-height: none; margin: 0; padding: var(--space-16) var(--space-4) var(--space-6); border: 0; background: transparent; color: var(--color-night-ink); }
+.lightbox::backdrop { background: rgba(6, 30, 28, 0.94); }
+.lightbox[open] { display: grid; place-items: center; }
+.lightbox__figure { margin: 0; display: grid; gap: var(--space-4); justify-items: center; max-height: 100%; pointer-events: none; }
+.lightbox__img { max-width: min(100%, 1200px); max-height: calc(100svh - 10rem); width: auto; height: auto; border-radius: var(--radius-sm); pointer-events: auto; }
+.lightbox__caption { text-align: center; font-size: var(--text-small); color: var(--color-night-muted); max-width: 40rem; }
+.lightbox__btn { position: fixed; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(245, 242, 234, 0.3); background: rgba(12, 57, 54, 0.6); color: var(--color-night-ink); cursor: pointer; }
+.lightbox__btn:hover { background: rgba(12, 57, 54, 0.9); }
+.lightbox__btn:focus-visible { outline: 2px solid var(--color-focus-inverse); outline-offset: 2px; }
+.lightbox__close { top: var(--space-4); right: var(--space-4); }
+.lightbox__prev { left: var(--space-4); top: 50%; transform: translateY(-50%); }
+.lightbox__next { right: var(--space-4); top: 50%; transform: translateY(-50%); }
+@media (max-width: 767px) { .lightbox__prev, .lightbox__next { top: auto; bottom: var(--space-4); transform: none; } }
+.motion .lightbox[open] .lightbox__img { animation: cine-fade 420ms var(--ease-cinema) both; }
+html.has-lightbox { overflow: hidden; }

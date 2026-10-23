@@ -1,0 +1,15 @@
+<%#
+  The full-size photograph viewer, driven by /js/gallery.js: any
+  a[data-lightbox] on the page opens in it. Without the script the links
+  simply open the image. Shared by the gallery page and the homepage.
+%>
+<% var ic = function (n) { return include('icon', { name: n }); }; %>
+<dialog class="lightbox" data-lightbox-dialog aria-label="Photograph">
+  <figure class="lightbox__figure">
+    <img class="lightbox__img" alt="">
+    <figcaption class="lightbox__caption" aria-live="polite"></figcaption>
+  </figure>
+  <button type="button" class="lightbox__btn lightbox__close" data-lightbox-close aria-label="Close"><%- ic('close') %></button>
+  <button type="button" class="lightbox__btn lightbox__prev" data-lightbox-prev aria-label="Previous photograph"><%- ic('chevronLeft') %></button>
+  <button type="button" class="lightbox__btn lightbox__next" data-lightbox-next aria-label="Next photograph"><%- ic('chevronRight') %></button>
+</dialog>

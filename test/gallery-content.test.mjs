@@ -40,7 +40,7 @@ describe('clinic gallery photos', () => {
 
   test('the homepage shows them as a grid with their titles', async () => {
     const body = (await srv.call('/')).body;
-    assert.match(body, /class="gallery-grid-ds[ "]|class="gallery-feature"/);
+    assert.match(body, /class="screens screens--\d"/);
     assert.ok(body.includes(PHOTOS[1].title));
   });
 

@@ -190,25 +190,49 @@
   .clinic__facts { grid-area: facts; }
 }
 
-/* ── 04 · Inside the clinic ───────────────────────────────────────────── */
-.gallery-feature { max-width: 40rem; margin: 0 auto; }
-.gallery-feature img { width: 100%; height: auto; border-radius: var(--radius-md); }
-.gallery-feature figcaption, .carousel figcaption { margin-top: var(--space-2); font-size: var(--text-small); color: var(--color-text-muted); }
-.gallery-grid-ds { display: grid; gap: var(--gap-md); grid-template-columns: 1fr; }
-.gallery-grid-ds__item { margin: 0; min-width: 0; }
-.gallery-grid-ds__frame { overflow: hidden; border-radius: var(--radius-md); background: var(--color-accent-sand); }
-.gallery-grid-ds__frame img { width: 100%; height: 100%; aspect-ratio: 1; object-fit: cover; }
-.gallery-grid-ds figcaption { display: flex; gap: var(--space-3); align-items: baseline; margin-top: var(--space-3); font-size: var(--text-small); color: var(--color-text-muted); }
-.gallery-grid-ds__n { font-family: var(--font-display); font-style: italic; color: var(--color-primary); }
-@media (min-width: 768px) {
-  .gallery-grid-ds { grid-template-columns: repeat(2, 1fr); }
-  .gallery-grid-ds--3 { grid-template-columns: 1.3fr 1fr; grid-template-rows: auto auto; }
-  .gallery-grid-ds--3 .gallery-grid-ds__item:first-child { grid-row: span 2; }
-  .gallery-grid-ds--3 .gallery-grid-ds__item:first-child .gallery-grid-ds__frame { height: calc(100% - 2.5rem); background: var(--color-surface); border: 1px solid var(--color-border-subtle); }
-  /* The tall lead cell shows the whole image: clinic uploads are often
-     posters, and cropping a poster cuts its words in half. */
-  .gallery-grid-ds--3 .gallery-grid-ds__item:first-child img { object-fit: contain; }
+/* ── 04 · Inside the clinic: a screening room ──────────────────────────────
+   The clinic's own photographs as lit stills on night, shown whole: contain,
+   never cover, because uploads are often posters or before-and-afters whose
+   words or halves a crop would cut. Each frame is a softly lit "screen" with
+   a vignette, so photographs of any shape sit well together. */
+.gallery-night .split-heading__lede { color: var(--color-night-muted); }
+.gallery-night .empty-state { background: rgba(245, 242, 234, 0.04); border-color: rgba(245, 242, 234, 0.18); color: var(--color-night-ink); }
+.screens { display: grid; gap: var(--space-8) var(--gap-md); grid-template-columns: 1fr; }
+.screens--1 { max-width: 46rem; margin-inline: auto; }
+.screens__item { margin: 0; min-width: 0; display: flex; flex-direction: column; }
+.screen {
+  position: relative; display: block; flex: 1; overflow: hidden; cursor: zoom-in;
+  aspect-ratio: 4 / 3; padding: var(--space-4); border-radius: var(--radius-md);
+  background: radial-gradient(120% 90% at 50% 40%, #1A4A46 0%, #0B302D 70%, #082624 100%);
+  box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(245, 242, 234, 0.08);
 }
+.screen img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.45)); transition: transform 1200ms var(--ease-cinema); }
+.screen:hover img { transform: scale(1.025); }
+.screen__zoom {
+  position: absolute; right: var(--space-3); bottom: var(--space-3); display: grid; place-items: center;
+  width: 40px; height: 40px; border-radius: 50%; background: rgba(245, 242, 234, 0.12); color: var(--color-night-ink);
+  border: 1px solid rgba(245, 242, 234, 0.25);
+  opacity: 0; transform: scale(0.9); transition: opacity var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+}
+.screen:is(:hover, :focus-visible) .screen__zoom { opacity: 1; transform: none; }
+@media (hover: none) { .screen__zoom { opacity: 1; transform: none; } }
+.screen:focus-visible { outline: 2px solid var(--color-focus-inverse); outline-offset: 3px; }
+.screens__item figcaption { display: flex; gap: var(--space-3); align-items: baseline; margin-top: var(--space-4); color: var(--color-night-ink); }
+.screens__n { font-family: var(--font-display); font-style: italic; font-size: 1.2rem; color: var(--color-mint); }
+.screens__item--lead figcaption span:last-child { font-family: var(--font-display); font-size: 1.25rem; }
+.gallery-night .section-foot .button .icon { width: 1rem; height: 1rem; }
+@media (min-width: 768px) {
+  .screens--2 { grid-template-columns: 1fr 1fr; }
+  /* A lead still and a stack beside it, the lead as tall as the stack. */
+  .screens--3, .screens--4 { grid-template-columns: 1.35fr 1fr; }
+  .screens--3 .screens__item--lead { grid-row: span 2; }
+  .screens--4 .screens__item--lead { grid-row: span 3; }
+  .screens__item--lead .screen { aspect-ratio: auto; min-height: 24rem; }
+  .screens--1 .screen { aspect-ratio: 4 / 3; }
+}
+/* Carousel on night (five or more photographs). */
+.carousel--night [data-carousel-status] { color: var(--color-night-muted); }
+.carousel--night .screens__item { height: 100%; }
 
 /* Carousel (gallery ≥5, testimonials) */
 .carousel__track {

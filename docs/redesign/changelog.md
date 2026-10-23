@@ -1093,3 +1093,29 @@ illustrative photographs had been used 2–4 times each.
   narrow ones), the backfill (made once, a missing file survived), and the
   portrait being served with the 800px copy on About and the homepage.
   `npm test` passes 307/307.
+
+## Homepage gallery: a screening room (2026-10-23)
+
+- **Night section:** chapter 04 "Inside the clinic" is now a night section.
+  The clinic's own photographs are lit stills, each on a softly vignetted
+  "screen" with a drop shadow.
+- **Uncropped:** photos are `contain`, never `cover`, because uploads are
+  posters and before-and-afters whose words or halves a crop would cut.
+- **Layout by count:**
+
+  | Photos | Layout |
+  |---|---|
+  | One | Shown large |
+  | Two | Side by side |
+  | Three or four | A lead still as tall as the stack beside it |
+  | Five or more | The carousel, on night; its stills don't reveal, since off-screen ones would wait for a sideways scroll |
+
+- **Captions:** numbered in mint italic, with titles in night-ink.
+- **Viewer:** every still opens full size in the same viewer as the gallery
+  page. The viewer markup is now `partials/lightbox.ejs` and its CSS moved
+  to `layout.css`. The homepage loads `/js/gallery.js`.
+- **Images:** stills use the 800px mid-size copy where it exists.
+- **Button:** "See the full gallery" is a ghost-light button.
+- **Clean-up:** the old `gallery-grid-ds` and `gallery-feature` styles are
+  removed, and the tests now check the new layouts. `npm test` passes
+  307/307.

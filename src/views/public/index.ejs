@@ -195,10 +195,25 @@
     </div>
   </section>
 
-  <!-- ============ 04 · INSIDE THE CLINIC ============ -->
-  <%# Layout follows the number of real photographs: one alone, two to four
-      as an asymmetric grid, five or more as a carousel. %>
-  <section class="section section--surface chapter-section" id="gallery" aria-labelledby="galleryTitle">
+  <!-- ============ 04 · INSIDE THE CLINIC (night) ============ -->
+  <%# A screening room: the clinic's own photographs as lit stills on night,
+      shown whole (a poster or a before & after loses its meaning when
+      cropped), each opening full size in the viewer. One photograph alone is
+      shown large; two to four as a lead and a stack; five or more scroll. %>
+  <%# reveal: off in the carousel, whose off-screen stills would wait for a
+      sideways scroll to appear. %>
+  <% var still = function (g, i, sizes, lead, reveal) { %>
+    <figure class="screens__item<%= lead ? ' screens__item--lead' : '' %>">
+      <a class="screen" href="<%= g.image_url %>" data-lightbox data-caption="<%= g.title %><%= g.description ? ' — ' + g.description : '' %>"<% if (reveal !== false) { %> data-reveal="image"<% } %>>
+        <% var ss = mediaSrcset(g.image_url, g.width, g.medium_url, g.medium_width); %>
+        <img src="<%= g.medium_url || g.image_url %>"<% if (ss) { %> srcset="<%= ss %>" sizes="<%= sizes %>"<% } %> alt="<%= g.image_alt || g.title %>"
+             width="<%= g.width || 1200 %>" height="<%= g.height || 1200 %>" loading="lazy" decoding="async">
+        <span class="screen__zoom" aria-hidden="true"><%- ic('plus') %></span>
+      </a>
+      <figcaption><span class="screens__n" aria-hidden="true"><%= String(i + 1).padStart(2, '0') %></span><span><%= g.title %></span></figcaption>
+    </figure>
+  <% }; %>
+  <section class="section section--night chapter-section gallery-night" id="gallery" aria-labelledby="galleryTitle">
     <div class="container">
       <div class="split-heading" data-reveal-group>
         <div>
@@ -210,47 +225,25 @@
 
       <% if (galleryMode === 'empty') { %>
         <div class="empty-state"><%- ic('camera') %><h3>Photographs coming soon</h3><p>Photographs of the clinic will appear here.</p></div>
-      <% } else if (galleryMode === 'single') { var g = gallery[0]; %>
-        <figure class="gallery-feature">
-          <div data-reveal="image"><img src="<%= g.image_url %>"<% var gs = mediaSrcset(g.image_url, g.width, g.medium_url, g.medium_width); if (gs) { %> srcset="<%= gs %>" sizes="(min-width: 768px) 40rem, 100vw"<% } %> alt="<%= g.image_alt || g.title %>" width="<%= g.width || 1200 %>" height="<%= g.height || 1200 %>" loading="lazy" decoding="async"></div>
-          <figcaption><%= g.title %><% if (g.description) { %> — <%= g.description %><% } %></figcaption>
-        </figure>
+      <% } else if (galleryMode === 'single') { %>
+        <div class="screens screens--1"><% still(gallery[0], 0, '(min-width: 768px) 46rem, 100vw', true); %></div>
       <% } else if (galleryMode === 'grid') { %>
-        <div class="gallery-grid-ds gallery-grid-ds--<%= gallery.length %>">
-          <% gallery.forEach(function (g, i) { %>
-          <figure class="gallery-grid-ds__item">
-            <div class="gallery-grid-ds__frame" data-reveal="image">
-              <%# The lead photo is shown large; the rest are small square cells, so
-                  the 480px thumbnail is the right size for them. %>
-              <% var big = i === 0 || !g.thumb_url; %>
-              <% var bs = big ? mediaSrcset(g.image_url, g.width, g.medium_url, g.medium_width) : ''; %>
-              <img src="<%= big ? g.image_url : g.thumb_url %>"<% if (bs) { %> srcset="<%= bs %>" sizes="(min-width: 768px) 55vw, 100vw"<% } %> alt="<%= g.image_alt || g.title %>"
-                   width="<%= big ? (g.width || 1200) : 480 %>" height="<%= big ? (g.height || 1200) : 480 %>" loading="lazy" decoding="async">
-            </div>
-            <figcaption><span class="gallery-grid-ds__n" aria-hidden="true"><%= String(i + 1).padStart(2, '0') %></span><%= g.title %></figcaption>
-          </figure>
-          <% }) %>
+        <div class="screens screens--<%= gallery.length %>">
+          <% gallery.forEach(function (g, i) { still(g, i, i === 0 ? '(min-width: 768px) 55vw, 100vw' : '(min-width: 768px) 40vw, 100vw', i === 0); }) %>
         </div>
       <% } else { %>
-        <div class="carousel" data-carousel>
+        <div class="carousel carousel--night" data-carousel>
           <ul class="carousel__track" data-carousel-track tabindex="0" aria-label="Clinic photographs, scrollable">
-            <% gallery.forEach(function (g) { %>
-            <li class="carousel__item">
-              <figure>
-                <img src="<%= g.image_url %>"<% var cs = mediaSrcset(g.image_url, g.width, g.medium_url, g.medium_width); if (cs) { %> srcset="<%= cs %>" sizes="(min-width: 768px) 40vw, 85vw"<% } %> alt="<%= g.image_alt || g.title %>" width="<%= g.width || 1200 %>" height="<%= g.height || 900 %>" loading="lazy" decoding="async">
-                <figcaption><%= g.title %></figcaption>
-              </figure>
-            </li>
-            <% }) %>
+            <% gallery.forEach(function (g, i) { %><li class="carousel__item"><% still(g, i, '(min-width: 768px) 40vw, 85vw', false, false); %></li><% }) %>
           </ul>
           <div class="carousel__controls" data-carousel-controls>
-            <button type="button" class="button button--secondary button--small" data-carousel-prev aria-label="Previous photographs"><%- ic('chevronLeft') %></button>
-            <span class="text-small text-muted" data-carousel-status aria-live="polite"></span>
-            <button type="button" class="button button--secondary button--small" data-carousel-next aria-label="More photographs"><%- ic('chevronRight') %></button>
+            <button type="button" class="button button--ghost-light button--small" data-carousel-prev aria-label="Previous photographs"><%- ic('chevronLeft') %></button>
+            <span class="text-small" data-carousel-status aria-live="polite"></span>
+            <button type="button" class="button button--ghost-light button--small" data-carousel-next aria-label="More photographs"><%- ic('chevronRight') %></button>
           </div>
         </div>
       <% } %>
-      <p class="section-foot"><a class="button button--secondary" href="/gallery">See the full gallery</a></p>
+      <p class="section-foot"><a class="button button--ghost-light" href="/gallery">See the full gallery <%- ic('arrow') %></a></p>
     </div>
   </section>
 
@@ -397,11 +390,13 @@
 
 </main>
 
+<%- include('partials/lightbox') %>
 <%- include('partials/site-footer') %>
 
 <script src="/js/ds.js" defer></script>
 <script src="/js/site-ds.js" defer></script>
 <script src="/js/motion.js" defer></script>
 <script src="/js/booking.js" defer></script>
+<script src="/js/gallery.js" defer></script>
 </body>
 </html>

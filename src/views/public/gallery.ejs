@@ -90,15 +90,7 @@
 
 </main>
 
-<dialog class="lightbox" data-lightbox-dialog aria-label="Photograph">
-  <figure class="lightbox__figure">
-    <img class="lightbox__img" alt="">
-    <figcaption class="lightbox__caption" aria-live="polite"></figcaption>
-  </figure>
-  <button type="button" class="lightbox__btn lightbox__close" data-lightbox-close aria-label="Close"><%- ic('close') %></button>
-  <button type="button" class="lightbox__btn lightbox__prev" data-lightbox-prev aria-label="Previous photograph"><%- ic('chevronLeft') %></button>
-  <button type="button" class="lightbox__btn lightbox__next" data-lightbox-next aria-label="Next photograph"><%- ic('chevronRight') %></button>
-</dialog>
+<%- include('partials/lightbox') %>
 
 <%- include('partials/site-footer') %>
 <script src="/js/ds.js" defer></script>

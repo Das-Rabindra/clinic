@@ -102,13 +102,14 @@ describe('homepage content', () => {
     assert.match(await home(), /Photographs coming soon/);
     await addGalleryPhoto(1);
     const one = await home();
-    assert.match(one, /class="gallery-feature"/);
+    assert.match(one, /class="screens screens--1"/);
+    assert.match(one, /data-lightbox/, 'opens full size');
     assert.ok(!/data-carousel-prev aria-label="Previous photographs"/.test(one), 'no controls for one photo');
   });
 
   test('gallery: two to four → static grid, five or more → carousel', async () => {
     await addGalleryPhoto(2);
-    assert.match(await home(), /class="gallery-grid-ds[ "]/);
+    assert.match(await home(), /class="screens screens--2"/);
     for (const n of [3, 4, 5]) await addGalleryPhoto(n);
     const many = await home();
     assert.match(many, /aria-label="Clinic photographs, scrollable"/);
