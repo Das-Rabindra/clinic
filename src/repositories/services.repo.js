@@ -58,6 +58,13 @@ export const faqsFor = async (serviceId) =>
        WHERE service_id = ? AND is_published = 1
        ORDER BY display_order, id`, serviceId);
 
+/** Every published treatment question, with its treatment, for the FAQ page. */
+export const publishedFaqsWithService = async () =>
+  await all(`SELECT s.id AS service_id, s.name, s.slug, s.has_detail_page, f.question, f.answer
+       FROM service_faqs f JOIN services s ON s.id = f.service_id
+       WHERE f.is_published = 1 AND s.deleted_at IS NULL AND s.is_active = 1
+       ORDER BY s.is_featured DESC, s.display_order, s.id, f.display_order, f.id`);
+
 /** Slugs for the sitemap. */
 export const publicSlugs = async () =>
   await all(`SELECT slug, updated_at FROM services

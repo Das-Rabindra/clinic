@@ -256,6 +256,7 @@
         <p class="text-muted" data-reveal>Something not covered here?
           <% if (tel) { %><a class="link" href="<%= tel %>" data-track="call_clicked">Call <%= clinic.phone %></a><% } %>
           <% if (whatsappUrl) { %> or <a class="link" href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked">message on WhatsApp</a><% } %>.</p>
+        <p data-reveal><a class="link link--arrow" href="/faq">All questions, including each treatment <%- ic('arrow') %></a></p>
       </div>
       <div class="accordion" data-accordion>
         <% faqs.forEach(function (f, i) { %>

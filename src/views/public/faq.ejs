@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head') %>
+</head>
+<body class="has-action-bar">
+<% var ic = function (n) { return include('partials/icon', { name: n }); }; %>
+<% var tel = clinic.phone ? 'tel:' + (clinic.phone_intl || clinic.phone) : null; %>
+<a class="skip-to-content" href="#main">Skip to content</a>
+<%- include('partials/site-header') %>
+
+<main id="main">
+
+  <!-- ============ SCENE ============ -->
+  <section class="page-cine" data-hero aria-labelledby="pageTitle">
+    <div class="container">
+      <div class="page-cine__inner">
+        <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Questions' }] }) %>
+        <p class="eyebrow-label">Good to know</p>
+        <h1 id="pageTitle">Questions patients <em class="display-em">ask</em></h1>
+        <p class="page-cine__lede">About visiting the clinic, and about each treatment it offers. Something not covered here? Call or message the clinic.</p>
+        <ul class="tx-facts">
+          <li><%- ic('chat') %><span><%= total %> answer<%= total === 1 ? '' : 's' %> in <%= groups.length %> section<%= groups.length === 1 ? '' : 's' %></span></li>
+        </ul>
+        <div class="page-cine__actions">
+          <% if (tel) { %><a class="button button--inverse" href="<%= tel %>" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
+          <% if (whatsappUrl) { %><a class="button button--ghost-light" href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked"><%- ic('whatsapp') %>Ask on WhatsApp</a><% } %>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ QUESTIONS ============ -->
+  <%# An index of the sections beside the questions: sticky on a wide
+      screen, a wrapped row of links on a phone. Each section is a numbered
+      chapter with its own accordion. %>
+  <section class="section" aria-label="Questions by topic">
+    <div class="container faq-page">
+      <nav class="faq-index" aria-label="Topics">
+        <p class="faq-index__label">Topics</p>
+        <ol>
+          <% groups.forEach(function (g, gi) { %>
+          <li><a href="#<%= g.id %>"><span class="faq-index__n" aria-hidden="true"><%= String(gi + 1).padStart(2, '0') %></span><%= g.title %></a></li>
+          <% }) %>
+        </ol>
+      </nav>
+      <div class="faq-groups">
+        <% groups.forEach(function (g, gi) { %>
+        <section class="faq-group" id="<%= g.id %>" aria-labelledby="fg-<%= gi %>">
+          <div class="faq-group__head" data-reveal>
+            <span class="tx-chapter__num" aria-hidden="true"><%= String(gi + 1).padStart(2, '0') %></span>
+            <h2 id="fg-<%= gi %>"><%= g.title %></h2>
+            <% if (g.href) { %><a class="link link--arrow" href="<%= g.href %>">About this treatment <%- ic('arrow') %></a><% } %>
+          </div>
+          <div class="accordion" data-accordion>
+            <% g.faqs.forEach(function (f, i) { var k = gi + '-' + i; %>
+            <div class="accordion__item">
+              <h3 class="accordion__heading">
+                <button type="button" class="accordion__trigger" aria-expanded="false" aria-controls="faq-a-<%= k %>" id="faq-q-<%= k %>">
+                  <%= f.question %><span class="accordion__icon"><%- ic('plus') %></span>
+                </button>
+              </h3>
+              <div class="accordion__panel" id="faq-a-<%= k %>" role="region" aria-labelledby="faq-q-<%= k %>" data-collapsed>
+                <p><%= f.answer %></p>
+              </div>
+            </div>
+            <% }) %>
+          </div>
+        </section>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CLOSING SCENE ============ -->
+  <section class="section section--night closing" aria-labelledby="closingTitle">
+    <div class="container closing__grid closing__grid--solo">
+      <div class="closing__copy" data-reveal-group>
+        <p class="eyebrow-label" data-reveal>Still wondering?</p>
+        <h2 id="closingTitle" class="closing__title" data-reveal>Ask <%= clinic.doctor || 'the dentist' %> <em class="display-em">directly</em></h2>
+        <p class="closing__body" data-reveal>A consultation is the place for questions about your own teeth &mdash; or request a call back and the clinic will ring you.</p>
+        <div class="cluster closing__actions" data-reveal>
+          <a href="/#appointment" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book a consultation</a>
+          <button type="button" class="button button--ghost-light" data-callback-open><%- ic('callback') %>Request a call back</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<%- include('partials/site-footer') %>
+<script src="/js/ds.js" defer></script>
+<script src="/js/site-ds.js" defer></script>
+<script src="/js/motion.js" defer></script>
+</body>
+</html>

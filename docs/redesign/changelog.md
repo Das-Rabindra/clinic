@@ -543,3 +543,29 @@ They are now pages of their own, in the same cinematic style.
   published photo.
 - **Checks:** `npm test` passes 280/280 (new `about-gallery.test.mjs`). The
   local width sweep found nothing.
+
+## Testimonials and FAQ pages, footer wordmark fix (2026-10-23)
+
+- **/testimonials:** opens on the night scene, with the "genuine feedback
+  only" rule stated up front.
+  - With real reviews, it shows the rating (and what it is based on) in the
+    scene, and the reviews as a wall of quotes.
+  - Until then, it says "Testimonials coming soon" and invents nothing.
+    While empty it is noindex and stays out of the sitemap.
+  - "Share your experience" offers a Google review (link and QR) or telling
+    the clinic directly. A named testimonial needs permission, as the
+    privacy policy says.
+- **/faq:** the 12 general questions plus every treatment's own (64 answers
+  in 16 sections).
+  - Each section is a numbered chapter with an accordion. Treatment
+    sections link to the treatment page.
+  - A topic index sits beside the questions: sticky on desktop, a row of
+    pills on phones.
+  - FAQPage markup is not duplicated here.
+- **Navigation:** the menu's Testimonials and FAQ, and the footer links, go
+  to the new pages. The homepage sections stay, with links to them.
+- **Footer wordmark:** it was sized from the viewport width, which clipped
+  the final "e" of "Care" at 320–390 px and at 1920 px and wider. It is now
+  sized from its container's width (`100cqi / 8.1`; the line is 7.81× its
+  font size), so it fits at every width.
+- **Checks:** `npm test` passes 285/285. The width sweep found nothing.

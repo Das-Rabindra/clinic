@@ -70,6 +70,10 @@
         </div>
       <% } %>
 
+      <% if (chapterNum && !isSample) { %>
+      <p class="section-foot"><a class="link link--arrow" href="/testimonials"><%= reviews.reviews.length ? 'All testimonials' : 'How to share your experience' %> <%- include('icon', { name: 'arrow' }) %></a></p>
+      <% } %>
+
       <% if (reviewQr) { %>
       <aside class="card review-qr" aria-labelledby="qrTitle">
         <div class="review-qr__code">

@@ -483,6 +483,73 @@ router.get('/gallery', async (_req, res) => {
   });
 });
 
+/* ── Testimonials ────────────────────────────────────────────────────────── */
+/* Only genuine feedback: reviews synced from Google and testimonials patients
+   shared and agreed to publish. Until there are any, the page says so and
+   explains how to leave one — and keeps itself out of search results, since
+   an empty page is not worth indexing. */
+router.get('/testimonials', async (_req, res) => {
+  const base = await baseLocals();
+  const { settings } = base;
+  const canonical = seo.canonicalUrl(settings);
+  const reviews = await reviewsService.publicReviews(60);
+
+  res.render('public/testimonials', {
+    ...base,
+    pageCss: ['/css/home.css', '/css/pages.css'],
+    reviews, starsHtml, formatReviewDate,
+    noindex: !reviews.reviews.length,
+    meta: {
+      title: `Patient testimonials | ${settings.name}`,
+      description: `Genuine feedback from patients of ${settings.name}: Google reviews and testimonials shared with the clinic.`,
+      canonical: `${canonical}/testimonials`,
+      ogTitle: `Patient testimonials | ${settings.name}`,
+      ogDescription: 'Genuine feedback from patients only.',
+      ogUrl: `${canonical}/testimonials`,
+      ogImage: null,
+    },
+    ogType: 'website',
+    schemas: [seo.breadcrumbs(canonical, [{ name: 'Home', path: '/' }, { name: 'Testimonials', path: '/testimonials' }])],
+  });
+});
+
+/* ── Questions ───────────────────────────────────────────────────────────── */
+/* The clinic's general questions, then every treatment's own, grouped under
+   the treatment. FAQPage markup stays on the homepage and treatment pages
+   where it already lives, rather than being duplicated here. */
+router.get('/faq', async (_req, res) => {
+  const base = await baseLocals();
+  const { settings, clinic } = base;
+  const canonical = seo.canonicalUrl(settings);
+  const resolve = (f) => ({ question: resolveFaq(f.question, clinic), answer: resolveFaq(f.answer, clinic) });
+
+  const groups = [];
+  const general = (await contentRepo.listFaqs({ publishedOnly: true })).map(resolve);
+  if (general.length) groups.push({ id: 'visiting', title: 'Visiting the clinic', faqs: general });
+  for (const f of await servicesRepo.publishedFaqsWithService()) {
+    let g = groups.find(x => x.id === f.slug);
+    if (!g) groups.push(g = { id: f.slug, title: f.name, href: f.has_detail_page ? `/services/${f.slug}` : null, faqs: [] });
+    g.faqs.push(resolve(f));
+  }
+
+  res.render('public/faq', {
+    ...base,
+    groups,
+    total: groups.reduce((n, g) => n + g.faqs.length, 0),
+    meta: {
+      title: `Questions patients ask | ${settings.name}`,
+      description: `Answers to common questions about visiting ${settings.name} and the treatments it offers.`,
+      canonical: `${canonical}/faq`,
+      ogTitle: `Questions patients ask | ${settings.name}`,
+      ogDescription: 'Visiting the clinic, appointments, and each treatment explained.',
+      ogUrl: `${canonical}/faq`,
+      ogImage: null,
+    },
+    ogType: 'website',
+    schemas: [seo.breadcrumbs(canonical, [{ name: 'Home', path: '/' }, { name: 'Questions', path: '/faq' }])],
+  });
+});
+
 /* ── Design-system preview ───────────────────────────────────────────────────
    Internal review page for the redesign's tokens and primitives. Unlinked,
    noindex by meta and header, and absent from the sitemap (which lists routes

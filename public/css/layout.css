@@ -156,8 +156,15 @@
   font-family: var(--font-display); font-weight: var(--weight-regular); letter-spacing: -0.03em; line-height: 0.9;
   /* Large text: 3:1 is the floor even for a decorative wordmark — #64958C
      is 3.37:1 on white; the italic word is the brand primary, 7.56:1. */
-  font-size: clamp(2.6rem, 0.6rem + 9.6vw, 10rem); color: #64958C; white-space: nowrap;
+  color: #64958C; white-space: nowrap;
+  /* Sized from the width it actually has, not guessed from the viewport:
+     the set line is 7.81× its font size, so 100cqi / 8.1 always fits with
+     a little air. The vw guess clipped the final "e" on phones and on wide
+     screens. The fallback is for browsers without container units. */
+  font-size: clamp(2rem, 11.5vw, 9.5rem);
+  font-size: min(10rem, 100cqi / 8.1);
 }
+.site-footer > .container { container-type: inline-size; }
 .site-footer__wordmark em { font-style: italic; color: var(--color-primary); }
 
 /* ══ Cinematic shared components (moved from home.css): treatment tiles

@@ -265,6 +265,12 @@ export async function sitemapXml(canonical) {
   const galleryNewest = day(await galleryRepo.newestUpdate());
   entries.push({ loc: `${canonical}/about`, lastmod: day(settings.updated_at), changefreq: 'monthly', priority: '0.6' });
   entries.push({ loc: `${canonical}/gallery`, lastmod: [day(settings.updated_at), galleryNewest].filter(Boolean).sort().pop() || null, changefreq: 'monthly', priority: '0.5' });
+  entries.push({ loc: `${canonical}/faq`, lastmod: newest, changefreq: 'monthly', priority: '0.6' });
+  /* Listed only once there is something on it: until then the page is
+     noindex, and a sitemap must not advertise a page it asks not to index. */
+  if ((await reviewsRepo.aggregate()).count) {
+    entries.push({ loc: `${canonical}/testimonials`, lastmod: newest, changefreq: 'weekly', priority: '0.5' });
+  }
   entries.push({ loc: `${canonical}/privacy`, lastmod: PRIVACY_UPDATED, changefreq: 'yearly', priority: '0.2' });
 
   const body = entries.map(e =>

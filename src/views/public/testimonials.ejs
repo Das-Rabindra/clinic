@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head') %>
+</head>
+<body class="has-action-bar">
+<% var ic = function (n) { return include('partials/icon', { name: n }); }; %>
+<% var tel = clinic.phone ? 'tel:' + (clinic.phone_intl || clinic.phone) : null; %>
+<% var chapter = function (num, name) { %><p class="chapter" data-reveal><span class="chapter__index"><%= num %></span><span class="chapter__rule" aria-hidden="true"></span><span class="chapter__name"><%= name %></span></p><% }; %>
+<% var has = reviews.reviews.length > 0; %>
+<a class="skip-to-content" href="#main">Skip to content</a>
+<%- include('partials/site-header') %>
+
+<main id="main">
+
+  <!-- ============ SCENE ============ -->
+  <section class="page-cine" data-hero aria-labelledby="pageTitle">
+    <div class="container">
+      <div class="page-cine__inner">
+        <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Testimonials' }] }) %>
+        <p class="eyebrow-label">Testimonials</p>
+        <h1 id="pageTitle">Words from <em class="display-em">patients</em></h1>
+        <p class="page-cine__lede">Genuine feedback only &mdash; reviews from the clinic&rsquo;s Google Business Profile, and testimonials patients chose to share. Nothing here is written by the clinic.</p>
+        <%# The rating is shown only when there are real reviews behind it,
+            and says what it is based on. %>
+        <% if (has) { %>
+        <div class="rating-hero">
+          <span class="rating-hero__score"><%= reviews.average %></span>
+          <div>
+            <span class="stars" role="img" aria-label="<%= reviews.average %> out of 5"><%- starsHtml(reviews.average) %></span>
+            <p><% if (reviews.google_count && reviews.has_manual) { %><%= reviews.google_count %> Google review<%= reviews.google_count === 1 ? '' : 's' %> and <%= reviews.count - reviews.google_count %> shared with the clinic<% } else { %><%= reviews.google_count ? 'Google rating' : 'Patient feedback' %>, based on <%= reviews.count %> review<%= reviews.count === 1 ? '' : 's' %><% } %></p>
+          </div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </section>
+
+  <% if (has) { %>
+  <!-- ============ THE WALL ============ -->
+  <section class="section" aria-labelledby="wallTitle">
+    <div class="container">
+      <div class="index-head" data-reveal-group>
+        <div>
+          <% chapter('01', 'In their words'); %>
+          <h2 id="wallTitle" data-reveal>What patients are saying</h2>
+        </div>
+        <% if (clinic.reviews_url) { %><a class="link link--arrow" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener" data-reveal>Read them on Google <%- ic('arrow') %></a><% } %>
+      </div>
+      <div class="testimony-wall">
+        <% reviews.reviews.forEach(function (r, i) { %>
+        <figure class="testimony" data-reveal>
+          <span class="testimony__mark" aria-hidden="true">&ldquo;</span>
+          <span class="stars" role="img" aria-label="<%= r.rating %> out of 5"><%- starsHtml(r.rating) %></span>
+          <% if (r.text) { %><blockquote class="testimony__text"><p><%= r.text %></p></blockquote><% } %>
+          <figcaption class="testimony__by">
+            <strong><%= r.author_name %></strong>
+            <span><% if (r.source === 'manual') { %>Shared with the clinic<% } else { %>Google review<% } %><% if (r.reviewed_at) { %> · <%= formatReviewDate(r.reviewed_at) %><% } %></span>
+          </figcaption>
+        </figure>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+  <% } else { %>
+  <!-- ============ NOT YET ============ -->
+  <section class="section" aria-labelledby="soonTitle">
+    <div class="container testimony-soon" data-reveal-group>
+      <span class="testimony-soon__mark" aria-hidden="true">&ldquo;</span>
+      <% chapter('01', 'In their words'); %>
+      <h2 id="soonTitle" data-reveal>Testimonials coming soon</h2>
+      <p data-reveal>This page will fill as patients share their experience. It will only ever show reviews synced from Google and testimonials patients have agreed to have published &mdash; never wording written for them.</p>
+    </div>
+  </section>
+  <% } %>
+
+  <!-- ============ SHARE YOURS ============ -->
+  <section class="section section--surface" aria-labelledby="shareTitle">
+    <div class="container">
+      <div class="index-head" data-reveal-group>
+        <div>
+          <% chapter('02', 'Been to the clinic?'); %>
+          <h2 id="shareTitle" data-reveal>Share your experience</h2>
+        </div>
+      </div>
+      <ol class="share-ways">
+        <% if (clinic.reviews_url || reviewQr) { %>
+        <li class="share-way" data-reveal>
+          <span class="tx-chapter__num" aria-hidden="true">i.</span>
+          <div>
+            <h3>Leave a review on Google</h3>
+            <p>It takes a minute, appears on the clinic&rsquo;s Google listing, and helps other people nearby find a dentist.</p>
+            <% if (clinic.reviews_url) { %><a class="button button--primary" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener"><%- ic('star') %>Write a Google review</a><% } %>
+          </div>
+          <% if (reviewQr) { %>
+          <img class="share-way__qr" src="<%= reviewQr.url %>" alt="QR code linking to the Google review page for <%= clinic.name %>" width="<%= reviewQr.width || 320 %>" height="<%= reviewQr.height || 320 %>" loading="lazy" decoding="async">
+          <% } %>
+        </li>
+        <% } %>
+        <li class="share-way" data-reveal>
+          <span class="tx-chapter__num" aria-hidden="true"><%= (clinic.reviews_url || reviewQr) ? 'ii.' : 'i.' %></span>
+          <div>
+            <h3>Tell the clinic directly</h3>
+            <p>Call or send a WhatsApp message. A testimonial carrying your name is only published with your permission, and is removed whenever you ask.</p>
+            <div class="cluster">
+              <% if (whatsappUrl) { %><a class="button button--secondary" href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked"><%- ic('whatsapp') %>WhatsApp</a><% } %>
+              <% if (tel) { %><a class="button button--text" href="<%= tel %>" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
+            </div>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ CLOSING SCENE ============ -->
+  <section class="section section--night closing" aria-labelledby="closingTitle">
+    <div class="container closing__grid closing__grid--solo">
+      <div class="closing__copy" data-reveal-group>
+        <p class="eyebrow-label" data-reveal>Ready when you are</p>
+        <h2 id="closingTitle" class="closing__title" data-reveal>See the clinic <em class="display-em">for yourself</em></h2>
+        <p class="closing__body" data-reveal>Book a consultation, or ask a question first &mdash; whichever you prefer.</p>
+        <div class="cluster closing__actions" data-reveal>
+          <a href="/#appointment" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
+          <button type="button" class="button button--ghost-light" data-callback-open><%- ic('callback') %>Request a call back</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<%- include('partials/site-footer') %>
+<script src="/js/ds.js" defer></script>
+<script src="/js/site-ds.js" defer></script>
+<script src="/js/motion.js" defer></script>
+</body>
+</html>

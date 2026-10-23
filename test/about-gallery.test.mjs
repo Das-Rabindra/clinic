@@ -1,5 +1,6 @@
 /**
- * The standalone About and Gallery pages, and the links that lead to them.
+ * The standalone About, Gallery, Testimonials and FAQ pages, and the links
+ * that lead to them.
  */
 import { test, before, after, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -61,12 +62,56 @@ describe('/gallery', () => {
   });
 });
 
+describe('/testimonials', () => {
+  test('with no reviews it says so honestly, invents nothing and stays out of search', async () => {
+    const r = await srv.call('/testimonials');
+    assert.equal(r.status, 200);
+    assertHeadingOrder(r.body, '/testimonials');
+    assert.match(r.body, /Testimonials coming soon/);
+    assert.match(r.body, /<meta name="robots" content="noindex, follow">/);
+    assert.ok(!r.body.includes('class="testimony"'), 'no testimony cards');
+    assert.ok(!r.body.includes('rating-hero'), 'no rating without reviews');
+    assert.ok(!r.body.includes('AggregateRating'));
+    assert.ok(!(await srv.call('/sitemap.xml')).body.includes('/testimonials'));
+  });
+
+  test('shows a visible review, and only then is indexed and listed', async () => {
+    const reviewsRepo = await import('../src/repositories/reviews.repo.js');
+    const t = await reviewsRepo.createManual({ author_name: 'Test Patient', rating: 5, text: 'Test wording for the suite.', is_visible: 1, consent_confirmed: 1 });
+    try {
+      const r = await srv.call('/testimonials');
+      assertHeadingOrder(r.body, '/testimonials with a review');
+      assert.match(r.body, /class="testimony"/);
+      assert.ok(r.body.includes('Test wording for the suite.'));
+      assert.match(r.body, /<meta name="robots" content="index, follow">/);
+      assert.ok((await srv.call('/sitemap.xml')).body.includes('/testimonials'));
+    } finally {
+      await reviewsRepo.deleteManual(t.id);
+    }
+  });
+});
+
+describe('/faq', () => {
+  test('groups the general questions and every treatment\'s own, with unique accordion ids', async () => {
+    const r = await srv.call('/faq');
+    assert.equal(r.status, 200);
+    assertHeadingOrder(r.body, '/faq');
+    assert.match(r.body, /id="visiting"/);
+    assert.ok(r.body.includes('href="/services/root-canal-treatment"'), 'links a treatment group to its page');
+    const ids = [...r.body.matchAll(/id="(faq-q-[^"]+)"/g)].map((m) => m[1]);
+    assert.ok(ids.length > 20);
+    assert.equal(new Set(ids).size, ids.length, 'accordion ids are unique');
+    assert.ok(!r.body.includes('{{'), 'placeholders are resolved');
+  });
+});
+
 describe('navigation to the new pages', () => {
-  for (const page of ['/', '/services', '/privacy', '/about', '/gallery']) {
-    test(`${page} links About and Gallery to their pages`, async () => {
+  for (const page of ['/', '/services', '/privacy', '/about', '/gallery', '/testimonials', '/faq']) {
+    test(`${page} links every section page`, async () => {
       const body = (await srv.call(page)).body;
-      assert.ok(body.includes('href="/about"'), 'About link');
-      assert.ok(body.includes('href="/gallery"'), 'Gallery link');
+      for (const href of ['/about', '/gallery', '/testimonials', '/faq']) {
+        assert.ok(body.includes(`href="${href}"`), `${href} link`);
+      }
     });
   }
 
@@ -74,5 +119,6 @@ describe('navigation to the new pages', () => {
     const xml = (await srv.call('/sitemap.xml')).body;
     assert.match(xml, /<loc>[^<]+\/about<\/loc>/);
     assert.match(xml, /<loc>[^<]+\/gallery<\/loc>/);
+    assert.match(xml, /<loc>[^<]+\/faq<\/loc>/);
   });
 });
