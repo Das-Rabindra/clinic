@@ -1163,3 +1163,26 @@ illustrative photographs had been used 2–4 times each.
 - **All 12 stay:** the homepage FAQPage markup must match what is visible.
 - **Checks:** `npm test` passes 307/307, and the homepage sweep found
   nothing.
+
+## Homepage "Find us": a location shot (2026-10-23)
+
+- **Stays light:** chapter 08 sits between the night booking scene and the
+  closing scene. Its new styles are scoped to `.visit--cine`, so About and
+  Contact, which share the visit and hours styles, are unchanged.
+- **The map:**
+  - Graded with CSS filters (a little desaturated and warmed) to sit with
+    the palette, lifting to full colour on hover or focus. Touch devices
+    get a lighter grade.
+  - A soft vignette closes the frame.
+  - A night title card names the location (clinic, area) with a
+    Directions button.
+  - The pin is not printed as coordinates, since its exact position still
+    awaits the owner.
+- **Blocks:**
+  - Address, Call or message, and Opening hours are numbered i., ii., iii.
+    (italic, primary), like the other chapters.
+  - The address is set as a title in the display face.
+  - Today's row in the hours table is marked with a sage band and a
+    primary bar.
+- **Checks:** `npm test` passes 307/307, and the sweep (home, contact,
+  about) found nothing.

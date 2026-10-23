@@ -315,12 +315,23 @@
   </section>
 
   <!-- ============ 08 · VISIT ============ -->
-  <section class="section chapter-section visit" id="location" aria-labelledby="visitTitle">
+  <%# Light, between the night booking scene and the closing one; cinematic
+      through framing: the map is a "location shot" — graded, vignetted, with
+      a title card — and the blocks beside it are numbered like the page's
+      other chapters, the address set as a title. The map pin itself is not
+      printed as coordinates: its exact position awaits the owner. %>
+  <section class="section chapter-section visit visit--cine" id="location" aria-labelledby="visitTitle">
     <div class="container visit__grid">
       <div class="visit__map" data-reveal="image">
         <iframe class="contact-bento__frame" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
           data-src="<%= clinic.map_embed_url %>"
           title="Map showing <%= clinic.name %>, <%= shortAddress %>"></iframe>
+        <div class="visit__vignette" aria-hidden="true"></div>
+        <div class="visit__card">
+          <span class="visit__card-pin" aria-hidden="true"><%- ic('pin') %></span>
+          <span class="visit__card-text"><strong><%= clinic.name %></strong><span><%= shortAddress %></span></span>
+          <a class="button button--inverse button--small" href="<%= clinic.directions_url %>" target="_blank" rel="noopener" data-track="directions_clicked"><%- ic('directions') %>Directions</a>
+        </div>
       </div>
       <div class="visit__info" data-reveal-group>
         <% chapter('08', 'Find us'); %>
@@ -328,15 +339,15 @@
         <% if (settings.location_body) { %><p class="text-muted" data-reveal><%= settings.location_body %></p><% } %>
 
         <div class="visit__block" data-reveal>
-          <h3 class="visit__label"><%- ic('pin') %>Address</h3>
-          <address class="contact-bento__lines"><%- addressHtml %></address>
+          <h3 class="visit__label"><span class="visit__n" aria-hidden="true">i.</span>Address</h3>
+          <address class="contact-bento__lines visit__address"><%- addressHtml %></address>
           <div class="cluster">
             <a class="button button--primary button--small" href="<%= clinic.directions_url %>" target="_blank" rel="noopener" data-track="directions_clicked"><%- ic('directions') %>Get directions</a>
           </div>
         </div>
 
         <div class="visit__block" data-reveal>
-          <h3 class="visit__label"><%- ic('phone') %>Call or message</h3>
+          <h3 class="visit__label"><span class="visit__n" aria-hidden="true">ii.</span>Call or message</h3>
           <ul class="contact-list">
             <% if (tel) { %><li><a href="<%= tel %>" data-track="call_clicked"><%= clinic.phone %></a><span class="text-small text-muted">Main line<% if (whatsappUrl) { %> and WhatsApp<% } %></span></li><% } %>
             <% if (clinic.phone_secondary) { %><li><a href="tel:<%= clinic.phone_secondary_intl || clinic.phone_secondary %>" data-track="call_clicked"><%= clinic.phone_secondary %></a><span class="text-small text-muted">Second line</span></li><% } %>
@@ -348,7 +359,7 @@
         </div>
 
         <div class="visit__block contact-bento__hours" data-reveal>
-          <h3 class="visit__label"><%- ic('clock') %>Opening hours</h3>
+          <h3 class="visit__label"><span class="visit__n" aria-hidden="true">iii.</span>Opening hours</h3>
           <p class="status-pill status-pill--<%= clinic.today.now.state %>"><span class="status-pill__dot" aria-hidden="true"></span><%= clinic.today.now.label %></p>
           <table class="hours-table-ds">
             <caption class="visually-hidden-ds">Weekly opening hours</caption>
