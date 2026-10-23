@@ -55,7 +55,9 @@ const scenePhoto = (name, width, height, sizes) => ({
   width, height,
 });
 const GALLERY_SCENE = scenePhoto('dentist-uv-curing', 1600, 1068, [640, 1024, 1600, 2048]);
-const ABOUT_SCENE = scenePhoto('smile-exam', 1600, 1422, [640, 1024, 1600, 2048]);
+/* Its own lighter encoding: it sits under deep shade, so it needs far fewer
+   bytes than the bright homepage copy of the same photograph. */
+const ABOUT_SCENE = scenePhoto('about-scene', 1600, 1422, [640, 1024, 1600, 2048]);
 
 const CATEGORY_LABELS = {
   clinic: 'Clinic', reception: 'Reception', treatment_room: 'Treatment room',

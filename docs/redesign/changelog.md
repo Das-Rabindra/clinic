@@ -849,3 +849,9 @@ widths) found nothing.
   `CREDITS.md` lists the new uses.
 - **Checks:** `npm test` passes 299/299, and the width sweep (4 pages × 8
   widths) found nothing.
+- **Follow-up, About speed:** the backdrop became the largest element, so
+  it is now the preloaded, high-priority image (the portrait loads
+  normally). It also gets its own lighter encoding, `about-scene-*`
+  (quality 56; 22KB instead of 36KB at the size phones fetch), since it sits
+  under deep shade. The unused `smile-exam-2048` is removed. Contrast is
+  unchanged.
