@@ -37,7 +37,9 @@
       </div>
       <% if (doctorPhoto) { %>
       <figure class="about-scene__portrait">
-        <img src="<%= doctorPhoto.url %>" alt="<%= clinic.doctor %>" width="<%= doctorPhoto.width %>" height="<%= doctorPhoto.height %>" decoding="async">
+        <%# Low priority: a 114KB original that, fetched alongside the backdrop,
+            fonts and stylesheets, slowed the backdrop (the LCP) on slow links. %>
+        <img src="<%= doctorPhoto.url %>" alt="<%= clinic.doctor %>" width="<%= doctorPhoto.width %>" height="<%= doctorPhoto.height %>" fetchpriority="low" decoding="async">
       </figure>
       <% } %>
     </div>
