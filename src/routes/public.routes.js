@@ -274,6 +274,9 @@ router.get('/', async (req, res) => {
       settings.area, [settings.city, settings.state].filter(Boolean).join(', '), settings.postal_code]
       .filter(Boolean).map(esc).join('<br>'),
     heroTitleHtml: esc(settings.hero_title || settings.name).replace(/\s*\n\s*/g, ' <br>'),
+    /* The hero headline as separate lines, for the line-by-line reveal. The
+       admin's own line break decides where lines fall. */
+    heroLines: String(settings.hero_title || settings.name).split(/\s*\n\s*/).filter(Boolean),
     servicesJson: JSON.stringify(services.map(s => ({
       id: s.id, name: s.name, slug: s.slug, duration: s.duration_min,
       desc: s.short_desc, category: s.category_name, bookable: s.bookable === 1,

@@ -7,11 +7,16 @@
 %>
 <% var ic = function (n) { return include('icon', { name: n }); }; %>
 <% var isSample = typeof sample !== 'undefined' && sample; %>
-  <section class="section" id="reviews">
+<% var chapterNum = typeof chapterNum !== 'undefined' ? chapterNum : null; %>
+  <section class="section chapter-section reviews-chapter" id="reviews" aria-labelledby="reviewsTitle">
     <div class="container">
-      <div class="section-heading section-heading--center">
+      <div class="section-heading section-heading--center" data-reveal-group>
+        <% if (chapterNum) { %>
+        <p class="chapter chapter--center" data-reveal><span class="chapter__index"><%= chapterNum %></span><span class="chapter__rule" aria-hidden="true"></span><span class="chapter__name">Words from patients</span></p>
+        <% } else { %>
         <span class="eyebrow-label">Testimonials from patients</span>
-        <h2><%= settings.reviews_title || 'What patients are saying' %></h2>
+        <% } %>
+        <h2 id="reviewsTitle" data-reveal><%= settings.reviews_title || 'What patients are saying' %></h2>
       </div>
 
       <% if (reviews.reviews.length) { %>
@@ -53,8 +58,8 @@
         <p class="section-foot"><a class="button button--secondary" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener">Read the reviews on Google</a></p>
         <% } %>
       <% } else { %>
-        <div class="empty-state">
-          <%- ic('star') %>
+        <div class="empty-state reviews-empty" data-reveal>
+          <span class="reviews-empty__mark" aria-hidden="true">&ldquo;</span>
           <h3>Testimonials coming soon</h3>
           <p>This section shows genuine feedback only &mdash; reviews synced from the clinic&rsquo;s
           Google Business Profile, and testimonials patients have shared directly and agreed to

@@ -494,7 +494,7 @@ describe('FAQ accordion', () => {
     assert.match(js, /panel\.removeAttribute\('data-collapsed'\)/, 'opening must reveal the panel');
 
     const page = (await srv.call('/')).body;
-    assert.match(page, /classList\.add\('js', 'ds-js'\)/,
+    assert.match(page, /classList\.add\('js',\s*'ds-js'\)/,
       'the class must be set before paint, or the answers flash open on load');
     for (const m of page.matchAll(/class="accordion__trigger"[^>]*aria-controls="([^"]+)"/g)) {
       assert.ok(page.includes(`id="${m[1]}"`), `trigger points at missing panel ${m[1]}`);
@@ -567,7 +567,7 @@ describe('fixes from the audit', () => {
 
   test('the homepage leads with six treatments, not fourteen', async () => {
     const r = await srv.call('/');
-    const cards = (r.body.match(/class="(?:tx-card|card card--interactive treatment-card)"/g) || []).length;
+    const cards = (r.body.match(/data-treatment-card/g) || []).length;
     assert.equal(cards, 6, 'fourteen near-identical cards buried the section');
     assert.match(r.body, /Also treated at the clinic/);
   });

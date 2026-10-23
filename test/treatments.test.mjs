@@ -36,7 +36,7 @@ describe('/services', () => {
   test('lists every active treatment, each with a detail link and a working Book link', async () => {
     const active = await servicesRepo.list({ activeOnly: true });
     const body = (await srv.call('/services')).body;
-    const cards = (body.match(/class="card card--interactive treatment-card"/g) || []).length;
+    const cards = (body.match(/data-treatment-card/g) || []).length;
     assert.equal(cards, active.length);
     for (const s of active) {
       if (s.has_detail_page) assert.ok(body.includes(`class="card__link" href="/services/${s.slug}"`), s.slug);

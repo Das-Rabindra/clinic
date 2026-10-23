@@ -52,4 +52,8 @@ export const CONTRAST_RULES = [
     { fg: `--color-${k}-text`, bg: '--color-surface', min: 4.5 },
   ]),
   { fg: '--color-disabled-text', bg: '--color-disabled-bg', min: 4.5 },
+  { fg: '--color-night-ink', bg: '--color-night', min: 4.5 },
+  { fg: '--color-night-muted', bg: '--color-night', min: 4.5 },
+  { fg: '--color-mint', bg: '--color-night', min: 4.5 },
+  { fg: '--color-focus-inverse', bg: '--color-night', min: 3 },
 ];

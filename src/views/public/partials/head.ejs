@@ -31,6 +31,7 @@
     because the swap to Fraunces changed the header's height and shifted the
     whole page. The two faces used above the fold are preloaded. %>
 <link rel="preload" href="/fonts/lora-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/lora-italic-var-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/inter-400-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/ds.css">
 <link rel="stylesheet" href="/css/layout.css">
@@ -52,7 +53,7 @@
     accordion would hide its own content from anyone browsing without
     JavaScript, and setting the class from site.js (deferred) would flash the
     answers open on every load. %>
-<script>document.documentElement.classList.add('js', 'ds-js');</script>
+<script>(function(d){d.classList.add('js','ds-js');try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('motion');}catch(e){}})(document.documentElement);</script>
 <% (typeof schemas !== 'undefined' ? schemas : []).filter(Boolean).forEach(function (s) { %>
 <script type="application/ld+json"><%- jsonForScript(s) %></script>
 <% }) %>

@@ -33,6 +33,14 @@
   src: url(/fonts/lora-var-latin-ext.woff2) format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400 600;
+  font-display: optional;
+  src: url(/fonts/lora-italic-var-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 /* The existing inter-400-*.woff2 files are already the full variable font
    (byte-identical to Google's Inter wght 100–900), so one range covers every
    weight with real glyphs rather than synthesised bold. */
@@ -106,6 +114,13 @@
   --color-warning-text: #8A5A00;  --color-warning-bg: #FBF1DC;
   --color-info-text: #1D5B9E;     --color-info-bg: #E7F0FA;
 
+  /* Night — the deep-teal chapters (booking, closing scene). Text and
+     accents are measured against it like every other surface. */
+  --color-night: #0C3936;
+  --color-night-ink: #F5F2EA;     /* 11.3:1 on night */
+  --color-night-muted: #B8CCC6;   /* 7.5:1 on night */
+  --color-mint: #9ED8C6;          /* accent on night only: 7.9:1 */
+
   /* Disabled — exempt from contrast rules, kept readable anyway (4.52:1) */
   --color-disabled-bg: #ECEBE5;
   --color-disabled-text: #646C69;
@@ -169,6 +184,10 @@
   --duration-base: 200ms;
   --duration-slow: 250ms;
   --ease-out: cubic-bezier(0.2, 0.7, 0.3, 1);
+  /* Cinematic reveals only — still transform/opacity/clip-path, and all of
+     it switched off under prefers-reduced-motion. */
+  --duration-reveal: 900ms;
+  --ease-cinema: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Hit area */
   --target-min: 44px;
@@ -339,6 +358,11 @@ p { margin: 0; }
 
 .button--inverse { --button-bg: var(--color-surface); --button-fg: var(--color-primary); --button-border: var(--color-surface); }
 .button--inverse:hover { --button-bg: var(--color-accent-sage); }
+
+/* Light outline, for night chapters and over the hero photograph. */
+.button--ghost-light { --button-bg: transparent; --button-fg: var(--color-night-ink); --button-border: rgba(245, 242, 234, 0.55); }
+.button--ghost-light:hover { --button-bg: rgba(245, 242, 234, 0.12); --button-border: var(--color-night-ink); }
+.section--night .button--text { color: var(--color-night-ink); }
 
 .button--small { min-height: 40px; padding: var(--space-2) var(--space-4); font-size: var(--text-small); }
 .button--block { width: 100%; }
@@ -708,6 +732,56 @@ html:has(body.has-action-bar) { scroll-padding-bottom: calc(84px + env(safe-area
   html:has(body.has-action-bar) { scroll-padding-bottom: 0; }
 }
 
+/* Caption for any photograph that is not of this clinic. Small, but always
+   there: a stock image must never pass for the clinic's own. */
+.illustrative-note { margin-top: var(--space-2); font-size: 0.75rem; letter-spacing: 0.04em; color: var(--color-text-muted); }
+.section--night .illustrative-note { color: var(--color-night-muted); }
+
+/* ── Night chapters ────────────────────────────────────────────────────── */
+.section--night { background: var(--color-night); color: var(--color-night-ink); }
+.section--night :is(h1, h2, h3, h4) { color: var(--color-night-ink); }
+.section--night .eyebrow-label, .section--night .chapter__index { color: var(--color-mint); }
+.section--night .text-muted, .section--night .section-heading__lede { color: var(--color-night-muted); }
+.section--night :focus-visible { outline-color: var(--color-focus-inverse); }
+.section--night .link { color: var(--color-mint); }
+
+/* ── Chapter marker: "01 — The dentist" ─────────────────────────────────── */
+.chapter { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-5); }
+.chapter__index {
+  font-family: var(--font-display); font-style: italic; font-size: 1.125rem; line-height: 1;
+  color: var(--color-primary);
+}
+.chapter__rule { width: 2.5rem; height: 1px; background: currentColor; opacity: 0.35; }
+.chapter__name {
+  font-size: var(--text-eyebrow); font-weight: var(--weight-semibold);
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-muted);
+}
+.section--night .chapter__name { color: var(--color-night-muted); }
+.display-em { font-style: italic; font-weight: var(--weight-regular); }
+
+/* ── Reveal system ─────────────────────────────────────────────────────────
+   Content is only hidden when html.motion is set — by an inline script in
+   <head> that also checks prefers-reduced-motion — so without JS, or with
+   reduced motion, everything is simply visible. Reveals move transform,
+   opacity and clip-path only: no layout shift. */
+.motion [data-reveal] {
+  opacity: 0; transform: translate3d(0, 28px, 0);
+  transition: opacity var(--duration-reveal) var(--ease-cinema), transform var(--duration-reveal) var(--ease-cinema);
+  transition-delay: calc(var(--reveal-i, 0) * 90ms);
+}
+.motion [data-reveal].is-in { opacity: 1; transform: none; }
+/* The image inside starts enlarged; its frame must clip it, or the
+   enlarged image widens the page on a phone. */
+[data-reveal='image'] { overflow: hidden; }
+.motion [data-reveal='image'] {
+  opacity: 1; transform: none;
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 1200ms var(--ease-cinema);
+}
+.motion [data-reveal='image'] > img { transform: scale(1.12); transition: transform 1600ms var(--ease-cinema); }
+.motion [data-reveal='image'].is-in { clip-path: inset(0 0 0 0); }
+.motion [data-reveal='image'].is-in > img { transform: none; }
+
 /* ── Reduced motion: no transitions, no animation, no smooth scroll ───── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -717,4 +791,5 @@ html:has(body.has-action-bar) { scroll-padding-bottom: calc(84px + env(safe-area
     scroll-behavior: auto !important;
   }
   .button[aria-busy='true']::before, .spinner-ds { animation: none; border-right-color: currentColor; opacity: 0.6; }
+  .motion [data-reveal], .motion [data-reveal='image'], .motion [data-reveal='image'] > img { opacity: 1; transform: none; clip-path: none; }
 }

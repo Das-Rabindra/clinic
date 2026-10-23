@@ -57,7 +57,8 @@ describe('homepage content', () => {
 
   test('credentials appear once in the first screen, not three times', async () => {
     const body = await home();
-    const hero = body.slice(body.indexOf('class="hero"'), body.indexOf('id="about"'));
+    const hero = body.slice(body.indexOf('class="cine-hero"'), body.indexOf('id="about"'));
+    assert.ok(hero.length > 100, 'hero found');
     assert.equal((hero.match(/class="trust-row"/g) || []).length, 1);
     assert.ok(!hero.includes('cred-strip'));
   });
@@ -104,7 +105,7 @@ describe('homepage content', () => {
 
   test('gallery: two to four → static grid, five or more → carousel', async () => {
     await addGalleryPhoto(2);
-    assert.match(await home(), /class="gallery-grid-ds"/);
+    assert.match(await home(), /class="gallery-grid-ds[ "]/);
     for (const n of [3, 4, 5]) await addGalleryPhoto(n);
     const many = await home();
     assert.match(many, /aria-label="Clinic photographs, scrollable"/);
@@ -259,5 +260,70 @@ describe('paper-card testimonials', () => {
     for (const t of TESTIMONIALS) {
       if (t.consent) assert.ok(String(t.text).trim().length > 0, `${t.name}: consent without words`);
     }
+  });
+});
+
+describe('cinematic layer', () => {
+  test('every stock photograph is captioned as illustrative; the clinic photo carries real alt text', async () => {
+    const body = await home();
+    const stock = (body.match(/<img src="\/img\/stock\//g) || []).length;
+    const notes = (body.match(/class="illustrative-note">Illustrative photograph</g) || []).length;
+    assert.ok(stock > 0);
+    assert.equal(notes, stock, 'one caption per stock image');
+    assert.match(body, /<img src="\/img\/clinic\/treatment-room-1086\.webp" alt="The treatment room at Samal Dental Care/);
+  });
+
+  test('every licence is recorded for the stock images', async () => {
+    const fs = await import('node:fs');
+    const credits = fs.readFileSync('public/img/stock/CREDITS.md', 'utf8');
+    for (const f of fs.readdirSync('public/img/stock').filter((n) => n.endsWith('.webp'))) {
+      const base = f.replace(/-\d+\.webp$/, '');
+      assert.ok(credits.includes(base), `${base} missing from CREDITS.md`);
+    }
+    assert.match(credits, /CC0 1\.0/);
+  });
+});
+
+describe('cinematic layer in a browser', () => {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const btest = (name, fn) => test(name, async (t) => {
+    if (!browser) return t.skip('Chromium could not launch');
+    await fn();
+  });
+
+  btest('with reduced motion nothing is hidden or animated', async () => {
+    const p = await browser.newPage();
+    await p.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+    await p.setViewport({ width: 1280, height: 900 });
+    await p.goto(srv.base + '/', { waitUntil: 'networkidle0' });
+    const s = await p.evaluate(() => ({
+      motion: document.documentElement.classList.contains('motion'),
+      hidden: [...document.querySelectorAll('[data-reveal]')].filter((e) => {
+        const cs = getComputedStyle(e); return cs.opacity !== '1' || cs.clipPath !== 'none';
+      }).length,
+    }));
+    await p.close();
+    assert.equal(s.motion, false);
+    assert.equal(s.hidden, 0);
+  });
+
+  btest('every reveal fires while scrolling, and the header turns solid after the hero', async () => {
+    const p = await browser.newPage();
+    await p.setViewport({ width: 1280, height: 900 });
+    await p.goto(srv.base + '/', { waitUntil: 'networkidle0' });
+    assert.equal(await p.$eval('.site-header', (h) => h.classList.contains('is-transparent')), true, 'transparent over the hero');
+    const height = await p.evaluate(() => document.body.scrollHeight);
+    for (let y = 0; y < height; y += 500) {
+      await p.evaluate((v) => window.scrollTo(0, v), y);
+      await sleep(120);
+    }
+    await sleep(400);
+    const s = await p.evaluate(() => ({
+      stuck: document.querySelectorAll('[data-reveal]:not(.is-in)').length,
+      transparent: document.querySelector('.site-header').classList.contains('is-transparent'),
+    }));
+    await p.close();
+    assert.equal(s.stuck, 0, 'reveals never fired');
+    assert.equal(s.transparent, false, 'header solid below the hero');
   });
 });

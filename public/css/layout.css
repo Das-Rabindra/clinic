@@ -132,3 +132,28 @@
 .cta__actions { justify-content: center; margin-top: var(--space-8); }
 .cta__call { color: var(--color-on-primary); }
 .section--primary .eyebrow-label { color: var(--color-accent-sage); }
+
+/* ══ Header over the cinematic hero ══
+   motion.js adds .site-header--over-hero and toggles .is-transparent while
+   the hero is beneath it. Without JS the header stays solid. While the
+   mobile menu is open it is always solid. */
+.site-header { transition: background-color var(--duration-slow) var(--ease-out), border-color var(--duration-slow) var(--ease-out), box-shadow var(--duration-slow) var(--ease-out); }
+.site-header--over-hero.is-transparent:not(:has(~ .nav-drawer[data-open])) {
+  background: transparent; border-bottom-color: rgba(245, 242, 234, 0.16); box-shadow: none;
+  color: var(--color-night-ink);
+}
+.site-header--over-hero.is-transparent:not(:has(~ .nav-drawer[data-open])) :is(.site-header__name, .site-nav__link, .site-header__phone) { color: var(--color-night-ink); }
+.site-header--over-hero.is-transparent:not(:has(~ .nav-drawer[data-open])) .site-header__place { color: var(--color-night-muted); }
+.site-header--over-hero.is-transparent:not(:has(~ .nav-drawer[data-open])) .site-header__phone .icon { color: var(--color-mint); }
+.site-header--over-hero.is-transparent:not(:has(~ .nav-drawer[data-open])) .nav-toggle { background: transparent; color: var(--color-night-ink); border-color: rgba(245, 242, 234, 0.55); }
+.site-header--over-hero.is-transparent:not(:has(~ .nav-drawer[data-open])) .site-header__cta { --button-bg: var(--color-night-ink); --button-fg: var(--color-night); --button-border: var(--color-night-ink); }
+.site-header--over-hero.is-transparent:not(:has(~ .nav-drawer[data-open])) :focus-visible { outline-color: var(--color-focus-inverse); }
+.site-header--over-hero.is-transparent .site-header__brand img { background: var(--color-night-ink); border-radius: var(--radius-sm); }
+
+/* ══ Footer wordmark ══ */
+.site-footer__wordmark {
+  margin-top: var(--space-12); overflow: hidden;
+  font-family: var(--font-display); font-weight: var(--weight-regular); letter-spacing: -0.03em; line-height: 0.9;
+  font-size: clamp(2.6rem, 0.6rem + 9.6vw, 10rem); color: var(--color-accent-sage); white-space: nowrap;
+}
+.site-footer__wordmark em { font-style: italic; color: color-mix(in srgb, var(--color-primary) 30%, var(--color-accent-sage)); }

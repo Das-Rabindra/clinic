@@ -1,18 +1,23 @@
 <%#
-  One treatment card. Used by the homepage, /services, related treatments and
-  the 404 page, so every card looks and behaves the same.
+  One treatment, in one of three compositions so a page of treatments is not
+  a wall of identical cards:
+    card (default) — image above, text below; listings and related treatments
+    tile           — large image with the title laid over it; homepage lead
+    row            — editorial row: number, title, line, small image; homepage
 
   Book is a real link to /#appointment?treatment=<slug>. On the homepage
   booking.js intercepts it (.book-service) and opens the wizard in place;
   everywhere else it simply navigates there. It used to be a <button>, which
-  did nothing at all on any page without the wizard.
+  did nothing on any page without the wizard.
 
-  Locals: s (service row), level ('h2' | 'h3', default 'h3'), eager (bool).
+  Locals: s (service row), variant, level ('h2' | 'h3'), eager (bool), index.
 %>
 <% var tag = typeof level !== 'undefined' && level ? level : 'h3'; %>
 <% var lazy = !(typeof eager !== 'undefined' && eager); %>
-<article class="card card--interactive treatment-card">
-  <div class="card__media">
+<% var v = typeof variant !== 'undefined' && variant ? variant : 'card'; %>
+<% var n = typeof index !== 'undefined' ? String(index + 1).padStart(2, '0') : null; %>
+<% var media = function (cls) { %>
+  <div class="<%= cls %>"<% if (v !== 'card') { %> data-reveal="image"<% } %>>
     <% if (s.image_url) { %>
       <img src="<%= s.image_url %>" alt="<%= s.image_alt || '' %>"
            width="<%= s.image_width || 1280 %>" height="<%= s.image_height || 720 %>"
@@ -21,18 +26,51 @@
       <div class="treatment-card__art"><%- include('treatment-art', { slug: s.slug, name: s.name }) %></div>
     <% } %>
   </div>
-  <div class="card__body">
-    <% if (s.category_name) { %><span class="eyebrow-label"><%= s.category_name %></span><% } %>
-    <<%= tag %> class="card__title">
-      <% if (s.has_detail_page) { %><a class="card__link" href="/services/<%= s.slug %>"><%= s.name %></a><% } else { %><%= s.name %><% } %>
-    </<%= tag %>>
+<% }; %>
+<% var actions = function () { %>
+  <div class="card__footer">
+    <% if (s.bookable) { %>
+    <a class="button button--primary button--small book-service" href="/#appointment?treatment=<%= s.slug %>"
+       data-service="<%= s.id %>" data-service-name="<%= s.name %>" data-track="appointment_started">Book<span class="visually-hidden-ds"> <%= s.name %></span></a>
+    <% } %>
+    <button type="button" class="button button--text button--small" data-callback-open data-service="<%= s.id %>" data-service-name="<%= s.name %>">Request a call back<span class="visually-hidden-ds"> about <%= s.name %></span></button>
+  </div>
+<% }; %>
+<% var title = function () { %>
+  <<%= tag %> class="card__title">
+    <% if (s.has_detail_page) { %><a class="card__link" href="/services/<%= s.slug %>"><%= s.name %></a><% } else { %><%= s.name %><% } %>
+  </<%= tag %>>
+<% }; %>
+
+<% if (v === 'tile') { %>
+<article class="card card--interactive treatment-card treatment-card--tile" data-treatment-card>
+  <% media('card__media treatment-card__tile-media'); %>
+  <div class="card__body treatment-card__tile-body">
+    <% if (s.category_name) { %><span class="treatment-card__cat"><%= s.category_name %></span><% } %>
+    <% title(); %>
     <% if (s.short_desc) { %><p class="card__text"><%= s.short_desc %></p><% } %>
-    <div class="card__footer">
-      <% if (s.bookable) { %>
-      <a class="button button--primary button--small book-service" href="/#appointment?treatment=<%= s.slug %>"
-         data-service="<%= s.id %>" data-service-name="<%= s.name %>" data-track="appointment_started">Book<span class="visually-hidden-ds"> <%= s.name %></span></a>
-      <% } %>
-      <button type="button" class="button button--text button--small" data-callback-open data-service="<%= s.id %>" data-service-name="<%= s.name %>">Request a call back<span class="visually-hidden-ds"> about <%= s.name %></span></button>
-    </div>
+    <% actions(); %>
   </div>
 </article>
+<% } else if (v === 'row') { %>
+<article class="card--interactive treatment-row" data-treatment-card data-reveal>
+  <% if (n) { %><span class="treatment-row__num" aria-hidden="true"><%= n %></span><% } %>
+  <div class="treatment-row__text">
+    <% if (s.category_name) { %><span class="treatment-card__cat"><%= s.category_name %></span><% } %>
+    <% title(); %>
+    <% if (s.short_desc) { %><p class="card__text"><%= s.short_desc %></p><% } %>
+  </div>
+  <% media('treatment-row__media'); %>
+  <% actions(); %>
+</article>
+<% } else { %>
+<article class="card card--interactive treatment-card" data-treatment-card>
+  <% media('card__media'); %>
+  <div class="card__body">
+    <% if (s.category_name) { %><span class="eyebrow-label"><%= s.category_name %></span><% } %>
+    <% title(); %>
+    <% if (s.short_desc) { %><p class="card__text"><%= s.short_desc %></p><% } %>
+    <% actions(); %>
+  </div>
+</article>
+<% } %>
