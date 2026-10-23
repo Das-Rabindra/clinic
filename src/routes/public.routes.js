@@ -66,7 +66,10 @@ const TESTIMONIALS_SCENE = ABOUT_SCENE;
    text column. The booking page reuses the homepage's booking photograph. */
 const PRIVACY_SCENE = scenePhoto('dental-instruments', 1600, 628, [1024, 1600, 2048]);
 const BOOK_SCENE = scenePhoto('dentist-uv-curing', 1600, 1068, [640, 1024, 1600, 2048]);
-const scenePreload = (photo) => ({ preloadImage: photo.url, preloadSrcset: photo.srcset, preloadSizes: '100vw' });
+/* The 404 page: the smile, mirrored as on Testimonials, so a dead end still
+   opens on something friendly. Rendered by middleware/error.js. */
+export const NOT_FOUND_SCENE = ABOUT_SCENE;
+export const scenePreload = (photo) => ({ preloadImage: photo.url, preloadSrcset: photo.srcset, preloadSizes: '100vw' });
 
 const CATEGORY_LABELS = {
   clinic: 'Clinic', reception: 'Reception', treatment_room: 'Treatment room',

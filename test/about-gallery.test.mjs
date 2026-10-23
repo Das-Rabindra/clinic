@@ -127,7 +127,14 @@ describe('/contact', () => {
   });
 });
 
-describe('privacy and book scenes', () => {
+describe('privacy, book and 404 scenes', () => {
+  test('the 404 page has a captioned backdrop and still answers 404', async () => {
+    const r = await srv.call('/no-such-page');
+    assert.equal(r.status, 404);
+    assert.match(r.body, /class="page-cine page-cine--photo"[^>]*data-hero/);
+    assert.match(r.body, /<p class="page-cine__credit">Illustrative photograph<\/p>/);
+  });
+
   for (const page of ['/privacy', '/book']) {
     test(`${page} has a captioned illustrative backdrop`, async () => {
       const body = (await srv.call(page)).body;

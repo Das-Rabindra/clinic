@@ -14,10 +14,12 @@ export async function notFound(req, res, next) {
     return res.status(404).json({ error: 'Not found.', code: 'NOT_FOUND' });
   }
   try {
-    const { publicLocals } = await import('../routes/public.routes.js');
+    const { publicLocals, NOT_FOUND_SCENE, scenePreload } = await import('../routes/public.routes.js');
     const base = await publicLocals();
     return res.status(404).render('public/404', {
       ...base,
+      scenePhoto: NOT_FOUND_SCENE,
+      ...scenePreload(NOT_FOUND_SCENE),
       noindex: true,
       meta: {
         title: `Page not found | ${base.settings.name}`,

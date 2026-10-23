@@ -906,3 +906,17 @@ widths) found nothing.
 - **Checks:** a test per page asserts the captioned backdrop. `npm test`
   passes 301/301, and the width sweep found nothing.
 - Every main page now opens on a captioned photograph, except the 404 page.
+
+## 404 uses the owner's photographs (2026-10-23)
+
+- **Photo:** the 404 scene has the smile close-up, mirrored as on
+  Testimonials, so a dead end still opens on something friendly. It is
+  captioned "Illustrative photograph".
+- **Code:** rendered by `middleware/error.js`, which now takes
+  `NOT_FOUND_SCENE` and `scenePreload` from `public.routes.js`, where every
+  scene photograph is defined.
+- **Contrast:** every line is ≥ 7.55:1 at every width.
+- **Checks:** a test asserts the page still answers 404 with the captioned
+  backdrop. `npm test` passes 302/302. The width sweep found nothing beyond
+  the expected 404 status message.
+- Every public page now opens on a captioned photograph.
