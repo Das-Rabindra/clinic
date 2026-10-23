@@ -60,17 +60,30 @@
     sentinel.observe(hero);
   }
 
-  /* ---------- Hero parallax ----------
-     The photograph drifts at a fraction of the scroll speed. Desktop and
-     motion-allowed only; one rAF per frame at most; stops past the hero. */
+  /* ---------- Hero parallax and scroll choreography ----------
+     As the visitor scrolls on, the photograph drifts at a fraction of the
+     scroll speed (desktop), the words lift away a little faster and fade, and
+     the scene dims. That reads as a camera moving on, not a page scrolling.
+     Motion-allowed only; one rAF per frame at most; stops past the hero.
+     Transform and opacity only, so nothing reflows. */
   var media = hero && hero.querySelector('[data-parallax]');
-  if (motion && media && window.matchMedia('(min-width: 768px)').matches) {
+  var words = hero && hero.querySelector('[data-hero-content]');
+  var dim = hero && hero.querySelector('[data-hero-dim]');
+  var drift = window.matchMedia('(min-width: 768px)').matches;
+  if (motion && hero && (media || words)) {
     var ticking = false;
     var update = function () {
       ticking = false;
       var y = window.scrollY;
-      if (y > hero.offsetHeight) return;
-      media.style.transform = 'translate3d(0,' + (y * 0.18).toFixed(1) + 'px,0) scale(1.06)';
+      var h = hero.offsetHeight;
+      if (y > h) return;
+      var p = Math.min(1, y / (h * 0.75));
+      if (media && drift) media.style.transform = 'translate3d(0,' + (y * 0.18).toFixed(1) + 'px,0) scale(1.06)';
+      if (words) {
+        words.style.transform = y ? 'translate3d(0,' + (-y * 0.12).toFixed(1) + 'px,0)' : '';
+        words.style.opacity = y ? (1 - p * 0.85).toFixed(3) : '';
+      }
+      if (dim) dim.style.opacity = (p * 0.55).toFixed(3);
     };
     window.addEventListener('scroll', function () {
       if (!ticking) { ticking = true; requestAnimationFrame(update); }

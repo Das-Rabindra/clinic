@@ -15,19 +15,59 @@
 }
 .cine-hero__media { position: absolute; inset: -6% 0 -6%; z-index: -2; will-change: transform; }
 .cine-hero__frame { position: absolute; inset: 0; }
-.cine-hero__frame img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 55%; }
-.motion .cine-hero__frame { animation: cine-push 2600ms var(--ease-cinema) both; }
+.cine-hero__frame img {
+  width: 100%; height: 100%; object-fit: cover; object-position: 50% 55%;
+  /* A film grade instead of a flat tint: slightly cooler, deeper and more
+     contrasty, so the room keeps its own colour where no text sits. */
+  filter: saturate(0.88) contrast(1.06) brightness(0.9);
+}
+/* The scene opens like a film: letterbox bars part while the camera eases
+   back. Transform and clip-path only, so nothing reflows. */
+.motion .cine-hero__frame { animation: cine-push 2800ms var(--ease-cinema) both, cine-letterbox 1500ms var(--ease-cinema) both; }
 @keyframes cine-push { from { transform: scale(1.14); } to { transform: scale(1); } }
+@keyframes cine-letterbox { from { clip-path: inset(11% 0 11% 0); } to { clip-path: inset(0 0 0 0); } }
 
-/* The shade is strongest where the type sits: at least 70% night over the
-   lower-left, so white text holds ≥5:1 over the brightest pixels. */
+/* Light falls where the room is; darkness gathers where the type sits. The
+   lower-left stays at least 75% night, so white text holds ≥5:1 over the
+   brightest pixels behind it, and a vignette closes the frame. */
 .cine-hero__shade {
   position: absolute; inset: 0; z-index: -1;
   background:
-    linear-gradient(180deg, rgba(12, 57, 54, 0.78) 0, rgba(12, 57, 54, 0) 160px),
-    linear-gradient(0deg, rgba(12, 57, 54, 0.94) 0%, rgba(12, 57, 54, 0.80) 34%, rgba(12, 57, 54, 0.52) 66%, rgba(12, 57, 54, 0.34) 100%),
-    linear-gradient(90deg, rgba(12, 57, 54, 0.55) 0%, rgba(12, 57, 54, 0) 70%);
+    linear-gradient(180deg, rgba(6, 32, 30, 0.8) 0, rgba(6, 32, 30, 0) 170px),
+    radial-gradient(125% 95% at 72% 38%, rgba(6, 32, 30, 0) 35%, rgba(6, 32, 30, 0.6) 100%),
+    linear-gradient(0deg, rgba(8, 42, 39, 0.97) 0%, rgba(8, 42, 39, 0.86) 30%, rgba(8, 42, 39, 0.45) 62%, rgba(8, 42, 39, 0.15) 100%),
+    linear-gradient(90deg, rgba(8, 42, 39, 0.93) 0%, rgba(8, 42, 39, 0.9) 42%, rgba(8, 42, 39, 0.6) 60%, rgba(8, 42, 39, 0) 80%);
 }
+/* On a phone the words fill the width, so they cannot share it with the
+   photograph. The room is shown clear at the top, like an establishing
+   shot, and the words sit below it on deep night. */
+@media (max-width: 767px) {
+  .cine-hero { min-height: 0; padding-top: calc(var(--header-height) + 30svh); }
+  .cine-hero__media { inset: 0 0 auto 0; height: calc(var(--header-height) + 46svh); }
+  .cine-hero__frame img { object-position: 50% 40%; }
+  .cine-hero__shade {
+    background:
+      linear-gradient(180deg, rgba(6, 32, 30, 0.75) 0, rgba(6, 32, 30, 0) 120px),
+      linear-gradient(180deg, rgba(8, 42, 39, 0) calc(var(--header-height) + 14svh), rgba(8, 42, 39, 0.9) calc(var(--header-height) + 30svh), var(--color-night) calc(var(--header-height) + 40svh));
+  }
+}
+/* Fine grain over everything, as on film. A tiny inline SVG; static. */
+.cine-hero__grain {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.09; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* Deepens as the visitor scrolls on (motion.js sets its opacity). */
+.cine-hero__dim { position: absolute; inset: 0; z-index: -1; background: var(--color-night); opacity: 0; pointer-events: none; }
+
+/* What the photograph is, set like a still's caption. */
+.cine-hero__caption {
+  position: absolute; right: var(--gutter); bottom: calc(var(--space-16) + 2.5rem); z-index: 1; margin: 0;
+  display: inline-flex; align-items: center; gap: var(--space-3);
+  font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-night-muted);
+}
+.cine-hero__caption-mark { width: 2.5rem; height: 1px; background: currentColor; opacity: 0.6; }
+@media (max-width: 1023px) { .cine-hero__caption { display: none; } }
+.motion .cine-hero__caption { animation: cine-fade 1200ms var(--ease-cinema) 1200ms both; }
 
 .cine-hero__content {
   align-self: end;
@@ -45,8 +85,8 @@
 .cine-hero__pin .icon { width: 1rem; height: 1rem; }
 .cine-hero__title {
   color: var(--color-night-ink);
-  font-size: clamp(2.6rem, 1.5rem + 4.6vw, 5.25rem);
-  line-height: 1.02; letter-spacing: -0.025em; font-weight: var(--weight-regular);
+  font-size: clamp(2.6rem, 1.3rem + 5.2vw, 6rem);
+  line-height: 1; letter-spacing: -0.028em; font-weight: var(--weight-regular);
   text-wrap: balance;
 }
 .cine-hero__title em { color: var(--color-mint); }
@@ -77,8 +117,7 @@
 .cine-hero .status-pill--open .status-pill__dot { background: var(--color-mint); }
 
 @media (max-width: 767px) {
-  .cine-hero { min-height: 92svh; }
-  .cine-hero__content { padding-block: var(--space-12) var(--space-8); }
+  .cine-hero__content { padding-block: var(--space-4) var(--space-8); }
   .cine-hero__actions .button { flex: 1 1 100%; }
   .cine-hero__rail .trust-row { display: none; }   /* repeated in chapter 01 */
 }

@@ -28,8 +28,11 @@
       </div>
     </div>
     <div class="cine-hero__shade" aria-hidden="true"></div>
+    <%# Film grain and a scroll-driven dimmer: decoration only, both inert. %>
+    <div class="cine-hero__grain" aria-hidden="true"></div>
+    <div class="cine-hero__dim" aria-hidden="true" data-hero-dim></div>
 
-    <div class="container cine-hero__content">
+    <div class="container cine-hero__content" data-hero-content>
       <% if (settings.hero_eyebrow) { %><p class="cine-hero__eyebrow"><span class="cine-hero__pin"><%- ic('pin') %></span><%= settings.hero_eyebrow %></p><% } %>
       <h1 class="hero__title cine-hero__title" id="heroTitle">
         <% heroLines.forEach(function (line, i) { %><span class="cine-line"><span class="cine-line__inner" style="--line:<%= i %>"><% if (i === heroLines.length - 1 && heroLines.length > 1) { %><em class="display-em"><%= line %></em><% } else { %><%= line %><% } %></span></span><% if (i < heroLines.length - 1) { %> <% } %><% }) %>
@@ -41,6 +44,12 @@
       </div>
       <% if (settings.hero_trust_text) { %><p class="hero__note cine-hero__note"><%- ic('check') %><%= settings.hero_trust_text %></p><% } %>
     </div>
+
+    <%# Says what the photograph is, as a film still would. Only for the
+        clinic's own photograph, never for anything else the admin sets. %>
+    <% if (heroImage.caption) { %>
+    <p class="cine-hero__caption" aria-hidden="true"><span class="cine-hero__caption-mark"></span><%= heroImage.caption %></p>
+    <% } %>
 
     <%# One compact trust row: who, registration, where, and today's status. %>
     <div class="cine-hero__rail">

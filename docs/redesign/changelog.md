@@ -666,3 +666,36 @@ They are now pages of their own, in the same cinematic style.
 
 The slow path was also checked against a single-connection pool, as
 production runs. `npm test` passes 295/295.
+
+## Homepage hero, more cinematic (2026-10-23)
+
+- **Film grade, not a wash:**
+  - The flat teal overlay is gone. The photo gets a slight grade (less
+    saturation, more contrast, a little darker).
+  - Darkness gathers only where the words sit (lower-left), with a vignette
+    closing the frame, so the chair, lamp and cabinet on the right keep
+    their own light and colour.
+  - Fine static film grain on top (a tiny inline SVG).
+- **Phones get an establishing shot:**
+  - The clear photograph fills the top of the screen.
+  - The words sit below on deep night instead of fighting the photo
+    across the full width.
+- **Opening:**
+  - Letterbox bars part (clip-path) while the camera eases back.
+  - The headline lines rise as before and are larger (up to 6rem).
+  - A caption like a film still, "The treatment room, Samal Dental Care",
+    names the real photograph (desktop; only for the clinic's own photo).
+- **Scroll:**
+  - As the visitor scrolls on, the words lift and fade, a dimmer deepens
+    the scene, and the photo keeps its parallax.
+  - Transform and opacity only; all of it is off under reduced motion.
+- **Contrast, measured over the photo:** the brightest 1% of background
+  pixels behind each line, compared with the text colour.
+  - Before (live), worst case: eyebrow 2.1 and intro 2.6 on phones;
+    headline 3.3 on desktop.
+  - Now, worst case at 390/768/1440/1920px: eyebrow ≥7.4, headline ≥4.88,
+    intro ≥5.2, note ≥11.6, caption ≥7.7.
+- **Checks:** `npm test` passes 295/295. The width sweep found nothing.
+  - One run had two time-dependent booking-UI failures: late in the day,
+    today's few remaining slots get used up. They pass alone and on rerun,
+    so this is a pre-existing flake, not this change.

@@ -29,6 +29,7 @@ const CLINIC_PHOTO = {
   width: 1086,
   height: 1086,
   alt: 'The treatment room at Samal Dental Care, with the dental chair beside the consultation desk',
+  caption: 'The treatment room, Samal Dental Care',
 };
 
 const CATEGORY_LABELS = {
