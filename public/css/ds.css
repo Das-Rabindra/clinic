@@ -117,6 +117,7 @@
   /* Night — the deep-teal chapters (booking, closing scene). Text and
      accents are measured against it like every other surface. */
   --color-night: #0C3936;
+  --color-night-deep: #072624;   /* the footer: end credits, a shade below the last scene */
   --color-night-ink: #F5F2EA;     /* 11.3:1 on night */
   --color-night-muted: #B8CCC6;   /* 7.5:1 on night */
   --color-mint: #9ED8C6;          /* accent on night only: 7.9:1 */

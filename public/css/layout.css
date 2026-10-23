@@ -46,13 +46,27 @@
 .social-link:hover { background: var(--color-accent-sage); }
 .social-link svg { width: 1.125rem; height: 1.125rem; fill: currentColor; }
 
-/* ── Footer ── */
+/* ── Footer: end credits ──
+   A film's closing credits: deeper night than the last scene, a faint
+   projector glow at the top, the hero's grain, spaced mint capitals over
+   soft light lists. Every colour holds AA on --color-night-deep (see
+   design-tokens.js); the wordmark is decorative, but still ≥ 3:1. */
 .site-footer {
-  padding-block: var(--space-16) var(--space-8);
-  background: var(--color-surface);
-  border-top: var(--border-width) solid var(--color-border-subtle);
+  --footer-bg: var(--color-night-deep);
+  position: relative; isolation: isolate; overflow: hidden;
+  padding-block: var(--space-20, 5rem) var(--space-8);
+  background:
+    radial-gradient(70% 55% at 50% 0%, rgba(158, 216, 198, 0.10), rgba(158, 216, 198, 0) 70%),
+    var(--footer-bg);
+  border-top: 1px solid rgba(245, 242, 234, 0.12);
+  color: var(--color-night-muted);
   font-size: var(--text-small);
 }
+.site-footer__grain {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.08; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.site-footer :focus-visible { outline-color: var(--color-focus-inverse); }
 .site-footer__grid { display: grid; gap: var(--space-10); grid-template-columns: 1fr; }
 .site-footer__grid > * { min-width: 0; }
 /* Phones: the two link lists sit side by side; brand and contact span both. */
@@ -63,32 +77,39 @@
 @media (min-width: 1024px) { .site-footer__grid { grid-template-columns: 1.4fr 1fr 1fr 1.2fr; } }
 .site-footer__logo {
   display: inline-flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);
-  color: var(--color-text); text-decoration: none;
-  font-family: var(--font-display); font-size: 1.125rem; font-weight: var(--weight-semibold);
+  color: var(--color-night-ink); text-decoration: none;
+  font-family: var(--font-display); font-size: 1.25rem; font-weight: var(--weight-semibold);
 }
-.site-footer__logo img { border-radius: var(--radius-sm); }
-.site-footer__brand p { color: var(--color-text-muted); }
+.site-footer__logo img { border-radius: var(--radius-sm); background: var(--color-night-ink); }
+.site-footer__brand p { color: var(--color-night-muted); line-height: 1.7; }
 .site-footer__heading {
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
   font-family: var(--font-body); font-size: var(--text-eyebrow); font-weight: var(--weight-semibold);
-  letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text);
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-mint);
 }
 .site-footer__col ul { list-style: none; margin: 0; padding: 0; }
 .site-footer__col li { padding-block: 2px; }
 .site-footer__col a {
   display: inline-flex; align-items: center; min-height: 32px;
-  color: var(--color-text-muted); text-decoration: none;
+  color: var(--color-night-ink); text-decoration: none;
+  background: linear-gradient(var(--color-mint), var(--color-mint)) 0 100% / 0 1px no-repeat;
+  transition: background-size var(--duration-base) var(--ease-cinema), color var(--duration-fast) var(--ease-out);
 }
-.site-footer__col a:hover { color: var(--color-primary); text-decoration: underline; text-underline-offset: 0.2em; }
-.site-footer__col address { font-style: normal; color: var(--color-text-muted); padding-bottom: var(--space-2); }
-.site-footer__note { margin-left: var(--space-1); color: var(--color-text-muted); }
-.site-footer .status-pill { margin-top: var(--space-4); }
+.site-footer__col a:hover { color: var(--color-mint); background-size: 100% 1px; }
+.site-footer__col address { font-style: normal; color: var(--color-night-muted); padding-bottom: var(--space-2); line-height: 1.7; }
+.site-footer__note { margin-left: var(--space-1); color: var(--color-night-muted); }
+.site-footer .status-pill { margin-top: var(--space-4); background: rgba(245, 242, 234, 0.06); border-color: rgba(245, 242, 234, 0.2); color: var(--color-night-ink); }
+.site-footer .status-pill--open .status-pill__dot { background: var(--color-mint); }
+.site-footer .social-link { color: var(--color-night-ink); border-color: rgba(245, 242, 234, 0.25); background: transparent; }
+.site-footer .social-link:hover { background: rgba(245, 242, 234, 0.1); }
 .site-footer__bottom {
-  display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3);
-  margin-top: var(--space-12); padding-top: var(--space-6);
-  border-top: var(--border-width) solid var(--color-border-subtle); color: var(--color-text-muted);
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-3);
+  margin-top: var(--space-10); padding-top: var(--space-6);
+  border-top: 1px solid rgba(245, 242, 234, 0.14); color: var(--color-night-muted);
 }
-.site-footer__bottom a { display: inline-flex; align-items: center; min-height: var(--target-min); color: inherit; }
+.site-footer__bottom-links { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); }
+.site-footer__bottom a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); color: var(--color-night-ink); }
+.site-footer__top { text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.75rem; }
 
 /* ── Call-back dialog ── */
 .callback-form { margin-top: var(--space-5); }
@@ -152,20 +173,35 @@
 
 /* ══ Footer wordmark ══ */
 .site-footer__wordmark {
-  margin-top: var(--space-12); overflow: hidden;
-  font-family: var(--font-display); font-weight: var(--weight-regular); letter-spacing: -0.03em; line-height: 0.9;
-  /* Large text: 3:1 is the floor even for a decorative wordmark — #64958C
-     is 3.37:1 on white; the italic word is the brand primary, 7.56:1. */
-  color: #64958C; white-space: nowrap;
-  /* Sized from the width it actually has, not guessed from the viewport:
-     the set line is 7.81× its font size, so 100cqi / 8.1 always fits with
-     a little air. The vw guess clipped the final "e" on phones and on wide
-     screens. The fallback is for browsers without container units. */
-  font-size: clamp(2rem, 11.5vw, 9.5rem);
-  font-size: min(10rem, 100cqi / 8.1);
+  margin-top: var(--space-16); overflow: hidden; padding-bottom: 0.06em;
+  font-family: var(--font-display); font-weight: var(--weight-regular); letter-spacing: -0.03em; line-height: 0.95;
+  /* Decorative (aria-hidden), but held to large-text AA anyway: night-muted
+     is 9.5:1 and mint 9.9:1 on --color-night-deep. */
+  color: var(--color-night-muted); white-space: nowrap;
+  /* Sized from the width it actually has, not guessed from the viewport.
+     The set line is 8.11× its font size with Lora's real italic, and 7.81×
+     when the browser slants the upright face instead (font-display:
+     optional, so a first visit to a page that does not preload the italic
+     gets the slant, and a cached one gets the real italic). Dividing by 8.4
+     fits the wider of the two with ~3.5% to spare. At 8.1 the real italic
+     overflowed by 2px and clipped the final "e". */
+  font-size: clamp(2rem, 11vw, 9.5rem);
+  font-size: min(10rem, 100cqi / 8.4);
 }
 .site-footer > .container { container-type: inline-size; }
-.site-footer__wordmark em { font-style: italic; color: var(--color-primary); }
+.site-footer__wordmark em { font-style: italic; color: var(--color-mint); }
+/* Each word rises out of its own mask when the footer comes into view,
+   like a closing title. Only the words move; the line keeps its width. */
+.site-footer__word { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: 0.08em; margin-bottom: -0.08em; }
+.site-footer__word > * { display: inline-block; }
+.motion .site-footer__wordmark[data-reveal] { opacity: 1; transform: none; }
+.motion .site-footer__wordmark[data-reveal] .site-footer__word > * {
+  transform: translate3d(0, 110%, 0);
+  transition: transform 1300ms var(--ease-cinema);
+}
+.motion .site-footer__wordmark[data-reveal] .site-footer__word:nth-child(2) > * { transition-delay: 120ms; }
+.motion .site-footer__wordmark[data-reveal] .site-footer__word:nth-child(3) > * { transition-delay: 240ms; }
+.motion .site-footer__wordmark[data-reveal].is-in .site-footer__word > * { transform: none; }
 
 /* ══ Cinematic shared components (moved from home.css): treatment tiles
    and rows, the split FAQ, the closing night scene. ══ */

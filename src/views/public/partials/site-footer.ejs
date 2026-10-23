@@ -1,6 +1,9 @@
-<%# Footer for pages on the new design system. Old pages use footer.ejs. %>
+<%# Footer for pages on the new design system. Old pages use footer.ejs.
+    Set as a film's end credits: night, spaced capitals, the wordmark rising
+    word by word as it comes into view (motion.js, [data-reveal]). %>
 <% var nav = typeof navBase === 'undefined' ? '' : navBase; %>
 <footer class="site-footer">
+  <div class="site-footer__grain" aria-hidden="true"></div>
   <div class="container">
     <div class="site-footer__grid">
       <div class="site-footer__brand">
@@ -54,11 +57,14 @@
       </div>
     </div>
 
-    <p class="site-footer__wordmark" aria-hidden="true">Samal <em>Dental</em> Care</p>
+    <p class="site-footer__wordmark" aria-hidden="true" data-reveal="wordmark"><span class="site-footer__word"><span>Samal</span></span> <span class="site-footer__word"><em>Dental</em></span> <span class="site-footer__word"><span>Care</span></span></p>
 
     <div class="site-footer__bottom">
       <span>&copy; <%= new Date().getFullYear() %> <%= clinic.name %></span>
-      <a href="/privacy">Privacy &amp; appointment policy</a>
+      <span class="site-footer__bottom-links">
+        <a href="/privacy">Privacy &amp; appointment policy</a>
+        <a href="#main" class="site-footer__top">Back to top <span aria-hidden="true">&uarr;</span></a>
+      </span>
     </div>
   </div>
 </footer>

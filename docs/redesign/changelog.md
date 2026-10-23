@@ -723,3 +723,29 @@ page to settle before tapping.
 
 **Checks:** `test/booking-ui.test.mjs` passed 30 runs in a row (it failed
 about 1 run in 6 before). `npm test` passes 295/295.
+
+## Footer as end credits (2026-10-23)
+
+- **Night:** the footer is now a night scene in a new `--color-night-deep`
+  (#072624), a shade below the closing scenes so it reads as the credits
+  after the last scene.
+  - A faint projector glow at the top, the hero's film grain, and a hairline
+    where the scene ends.
+- **Credits:** column headings in spaced mint capitals, with links in
+  night-ink and a mint underline that draws on hover. The status pill,
+  social link and focus rings are recoloured for night.
+- **Wordmark:** "Samal *Dental* Care" set light on night, with Dental in
+  italic mint. Each word rises from its own mask as the footer comes into
+  view, through motion.js `[data-reveal]`, and stays static under reduced
+  motion.
+- **Back to top:** a link to `#main` (the skip-link target) sits beside the
+  privacy link.
+- **Contrast:** the four `--color-night-deep` pairs are added to
+  `CONTRAST_RULES`: ink 14.3:1, muted 9.5:1, mint 9.98:1, focus 16:1.
+- **Wordmark clipping, properly fixed:** the earlier `100cqi / 8.1` assumed
+  the line is 7.81× its font size. That is true only when the browser slants
+  upright Lora. With the real italic (preloaded on the homepage, and cached
+  on any page after a first visit) it is 8.11×, so the final "e" still
+  clipped by 2px. The divisor is now 8.4. Measured on four pages at seven
+  widths, first and cached visits: at least 10px to spare everywhere.
+- **Checks:** `npm test` passes 299/299.
