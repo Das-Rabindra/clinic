@@ -855,3 +855,22 @@ widths) found nothing.
   (quality 56; 22KB instead of 36KB at the size phones fetch), since it sits
   under deep shade. The unused `smile-exam-2048` is removed. Contrast is
   unchanged.
+- **Follow-up, loading order (all pages):**
+  - The opening-photograph preload moved to the top of the head, ahead of
+    the font preloads and stylesheets. After them, its request started
+    1–1.7s late on /about.
+  - On About, the portrait (a 114KB original) is now `fetchpriority="low"`,
+    so it no longer competes with the backdrop.
+  - Live LCP, 3–5 Lighthouse runs each:
+
+    | Page | LCP |
+    |---|---|
+    | /about | 1.74–2.42s (was 2.73–3.08s) |
+    | / | 1.75–1.83s (was ~2.2s) |
+    | /gallery | 1.84–2.05s |
+    | /services | 1.75–2.42s |
+    | /faq | 1.59–1.86s |
+
+    Accessibility 100 and CLS 0 everywhere. Fonts now queue behind the
+    photo; with `font-display: optional` a slow link may show the
+    metric-matched fallback for that visit, never a layout shift.
