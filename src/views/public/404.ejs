@@ -9,27 +9,28 @@
 <%- include('partials/site-header') %>
 
 <main id="main">
-  <section class="page-hero">
+  <section class="page-cine" data-hero aria-labelledby="pageTitle">
     <div class="container">
-      <span class="eyebrow-label">Page not found</span>
-      <h1>That page isn&rsquo;t here</h1>
-      <p class="page-hero__lede">The link may be out of date, or the address mistyped. Everything the clinic offers is still one tap away.</p>
-      <div class="cluster page-hero__actions">
-        <a href="/services" class="button button--primary">See all treatments</a>
-        <% if (clinic.phone) { %><a href="tel:<%= clinic.phone_intl || clinic.phone %>" class="button button--secondary" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
-        <% if (whatsappUrl) { %><a href="<%= whatsappUrl %>" target="_blank" rel="noopener" class="button button--secondary" data-track="whatsapp_clicked"><%- ic('whatsapp') %>WhatsApp</a><% } %>
+      <div class="page-cine__inner">
+        <p class="eyebrow-label">Page not found</p>
+        <h1 id="pageTitle">That page isn&rsquo;t <em class="display-em">here</em></h1>
+        <p class="page-cine__lede">The link may be out of date, or the address mistyped. Everything the clinic offers is still one tap away.</p>
+        <div class="page-cine__actions">
+          <a href="/services" class="button button--inverse">See all treatments</a>
+          <% if (clinic.phone) { %><a href="tel:<%= clinic.phone_intl || clinic.phone %>" class="button button--ghost-light" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
+          <% if (whatsappUrl) { %><a href="<%= whatsappUrl %>" target="_blank" rel="noopener" class="button button--ghost-light" data-track="whatsapp_clicked"><%- ic('whatsapp') %>WhatsApp</a><% } %>
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="section section--tight-top" aria-labelledby="popularTitle">
+  <section class="section" aria-labelledby="popularTitle">
     <div class="container">
-      <div class="section-heading">
-        <span class="eyebrow-label">Popular</span>
+      <div class="index-head" data-reveal>
         <h2 id="popularTitle">Treatments patients look for most</h2>
       </div>
-      <div class="treatment-grid">
-        <% footerServices.forEach(function (s) { %><%- include('partials/treatment-card', { s: s }) %><% }) %>
+      <div class="treatments-rows treatments-rows--flush">
+        <% footerServices.forEach(function (s, i) { %><%- include('partials/treatment-card', { s: s, variant: 'row', index: i }) %><% }) %>
       </div>
       <p class="section-foot"><a class="button button--secondary" href="/">Back to the homepage</a></p>
     </div>

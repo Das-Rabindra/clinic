@@ -489,3 +489,24 @@ Vercel had blocked six commits: "GitHub couldn't verify an account for the commi
 - The footer wordmark was under 3:1.
 - The night chapter's heading colour leaked into the white booking card.
 - The tall gallery cell cropped a poster's text.
+
+## Inner pages go cinematic (2026-10-23)
+
+/services, each treatment page, /privacy and the 404 now share the
+homepage's visual language.
+
+- **Opening scene:** each page opens on a night scene, and the header sits
+  transparent over it (`[data-hero]`). A treatment page uses its own
+  photograph as the backdrop. Stock photos are captioned "Illustrative
+  image, not a photograph of the clinic".
+- **Treatments index:** two lead tiles, then numbered editorial rows, as on
+  the homepage.
+- **Treatment page:** the body is numbered chapters next to a sticky contact
+  card, followed by split FAQs, related treatments as rows, and a closing
+  night scene.
+- **Privacy:** the text is unchanged, laid out as numbered chapters.
+- **404:** popular treatments are shown as rows.
+- **CSS:** tiles, rows, split FAQs and the closing scene moved from
+  `home.css` to `layout.css` so every page can use them.
+- **Checks:** `npm test` passes 271/271. The local width sweep across
+  320–1920 px found no overflow and one h1 per page.

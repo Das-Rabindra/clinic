@@ -7,86 +7,84 @@
 <% var ic = function (n) { return include('partials/icon', { name: n }); }; %>
 <% var tel = clinic.phone ? 'tel:' + (clinic.phone_intl || clinic.phone) : null; %>
 <% var bookHref = '/#appointment' + (service.bookable ? '?treatment=' + service.slug : ''); %>
+<%# The body's chapters, numbered in the order they actually appear — a
+    treatment without a "when it may be needed" text simply has one fewer. %>
+<% var chapters = [];
+   if (service.long_desc) chapters.push({ title: 'What it is', text: service.long_desc });
+   if (service.who_needs) chapters.push({ title: 'When it may be needed', text: service.who_needs });
+   if (service.what_to_expect) chapters.push({ title: 'What the treatment generally involves', text: service.what_to_expect });
+   if (benefits.length) chapters.push({ title: 'What it aims to do', list: benefits });
+   chapters.push({ title: 'What a consultation helps decide', consult: true }); %>
 <a class="skip-to-content" href="#main">Skip to content</a>
 <%- include('partials/site-header') %>
 
 <main id="main">
 
-  <!-- ============ TREATMENT HERO ============ -->
-  <section class="page-hero page-hero--split">
+  <!-- ============ SCENE ============ -->
+  <%# The treatment's photograph behind the title, shaded where the type
+      sits. A licensed image says so on the scene itself — presented without
+      that, it reads as the clinic's own work. %>
+  <section class="page-cine<%= service.image_url ? ' page-cine--photo' : '' %>" data-hero aria-labelledby="txTitle">
+    <% if (service.image_url) { %>
+    <div class="page-cine__media">
+      <img src="<%= service.image_url %>" alt="<%= service.image_alt || '' %>"
+           width="<%= service.image_width || 1280 %>" height="<%= service.image_height || 720 %>"
+           fetchpriority="high" decoding="async">
+    </div>
+    <div class="page-cine__shade" aria-hidden="true"></div>
+    <% } %>
     <div class="container">
-      <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Treatments', href: '/services' }, { name: service.name }] }) %>
-      <div class="tx-hero">
-        <div class="tx-hero__copy">
-          <% if (service.category_name) { %><span class="eyebrow-label"><%= service.category_name %></span><% } %>
-          <h1><%= service.name %></h1>
-          <% if (service.short_desc) { %><p class="page-hero__lede"><%= service.short_desc %></p><% } %>
-          <ul class="tx-facts">
-            <li><%- ic('clock') %><span>Appointment of about <%= service.duration_min %> minutes</span></li>
-            <%# The clinic does not publish prices. The admin fields remain so
-                that decision can be reversed, but nothing renders one. %>
-            <li><%- ic('pin') %><span><%= shortAddress %></span></li>
-          </ul>
-          <div class="cluster page-hero__actions">
-            <a href="<%= bookHref %>" class="button button--primary" data-track="appointment_started"><%- ic('calendar') %><%= service.bookable ? 'Book ' + service.name : 'Book a consultation' %></a>
-            <% if (tel) { %><a href="<%= tel %>" class="button button--secondary" data-track="call_clicked"><%- ic('phone') %>Call</a><% } %>
-            <% if (whatsappUrl) { %><a href="<%= treatmentWhatsapp %>" target="_blank" rel="noopener" class="button button--secondary" data-track="whatsapp_clicked"><%- ic('whatsapp') %>Ask on WhatsApp</a><% } %>
-          </div>
+      <div class="page-cine__inner">
+        <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Treatments', href: '/services' }, { name: service.name }] }) %>
+        <% if (service.category_name) { %><p class="eyebrow-label"><%= service.category_name %></p><% } %>
+        <h1 id="txTitle"><%= service.name %></h1>
+        <% if (service.short_desc) { %><p class="page-cine__lede"><%= service.short_desc %></p><% } %>
+        <ul class="tx-facts">
+          <li><%- ic('clock') %><span>Appointment of about <%= service.duration_min %> minutes</span></li>
+          <%# The clinic does not publish prices. The admin fields remain so
+              that decision can be reversed, but nothing renders one. %>
+          <li><%- ic('pin') %><span><%= shortAddress %></span></li>
+        </ul>
+        <div class="page-cine__actions">
+          <a href="<%= bookHref %>" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %><%= service.bookable ? 'Book ' + service.name : 'Book a consultation' %></a>
+          <% if (tel) { %><a href="<%= tel %>" class="button button--ghost-light" data-track="call_clicked"><%- ic('phone') %>Call</a><% } %>
+          <% if (whatsappUrl) { %><a href="<%= treatmentWhatsapp %>" target="_blank" rel="noopener" class="button button--ghost-light" data-track="whatsapp_clicked"><%- ic('whatsapp') %>Ask on WhatsApp</a><% } %>
         </div>
-        <figure class="tx-hero__media">
-          <% if (service.image_url) { %>
-            <img src="<%= service.image_url %>" alt="<%= service.image_alt || '' %>"
-                 width="<%= service.image_width || 1280 %>" height="<%= service.image_height || 720 %>"
-                 fetchpriority="high" decoding="async">
-            <%# Said plainly where the photograph is largest. A licensed image
-                presented without this reads as the clinic's own work. %>
-            <% if (service.image_is_stock) { %><figcaption>Illustrative image, not a photograph of the clinic</figcaption><% } %>
-          <% } else { %>
-            <div class="treatment-card__art"><%- include('partials/treatment-art', { slug: service.slug, name: service.name }) %></div>
-          <% } %>
-        </figure>
       </div>
     </div>
+    <% if (service.image_url && service.image_is_stock) { %>
+    <p class="page-cine__credit">Illustrative image, not a photograph of the clinic</p>
+    <% } %>
   </section>
 
-  <!-- ============ DETAIL ============ -->
+  <!-- ============ CHAPTERS ============ -->
   <section class="section">
     <div class="container tx-detail">
-      <article class="tx-detail__main prose">
-        <% if (service.long_desc) { %>
-        <h2>What it is</h2>
-        <p><%= service.long_desc %></p>
-        <% } %>
-
-        <% if (service.who_needs) { %>
-        <h2>When it may be needed</h2>
-        <p><%= service.who_needs %></p>
-        <% } %>
-
-        <% if (service.what_to_expect) { %>
-        <h2>What the treatment generally involves</h2>
-        <p><%= service.what_to_expect %></p>
-        <% } %>
-
-        <% if (benefits.length) { %>
-        <h2>What it aims to do</h2>
-        <ul class="tx-benefits">
-          <% benefits.forEach(function (b) { %><li><%- ic('check') %><span><%= b %></span></li><% }) %>
-        </ul>
-        <% } %>
-
-        <h2>What a consultation helps decide</h2>
-        <div class="notice notice--info">
-          <span class="notice__icon"><%- ic('info') %></span>
-          <div class="notice__body">
-            <p>This page explains the treatment in general terms. Whether it is right for you depends on an examination:
-            <%= clinic.doctor || 'the dentist' %> will look at your teeth and gums, explain what is found, and go through the options with you before anything is decided.</p>
+      <article class="tx-chapters">
+        <% chapters.forEach(function (c, i) { %>
+        <section class="tx-chapter" data-reveal aria-labelledby="txc-<%= i %>">
+          <span class="tx-chapter__num" aria-hidden="true"><%= String(i + 1).padStart(2, '0') %></span>
+          <h2 id="txc-<%= i %>"><%= c.title %></h2>
+          <% if (c.text) { %><p><%= c.text %></p><% } %>
+          <% if (c.list) { %>
+          <ul class="tx-benefits">
+            <% c.list.forEach(function (b) { %><li><%- ic('check') %><span><%= b %></span></li><% }) %>
+          </ul>
+          <% } %>
+          <% if (c.consult) { %>
+          <div class="notice notice--info">
+            <span class="notice__icon"><%- ic('info') %></span>
+            <div class="notice__body">
+              <p>This page explains the treatment in general terms. Whether it is right for you depends on an examination:
+              <%= clinic.doctor || 'the dentist' %> will look at your teeth and gums, explain what is found, and go through the options with you before anything is decided.</p>
+            </div>
           </div>
-        </div>
+          <% } %>
+        </section>
+        <% }) %>
       </article>
 
-      <%# Sticky contact card: the dentist, where, today's status and the ways to act.
-          Not a bento — this is the one aside the detail body has. %>
+      <%# Sticky contact card: the dentist, where, today's status and the ways to act. %>
       <aside class="tx-aside" aria-labelledby="asideTitle">
         <div class="card tx-aside__card">
           <div class="card__body">
@@ -115,13 +113,13 @@
     </div>
   </section>
 
-  <!-- ============ FAQ ============ -->
+  <!-- ============ QUESTIONS ============ -->
   <% if (faqs.length) { %>
-  <section class="section section--surface" id="faq">
-    <div class="container container--narrow">
-      <div class="section-heading">
-        <span class="eyebrow-label">Good to know</span>
-        <h2>Questions patients ask</h2>
+  <section class="section section--surface" id="faq" aria-labelledby="faqTitle">
+    <div class="container faq-split">
+      <div class="faq-split__head" data-reveal-group>
+        <p class="chapter" data-reveal><span class="chapter__index"><%= String(chapters.length + 1).padStart(2, '0') %></span><span class="chapter__rule" aria-hidden="true"></span><span class="chapter__name">Good to know</span></p>
+        <h2 id="faqTitle" data-reveal>Questions patients ask</h2>
       </div>
       <div class="accordion" data-accordion>
         <% faqs.forEach(function (f, i) { %>
@@ -145,12 +143,11 @@
   <% if (related.length) { %>
   <section class="section" aria-labelledby="relatedTitle">
     <div class="container">
-      <div class="section-heading">
-        <span class="eyebrow-label">Also at the clinic</span>
+      <div class="index-head" data-reveal>
         <h2 id="relatedTitle">Related treatments</h2>
       </div>
-      <div class="treatment-grid">
-        <% related.forEach(function (s) { %><%- include('partials/treatment-card', { s: s }) %><% }) %>
+      <div class="treatments-rows treatments-rows--flush">
+        <% related.forEach(function (s, i) { %><%- include('partials/treatment-card', { s: s, variant: 'row', index: i }) %><% }) %>
       </div>
       <p class="section-foot"><a class="button button--secondary" href="/services">See all treatments</a></p>
     </div>
@@ -159,15 +156,17 @@
   <div class="container"><p class="section-foot"><a class="button button--secondary" href="/services">See all treatments</a></p></div>
   <% } %>
 
-  <!-- ============ CTA ============ -->
-  <section class="section section--primary cta">
-    <div class="container cta__inner">
-      <span class="eyebrow-label">Ready when you are</span>
-      <h2>Talk to <%= clinic.doctor || 'the dentist' %> about <%= service.name.toLowerCase() %></h2>
-      <p class="cta__body">Book online, or ask the clinic a question first &mdash; whichever you prefer.</p>
-      <div class="cluster cta__actions">
-        <a href="<%= bookHref %>" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
-        <% if (tel) { %><a href="<%= tel %>" class="button button--text cta__call" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
+  <!-- ============ CLOSING SCENE ============ -->
+  <section class="section section--night closing" aria-labelledby="closingTitle">
+    <div class="container closing__grid closing__grid--solo">
+      <div class="closing__copy" data-reveal-group>
+        <p class="eyebrow-label" data-reveal>Ready when you are</p>
+        <h2 id="closingTitle" class="closing__title" data-reveal>Talk to <%= clinic.doctor || 'the dentist' %> about <em class="display-em"><%= service.name.toLowerCase() %></em></h2>
+        <p class="closing__body" data-reveal>Book online, or ask the clinic a question first &mdash; whichever you prefer.</p>
+        <div class="cluster closing__actions" data-reveal>
+          <a href="<%= bookHref %>" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
+          <% if (tel) { %><a href="<%= tel %>" class="button button--ghost-light" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
+        </div>
       </div>
     </div>
   </section>

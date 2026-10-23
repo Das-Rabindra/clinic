@@ -10,32 +10,47 @@
 <%- include('partials/site-header') %>
 
 <main id="main">
-  <section class="page-hero">
+  <!-- ============ SCENE ============ -->
+  <section class="page-cine" data-hero aria-labelledby="pageTitle">
     <div class="container">
-      <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Treatments' }] }) %>
-      <span class="eyebrow-label"><%= settings.treatments_eyebrow || 'Treatments' %></span>
-      <h1><%= settings.services_title || 'Dental treatments offered at the clinic' %></h1>
-      <% if (settings.services_lede) { %><p class="page-hero__lede"><%= settings.services_lede %></p><% } %>
-      <div class="cluster page-hero__actions">
-        <a class="button button--primary" href="/#appointment" data-track="appointment_started"><%- ic('calendar') %>Book a consultation</a>
-        <% if (tel) { %><a class="button button--secondary" href="<%= tel %>" data-track="call_clicked"><%- ic('phone') %>Call</a><% } %>
-        <% if (whatsappUrl) { %><a class="button button--secondary" href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked"><%- ic('whatsapp') %>WhatsApp</a><% } %>
+      <div class="page-cine__inner">
+        <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Treatments' }] }) %>
+        <p class="eyebrow-label"><%= settings.treatments_eyebrow || 'Treatments' %></p>
+        <h1 id="pageTitle"><%= settings.services_title || 'Dental treatments offered at the clinic' %></h1>
+        <% if (settings.services_lede) { %><p class="page-cine__lede"><%= settings.services_lede %></p><% } %>
+        <div class="page-cine__actions">
+          <a class="button button--inverse" href="/#appointment" data-track="appointment_started"><%- ic('calendar') %>Book a consultation</a>
+          <% if (tel) { %><a class="button button--ghost-light" href="<%= tel %>" data-track="call_clicked"><%- ic('phone') %>Call</a><% } %>
+          <% if (whatsappUrl) { %><a class="button button--ghost-light" href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked"><%- ic('whatsapp') %>WhatsApp</a><% } %>
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="section section--tight-top" aria-labelledby="allTitle">
+  <!-- ============ INDEX ============ -->
+  <%# Same composition as the homepage: two lead treatments as large tiles,
+      the rest as numbered editorial rows, so the list reads as an index
+      rather than a wall of identical cards. %>
+  <section class="section" aria-labelledby="allTitle">
     <div class="container">
-      <div class="listing-head">
+      <div class="index-head" data-reveal>
         <h2 id="allTitle">All treatments</h2>
         <p class="text-muted"><%= cards.length %> treatment<%= cards.length === 1 ? '' : 's' %> offered at the clinic</p>
       </div>
       <% if (cards.length) { %>
-        <div class="treatment-grid">
-          <% cards.forEach(function (s, i) { %>
-            <%- include('partials/treatment-card', { s: s, eager: i === 0 }) %>
+        <% var lead = cards.slice(0, 2), rest = cards.slice(2); %>
+        <div class="treatments-lead">
+          <% lead.forEach(function (s, i) { %>
+            <%- include('partials/treatment-card', { s: s, variant: 'tile', eager: i === 0 }) %>
           <% }) %>
         </div>
+        <% if (rest.length) { %>
+        <div class="treatments-rows">
+          <% rest.forEach(function (s, i) { %>
+            <%- include('partials/treatment-card', { s: s, variant: 'row', index: i + 2 }) %>
+          <% }) %>
+        </div>
+        <% } %>
       <% } else { %>
         <div class="empty-state">
           <h3>Treatments are being updated</h3>
@@ -45,14 +60,17 @@
     </div>
   </section>
 
-  <section class="section section--primary cta">
-    <div class="container cta__inner">
-      <span class="eyebrow-label">Not sure what you need?</span>
-      <h2>Start with a consultation</h2>
-      <p class="cta__body">Book a consultation and <%= clinic.doctor || 'the dentist' %> will examine your teeth, explain what is going on, and set out the options before any treatment is decided.</p>
-      <div class="cluster cta__actions">
-        <a href="/#appointment" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book a consultation</a>
-        <button type="button" class="button button--text cta__call" data-callback-open><%- ic('callback') %>Request a call back</button>
+  <!-- ============ CLOSING SCENE ============ -->
+  <section class="section section--night closing" aria-labelledby="closingTitle">
+    <div class="container closing__grid closing__grid--solo">
+      <div class="closing__copy" data-reveal-group>
+        <p class="eyebrow-label" data-reveal>Not sure what you need?</p>
+        <h2 id="closingTitle" class="closing__title" data-reveal>Start with a <em class="display-em">consultation</em></h2>
+        <p class="closing__body" data-reveal>Book a consultation and <%= clinic.doctor || 'the dentist' %> will examine your teeth, explain what is going on, and set out the options before any treatment is decided.</p>
+        <div class="cluster closing__actions" data-reveal>
+          <a href="/#appointment" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book a consultation</a>
+          <button type="button" class="button button--ghost-light" data-callback-open><%- ic('callback') %>Request a call back</button>
+        </div>
       </div>
     </div>
   </section>

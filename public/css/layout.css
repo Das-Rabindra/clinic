@@ -159,3 +159,92 @@
   font-size: clamp(2.6rem, 0.6rem + 9.6vw, 10rem); color: #64958C; white-space: nowrap;
 }
 .site-footer__wordmark em { font-style: italic; color: var(--color-primary); }
+
+/* ══ Cinematic shared components (moved from home.css): treatment tiles
+   and rows, the split FAQ, the closing night scene. ══ */
+
+/* ── Treatments: tiles and rows ──────────────────────────────────────────────────── */
+.treatments-lead { display: grid; gap: var(--gap-md); }
+@media (min-width: 768px) { .treatments-lead { grid-template-columns: 1.25fr 1fr; } }
+.treatment-card--tile { position: relative; color: var(--color-night-ink); background: var(--color-night); border: 0; min-height: clamp(24rem, 18rem + 14vw, 32rem); }
+.treatment-card__tile-media { position: absolute; inset: 0; aspect-ratio: auto; }
+.treatment-card__tile-media img { width: 100%; height: 100%; object-fit: cover; }
+.treatment-card--tile::before {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(0deg, rgba(12, 57, 54, 0.95) 0%, rgba(12, 57, 54, 0.78) 38%, rgba(12, 57, 54, 0.08) 75%);
+}
+.treatment-card--tile { display: flex; flex-direction: column; justify-content: flex-end; }
+.treatment-card__tile-body { position: relative; z-index: 2; flex: 0 0 auto; margin-top: auto; padding: var(--space-8); gap: var(--space-2); }
+.treatment-card--tile .card__title { font-size: clamp(1.6rem, 1.3rem + 1.2vw, 2.25rem); font-weight: var(--weight-regular); }
+.treatment-card--tile .card__link { color: var(--color-night-ink); }
+.treatment-card--tile .card__text { color: var(--color-night-muted); max-width: 30rem; }
+.treatment-card--tile .card__footer { padding-top: var(--space-4); }
+.treatment-card--tile .button--primary { --button-bg: var(--color-night-ink); --button-fg: var(--color-night); --button-border: var(--color-night-ink); }
+.treatment-card--tile .button--text { color: var(--color-night-ink); }
+.treatment-card--tile :focus-visible { outline-color: var(--color-focus-inverse); }
+.treatment-card--tile .card__link:focus-visible::after { outline-color: var(--color-focus-inverse); }
+.treatment-card__cat { font-size: var(--text-eyebrow); font-weight: var(--weight-semibold); letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-mint); }
+.treatment-card--tile:hover .treatment-card__tile-media img { transform: scale(1.04); }
+.treatment-card__tile-media img { transition: transform 1200ms var(--ease-cinema); }
+
+.treatments-rows { margin-top: var(--space-12); border-top: 1px solid var(--color-border-subtle); }
+.treatment-row {
+  position: relative; display: grid; gap: var(--space-2) var(--space-6);
+  grid-template-columns: 3rem 1fr; grid-template-areas: 'num text' 'num actions';
+  padding-block: var(--space-8); border-bottom: 1px solid var(--color-border-subtle);
+}
+.treatment-row__num { grid-area: num; font-family: var(--font-display); font-style: italic; font-size: 1.5rem; line-height: 1.2; color: var(--color-primary); }
+.treatment-row__text { grid-area: text; display: grid; gap: var(--space-2); }
+.treatment-row .treatment-card__cat { color: var(--color-primary); }
+.treatment-row .card__title { font-size: clamp(1.5rem, 1.3rem + 0.8vw, 2rem); font-weight: var(--weight-regular); }
+.treatment-row .card__link { color: var(--color-text); text-decoration: none; }
+.treatment-row .card__link:hover { color: var(--color-primary); }
+.treatment-row .card__text { color: var(--color-text-muted); max-width: 34rem; }
+.treatment-row .card__footer { grid-area: actions; padding-top: 0; }
+.treatment-row__media { display: none; }
+.treatment-row :is(.button, .link) { position: relative; z-index: 2; }
+@media (min-width: 768px) {
+  .treatment-row { grid-template-columns: 4rem 1fr 14rem; grid-template-areas: 'num text media' 'num actions media'; align-items: start; }
+  .treatment-row__media { grid-area: media; display: block; overflow: hidden; border-radius: var(--radius-sm); aspect-ratio: 4 / 3; background: var(--color-accent-sand); }
+  .treatment-row__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 1200ms var(--ease-cinema); }
+  .treatment-row:hover .treatment-row__media img { transform: scale(1.05); }
+}
+.treatment-card__art { display: grid; place-items: center; height: 100%; background: var(--color-accent-sage); }
+.treatment-card__art .tx-art { width: auto; height: 82%; }
+
+.more-treatments { margin-top: var(--space-12); }
+.more-treatments__title { font-family: var(--font-body); font-size: var(--text-eyebrow); font-weight: var(--weight-semibold); letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-muted); }
+.more-treatments ul { display: grid; gap: 0 var(--gap-md); grid-template-columns: 1fr; list-style: none; margin: var(--space-3) 0 0; padding: 0; }
+@media (min-width: 768px) { .more-treatments ul { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .more-treatments ul { grid-template-columns: repeat(4, 1fr); } }
+.more-treatments a {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  min-height: 56px; border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text); text-decoration: none; font-family: var(--font-display); font-size: 1.125rem;
+}
+.more-treatments a .icon { width: 1rem; height: 1rem; color: var(--color-primary); transition: transform var(--duration-fast) var(--ease-out); }
+.more-treatments a:hover { color: var(--color-primary); }
+.more-treatments a:hover .icon { transform: translateX(3px); }
+
+/* ── Questions: split layout ───────────────────────────────────────────────────── */
+.faq-split { display: grid; gap: var(--space-10); }
+.faq-split > * { min-width: 0; }
+.faq-split__head h2 { font-size: clamp(2rem, 1.5rem + 2.2vw, 3.25rem); line-height: 1.08; letter-spacing: -0.015em; }
+.faq-split__head p { margin-top: var(--space-4); max-width: 26rem; }
+.faq-split .accordion__trigger { font-size: 1.2rem; min-height: 64px; }
+@media (min-width: 1024px) {
+  .faq-split { grid-template-columns: 1fr 1.6fr; gap: var(--space-16); align-items: start; }
+  .faq-split__head { position: sticky; top: calc(var(--header-height) + var(--space-8)); }
+}
+
+/* ── Closing scene (night) ────────────────────────────────────────────── */
+.closing__grid { display: grid; gap: var(--space-10); align-items: center; }
+.closing__grid > * { min-width: 0; }
+.closing__title { font-size: clamp(2.2rem, 1.5rem + 3vw, 4.25rem); line-height: 1.04; letter-spacing: -0.02em; font-weight: var(--weight-regular); max-width: 16ch; margin-top: var(--space-4); }
+.closing__body { margin-top: var(--space-6); font-size: var(--text-body-lg); color: var(--color-night-muted); max-width: 32rem; }
+.closing__actions { margin-top: var(--space-8); }
+.closing__still { margin: 0; }
+.closing__frame { overflow: hidden; border-radius: var(--radius-md); }
+.closing__frame img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+@media (min-width: 1024px) { .closing__grid { grid-template-columns: 1.2fr 1fr; gap: var(--space-16); } }
+
