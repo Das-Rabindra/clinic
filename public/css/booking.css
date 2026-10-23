@@ -20,12 +20,16 @@
 
 /* ── Progress ── */
 .booking-progress { padding: var(--space-4) var(--space-6) 0; }
+/* The progress row is filled in by booking.js; reserve its height so the
+   wizard does not drop 35–45px when it renders. On /book that shift is in
+   the first screen and counted as layout shift (CLS was 0.13). */
+.booking-progress { min-height: 51px; }
 .booking-progress__compact { font-size: var(--text-small); font-weight: var(--weight-semibold); color: var(--color-primary); }
 .booking-progress__bar { height: 4px; margin-top: var(--space-2); border-radius: var(--radius-pill); background: var(--color-accent-sage); overflow: hidden; }
 .booking-progress__bar span { display: block; height: 100%; background: var(--color-primary); transition: width var(--duration-base) var(--ease-out); }
 .booking-progress__list { display: none; }
 @media (min-width: 640px) {
-  .booking-progress { padding: var(--space-5) var(--space-6) 0; }
+  .booking-progress { padding: var(--space-5) var(--space-6) 0; min-height: 65px; }
   .booking-progress__compact, .booking-progress__bar { display: none; }
   .booking-progress__list {
     display: flex; gap: var(--space-2); list-style: none; margin: 0; padding: 0 0 var(--space-4);

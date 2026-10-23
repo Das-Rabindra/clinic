@@ -10,7 +10,7 @@ privacy page, as a courtesy.
 | Files | Title | Creator | Source |
 |---|---|---|---|
 | `dental-lamp-*.webp` | Free dentist lamp image | not stated (rawpixel, public domain) | https://www.rawpixel.com/image/5925133/ |
-| `dental-probe-*.webp` | Minimal Dentist Tool | not stated (rawpixel, public domain) | https://www.rawpixel.com/image/5917413/ |
+| `fresh-mint-*.webp` | Fresh Mint Leaves | not stated (rawpixel, public domain) | https://www.rawpixel.com/image/5965717/fresh-mint-leaves |
 | `bamboo-toothbrushes-*.webp` | Cozy still life of bamboo toothbrushes with toothpaste on a bamboo mat | Nora Ferreirós | https://wordpress.org/photos/photo/574641d8aa/ |
 
 Found through Openverse (CC0 / public-domain filter), downloaded and

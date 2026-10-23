@@ -613,3 +613,14 @@ They are now pages of their own, in the same cinematic style.
   light, except inside the white booking panel.
 - **Checks:** `npm test` passes 289/289, with new browser tests for /book
   and the deep link.
+
+## Clinic photo swap and /book layout-shift fix (2026-10-23)
+
+- **New photo:** the homepage "A calm, modern clinic" photo was a dental
+  probe, which the owner didn't like. It is now a backlit fresh-mint leaf
+  (rawpixel, CC0), still captioned "Illustrative photograph". The probe
+  files are removed and `CREDITS.md` is updated.
+- **Layout shift on /book:** the wizard's progress row was empty until
+  `booking.js` filled it, so the wizard dropped 35–45px in the first screen.
+  CLS was 0.132 on the live site. The row's height (51px, or 65px from 640px
+  up) is now reserved in `booking.css`, and the wizard no longer moves.
