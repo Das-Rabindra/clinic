@@ -130,6 +130,21 @@ function dayHours(h) {
   };
 }
 
+/** The weekly hours starting Monday, each with its display text. */
+function weekHoursFor(clinic) {
+  return [1, 2, 3, 4, 5, 6, 0]
+    .map(w => clinic.hours.find(h => h.weekday === w))
+    .filter(Boolean)
+    .map(h => ({ ...h, display: dayHours(h) }));
+}
+
+/** The postal address as escaped lines, one per <br>. */
+function addressHtmlFor(settings) {
+  return [settings.name, settings.address_line1, settings.address_line2,
+    settings.area, [settings.city, settings.state].filter(Boolean).join(', '), settings.postal_code]
+    .filter(Boolean).map(esc).join('<br>');
+}
+
 /** Resolve FAQ placeholders so answers track the clinic's real details. */
 function resolveFaq(text, clinic) {
   return String(text || '')
@@ -405,9 +420,6 @@ router.get('/about', async (_req, res) => {
   const doctor = await doctorsRepo.primary();
   const doctorPhoto = doctor?.photo_media_id ? await mediaRepo.findById(doctor.photo_media_id) : null;
   const gallery = await galleryRepo.listPublic();
-  const orderedHours = [1, 2, 3, 4, 5, 6, 0]
-    .map(w => clinic.hours.find(h => h.weekday === w))
-    .filter(Boolean);
   const name = clinic.doctor || settings.name;
 
   res.render('public/about', {
@@ -417,12 +429,10 @@ router.get('/about', async (_req, res) => {
     clinicPhoto: CLINIC_PHOTO,
     galleryPreview: gallery.slice(0, 3),
     galleryCount: gallery.length + 1,          // + the treatment-room photograph
-    weekHours: orderedHours.map(h => ({ ...h, display: dayHours(h) })),
+    weekHours: weekHoursFor(clinic),
     hoursSummary: hoursSentence(clinic),
     showDoctorBio: saysSomethingNew(doctor?.bio, settings.about_body),
-    addressHtml: [settings.name, settings.address_line1, settings.address_line2,
-      settings.area, [settings.city, settings.state].filter(Boolean).join(', '), settings.postal_code]
-      .filter(Boolean).map(esc).join('<br>'),
+    addressHtml: addressHtmlFor(settings),
     preloadImage: doctorPhoto?.url || null,
     meta: {
       title: `About ${name} | ${settings.name}`,
@@ -480,6 +490,33 @@ router.get('/gallery', async (_req, res) => {
     },
     ogType: 'website',
     schemas: [seo.breadcrumbs(canonical, [{ name: 'Home', path: '/' }, { name: 'Gallery', path: '/gallery' }])],
+  });
+});
+
+/* ── Contact ─────────────────────────────────────────────────────────────── */
+router.get('/contact', async (req, res) => {
+  const base = await baseLocals();
+  const { settings, clinic } = base;
+  const canonical = seo.canonicalUrl(settings);
+  issuePublicToken(req, res);          // the call-back form posts from here
+
+  res.render('public/contact', {
+    ...base,
+    pageCss: ['/css/home.css', '/css/pages.css'],
+    weekHours: weekHoursFor(clinic),
+    hoursSummary: hoursSentence(clinic),
+    addressHtml: addressHtmlFor(settings),
+    meta: {
+      title: `Contact & directions | ${settings.name}`,
+      description: `Call, message or visit ${settings.name}: ${clinic.address}. Opening hours and directions.`,
+      canonical: `${canonical}/contact`,
+      ogTitle: `Contact & directions | ${settings.name}`,
+      ogDescription: clinic.address || '',
+      ogUrl: `${canonical}/contact`,
+      ogImage: null,
+    },
+    ogType: 'website',
+    schemas: [seo.breadcrumbs(canonical, [{ name: 'Home', path: '/' }, { name: 'Contact', path: '/contact' }])],
   });
 });
 

@@ -569,3 +569,21 @@ They are now pages of their own, in the same cinematic style.
   sized from its container's width (`100cqi / 8.1`; the line is 7.81× its
   font size), so it fits at every width.
 - **Checks:** `npm test` passes 285/285. The width sweep found nothing.
+
+## Contact page (2026-10-23)
+
+- **/contact** has four parts:
+  - **Night scene:** "Visit the clinic", the address, today's live status,
+    and Get directions / Call / WhatsApp buttons.
+  - **01 Reach the clinic:** cards for Call (both lines), WhatsApp and
+    Request a call back, plus Email when one is set.
+  - **02 Find us:** the lazy-loaded map beside the address and directions.
+  - **03 Opening hours:** the hours as a sentence plus the weekly table,
+    with today highlighted and the break shown.
+
+  It ends on a closing booking scene.
+- **Navigation:** the menu's Contact and the drawer's "Contact & directions"
+  go to /contact. The homepage Visit section stays, with a link to it.
+- **Code:** `weekHoursFor()` and `addressHtmlFor()` are now shared by
+  /about and /contact.
+- **Checks:** `npm test` passes 287/287. The width sweep found nothing.

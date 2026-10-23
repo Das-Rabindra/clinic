@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head') %>
+</head>
+<body class="has-action-bar">
+<% var ic = function (n) { return include('partials/icon', { name: n }); }; %>
+<% var tel = clinic.phone ? 'tel:' + (clinic.phone_intl || clinic.phone) : null; %>
+<% var chapter = function (num, name) { %><p class="chapter" data-reveal><span class="chapter__index"><%= num %></span><span class="chapter__rule" aria-hidden="true"></span><span class="chapter__name"><%= name %></span></p><% }; %>
+<a class="skip-to-content" href="#main">Skip to content</a>
+<%- include('partials/site-header') %>
+
+<main id="main">
+
+  <!-- ============ SCENE ============ -->
+  <section class="page-cine" data-hero aria-labelledby="pageTitle">
+    <div class="container">
+      <div class="page-cine__inner">
+        <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Contact' }] }) %>
+        <p class="eyebrow-label">Contact &amp; directions</p>
+        <h1 id="pageTitle">Visit the <em class="display-em">clinic</em></h1>
+        <p class="page-cine__lede"><%= clinic.address %></p>
+        <p class="status-pill status-pill--<%= clinic.today.now.state %>"><span class="status-pill__dot" aria-hidden="true"></span><%= clinic.today.now.label %></p>
+        <div class="page-cine__actions">
+          <% if (clinic.directions_url) { %><a class="button button--inverse" href="<%= clinic.directions_url %>" target="_blank" rel="noopener" data-track="directions_clicked"><%- ic('directions') %>Get directions</a><% } %>
+          <% if (tel) { %><a class="button button--ghost-light" href="<%= tel %>" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
+          <% if (whatsappUrl) { %><a class="button button--ghost-light" href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked"><%- ic('whatsapp') %>WhatsApp</a><% } %>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 01 · REACH THE CLINIC ============ -->
+  <section class="section" aria-labelledby="reachTitle">
+    <div class="container">
+      <div class="index-head" data-reveal-group>
+        <div>
+          <% chapter('01', 'Reach the clinic'); %>
+          <h2 id="reachTitle" data-reveal>Call, message or ask for a call back</h2>
+        </div>
+      </div>
+      <div class="reach-grid" data-reveal-group>
+        <% if (tel) { %>
+        <div class="reach" data-reveal>
+          <span class="reach__icon" aria-hidden="true"><%- ic('phone') %></span>
+          <h3>Call</h3>
+          <ul class="reach__lines">
+            <li><a href="<%= tel %>" data-track="call_clicked"><%= clinic.phone %></a><span>Main line<% if (whatsappUrl) { %> and WhatsApp<% } %></span></li>
+            <% if (clinic.phone_secondary) { %><li><a href="tel:<%= clinic.phone_secondary_intl || clinic.phone_secondary %>" data-track="call_clicked"><%= clinic.phone_secondary %></a><span>Second line</span></li><% } %>
+          </ul>
+        </div>
+        <% } %>
+        <% if (whatsappUrl) { %>
+        <div class="reach" data-reveal>
+          <span class="reach__icon" aria-hidden="true"><%- ic('whatsapp') %></span>
+          <h3>WhatsApp</h3>
+          <p>Message the clinic on <%= clinic.phone %>.</p>
+          <a class="button button--secondary" href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked"><%- ic('whatsapp') %>Open WhatsApp</a>
+        </div>
+        <% } %>
+        <div class="reach" data-reveal>
+          <span class="reach__icon" aria-hidden="true"><%- ic('callback') %></span>
+          <h3>Request a call back</h3>
+          <p>Leave your name and number and the clinic will ring you back.</p>
+          <button type="button" class="button button--secondary" data-callback-open><%- ic('callback') %>Request a call back</button>
+        </div>
+        <% if (clinic.email) { %>
+        <div class="reach" data-reveal>
+          <span class="reach__icon" aria-hidden="true"><%- ic('chat') %></span>
+          <h3>Email</h3>
+          <ul class="reach__lines"><li><a href="mailto:<%= clinic.email %>"><%= clinic.email %></a></li></ul>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 · FIND US ============ -->
+  <section class="section section--surface" aria-labelledby="findTitle">
+    <div class="container visit__grid">
+      <div class="visit__map" data-reveal="image">
+        <iframe class="contact-bento__frame" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+          data-src="<%= clinic.map_embed_url %>"
+          title="Map showing <%= clinic.name %>, <%= shortAddress %>"></iframe>
+      </div>
+      <div class="visit__info" data-reveal-group>
+        <% chapter('02', 'Find us'); %>
+        <h2 id="findTitle" data-reveal><%= settings.location_title || 'Finding the clinic' %></h2>
+        <% if (settings.location_body) { %><p class="text-muted" data-reveal><%= settings.location_body %></p><% } %>
+        <div class="visit__block" data-reveal>
+          <h3 class="visit__label"><%- ic('pin') %>Address</h3>
+          <address class="contact-bento__lines"><%- addressHtml %></address>
+          <div class="cluster">
+            <a class="button button--primary button--small" href="<%= clinic.directions_url %>" target="_blank" rel="noopener" data-track="directions_clicked"><%- ic('directions') %>Get directions</a>
+          </div>
+        </div>
+        <%- include('partials/social') %>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 · HOURS ============ -->
+  <section class="section" aria-labelledby="hoursTitle">
+    <div class="container hours-scene">
+      <div data-reveal-group>
+        <% chapter('03', 'Opening hours'); %>
+        <h2 id="hoursTitle" class="hours-scene__title" data-reveal>When the clinic is open</h2>
+        <p class="hours-scene__sum" data-reveal>Open <%= hoursSummary %>.</p>
+        <p class="status-pill status-pill--<%= clinic.today.now.state %>" data-reveal><span class="status-pill__dot" aria-hidden="true"></span><%= clinic.today.now.label %></p>
+      </div>
+      <table class="hours-table-ds hours-scene__table" data-reveal>
+        <caption class="visually-hidden-ds">Weekly opening hours</caption>
+        <tbody>
+        <% weekHours.forEach(function (h) { var d = h.display; var isToday = h.weekday === clinic.today.weekdayIndex; %>
+          <tr<% if (isToday) { %> class="is-today" aria-current="date"<% } %>>
+            <th scope="row"><%= h.day %><% if (isToday) { %> <span class="badge">Today</span><% } %></th>
+            <td>
+              <% if (d.closed) { %>Closed<% } else { %>
+                <% d.sessions.forEach(function (sess, i) { %><span class="hours-table-ds__session"><% if (i) { %><span class="visually-hidden-ds">and </span><% } %><%= sess %></span><% }) %>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ CLOSING SCENE ============ -->
+  <section class="section section--night closing" aria-labelledby="closingTitle">
+    <div class="container closing__grid closing__grid--solo">
+      <div class="closing__copy" data-reveal-group>
+        <p class="eyebrow-label" data-reveal>Ready when you are</p>
+        <h2 id="closingTitle" class="closing__title" data-reveal>Book a <em class="display-em">visit</em></h2>
+        <p class="closing__body" data-reveal>Choose a treatment, a day and a time from the clinic&rsquo;s live availability.</p>
+        <div class="cluster closing__actions" data-reveal>
+          <a href="/#appointment" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
+          <% if (tel) { %><a href="<%= tel %>" class="button button--ghost-light" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<%- include('partials/site-footer') %>
+<script src="/js/ds.js" defer></script>
+<script src="/js/site-ds.js" defer></script>
+<script src="/js/motion.js" defer></script>
+</body>
+</html>

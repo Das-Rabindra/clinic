@@ -202,14 +202,14 @@ describe('request a call back', () => {
 describe('cross-page navigation', () => {
   test('anchors on a treatment page point back to the homepage', async () => {
     const r = await srv.call('/services/dental-fillings');
-    // A bare "#location" on a subpage scrolls nowhere; it must be "/#location".
-    assert.ok(r.body.includes('href="/#location"'));
-    assert.ok(!r.body.includes('href="#location"'));
+    // A bare "#appointment" on a subpage scrolls nowhere; it must be "/#appointment".
+    assert.ok(r.body.includes('href="/#appointment"'));
+    assert.ok(!r.body.includes('href="#appointment"'));
   });
 
   test('the homepage keeps its in-page anchors', async () => {
     const r = await srv.call('/');
-    assert.ok(r.body.includes('href="#location"'));
+    assert.ok(r.body.includes('href="#appointment"'));
   });
 });
 

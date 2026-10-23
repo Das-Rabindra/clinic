@@ -105,11 +105,25 @@ describe('/faq', () => {
   });
 });
 
+describe('/contact', () => {
+  test('gives every way to reach the clinic, the map, the address and the week', async () => {
+    const r = await srv.call('/contact');
+    assert.equal(r.status, 200);
+    assertHeadingOrder(r.body, '/contact');
+    assert.match(r.body, /class="page-cine" data-hero/);
+    assert.ok(r.body.includes('href="tel:'), 'call link');
+    assert.ok(r.body.includes('data-callback-open'), 'call-back button');
+    assert.match(r.body, /<iframe[^>]+data-src="https:\/\/[^"]*google[^"]*"/);
+    assert.ok(r.body.includes('Annapurna Market Complex'));
+    assert.equal((r.body.match(/<tr[ >]/g) || []).length, 7, 'seven days of hours');
+  });
+});
+
 describe('navigation to the new pages', () => {
-  for (const page of ['/', '/services', '/privacy', '/about', '/gallery', '/testimonials', '/faq']) {
+  for (const page of ['/', '/services', '/privacy', '/about', '/gallery', '/testimonials', '/faq', '/contact']) {
     test(`${page} links every section page`, async () => {
       const body = (await srv.call(page)).body;
-      for (const href of ['/about', '/gallery', '/testimonials', '/faq']) {
+      for (const href of ['/about', '/gallery', '/testimonials', '/faq', '/contact']) {
         assert.ok(body.includes(`href="${href}"`), `${href} link`);
       }
     });
@@ -120,5 +134,6 @@ describe('navigation to the new pages', () => {
     assert.match(xml, /<loc>[^<]+\/about<\/loc>/);
     assert.match(xml, /<loc>[^<]+\/gallery<\/loc>/);
     assert.match(xml, /<loc>[^<]+\/faq<\/loc>/);
+    assert.match(xml, /<loc>[^<]+\/contact<\/loc>/);
   });
 });
