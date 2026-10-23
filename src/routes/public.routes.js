@@ -69,6 +69,44 @@ const BOOK_SCENE = scenePhoto('dentist-uv-curing', 1600, 1068, [640, 1024, 1600,
 /* The 404 page: the smile, mirrored as on Testimonials, so a dead end still
    opens on something friendly. Rendered by middleware/error.js. */
 export const NOT_FOUND_SCENE = ABOUT_SCENE;
+
+/* Treatment pages whose own subject one of the owner's photographs actually
+   shows: the scene behind the title uses it instead of the treatment's
+   admin image (which still appears on the treatment's cards). Only where the
+   photograph depicts the treatment: a check-up, a curing light setting a
+   filling, oral surgery, an implant, and, for emergency care (which has no
+   image), the instruments. Every other treatment keeps its own specific
+   image. */
+const PHOTO = { caption: 'Illustrative photograph' };
+const TREATMENT_SCENES = {
+  'general-dentistry': { ...scenePhoto('hero-dental-exam', 1600, 1067, [640, 1024, 1600, 2048]), ...PHOTO,
+    alt: 'A dentist examining a patient\'s teeth with a mouth mirror (illustrative photograph)' },
+  'dental-fillings': { ...BOOK_SCENE, ...PHOTO,
+    alt: 'A dentist setting a filling with a curing light (illustrative photograph)' },
+  'tooth-extraction': { ...scenePhoto('dental-procedure', 1600, 1067, [1024, 1600, 2048]), ...PHOTO,
+    alt: 'A dentist working with forceps during oral surgery (illustrative photograph)' },
+  'wisdom-tooth': { ...scenePhoto('dental-procedure', 1600, 1067, [1024, 1600, 2048]), ...PHOTO,
+    alt: 'A dentist working with forceps during oral surgery (illustrative photograph)' },
+  /* The render with its flat blue backdrop extended on the left, so the
+     implant itself sits in the lit side rather than under the words. */
+  'dental-implants': { ...scenePhoto('dental-implant-scene', 1600, 680, [1024, 1600, 2048]),
+    caption: 'Illustration', position: '78% 60%',
+    alt: 'A tooth, a dental implant and a mouth mirror (illustration)' },
+  'dental-emergency': { ...PRIVACY_SCENE, ...PHOTO, alt: '', position: '70% 30%' },
+};
+
+/** The scene behind a treatment page's title: a mapped photograph, or the
+    treatment's own image, disclosed as illustrative when it is stock. */
+function treatmentScene(service) {
+  if (TREATMENT_SCENES[service.slug]) return TREATMENT_SCENES[service.slug];
+  if (!service.image_url) return null;
+  return {
+    url: service.image_url, srcset: null,
+    width: service.image_width || 1280, height: service.image_height || 720,
+    alt: service.image_alt || '',
+    caption: service.image_is_stock ? 'Illustrative image, not a photograph of the clinic' : null,
+  };
+}
 export const scenePreload = (photo) => ({ preloadImage: photo.url, preloadSrcset: photo.srcset, preloadSizes: '100vw' });
 
 const CATEGORY_LABELS = {
@@ -413,7 +451,9 @@ router.get('/services/:slug', async (req, res, next) => {
   res.render('public/service', {
     ...base,
     service,
-    preloadImage: service.image_url || null,
+    scene: treatmentScene(service),
+    ...(() => { const sc = treatmentScene(service);
+      return sc ? { preloadImage: sc.url, preloadSrcset: sc.srcset, preloadSizes: '100vw' } : {}; })(),
     benefits: String(service.benefits || '').split('\n').map(s => s.trim()).filter(Boolean),
     related, faqs, doctorPhoto,
     meta: seo.serviceMeta(service, settings),

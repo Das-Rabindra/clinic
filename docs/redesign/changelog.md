@@ -920,3 +920,27 @@ widths) found nothing.
   backdrop. `npm test` passes 302/302. The width sweep found nothing beyond
   the expected 404 status message.
 - Every public page now opens on a captioned photograph.
+
+## Treatment pages use the owner's photographs where they fit (2026-10-23)
+
+Every treatment already had its own treatment-specific stock image (from the
+admin), except emergency care, which had none. The new photographs replace
+the scene image only where they depict the treatment. The other eight keep
+their own images, and the admin image still shows on every treatment's
+cards.
+
+| Treatment | Scene image | Caption |
+|---|---|---|
+| General Dentistry | Dentist examining with a mirror (check-up) | Illustrative photograph |
+| Dental Fillings | UV curing light, which sets a filling | Illustrative photograph |
+| Tooth Extraction, Wisdom Tooth | Oral surgery with forceps | Illustrative photograph |
+| Dental Implants | The licensed implant render, its blue backdrop extended on the left (`dental-implant-scene-*`) so the implant sits in the lit side | Illustration |
+| Emergency Dental Care | The instruments (no people); it previously had no image | Illustrative photograph |
+
+- **Code:** `TREATMENT_SCENES` and `treatmentScene()` in `public.routes.js`.
+  Each mapped scene has alt text saying it is illustrative, and the route
+  preloads it.
+- **Contrast:** every line on the six pages is ≥ 5.74:1 at every width.
+- **Checks:** a new test covers each mapping and caption, and confirms an
+  unmapped treatment is untouched. `npm test` passes 303/303, and the width
+  sweep (6 pages × 8 widths) found nothing.

@@ -21,15 +21,15 @@
 <main id="main">
 
   <!-- ============ SCENE ============ -->
-  <%# The treatment's photograph behind the title, shaded where the type
-      sits. A licensed image says so on the scene itself — presented without
-      that, it reads as the clinic's own work. %>
-  <section class="page-cine<%= service.image_url ? ' page-cine--photo' : '' %>" data-hero aria-labelledby="txTitle">
-    <% if (service.image_url) { %>
+  <%# The photograph behind the title (see treatmentScene() in the route),
+      shaded where the type sits. A stock image says so on the scene itself —
+      presented without that, it reads as the clinic's own work. %>
+  <section class="page-cine<%= scene ? ' page-cine--photo' : '' %>" data-hero aria-labelledby="txTitle">
+    <% if (scene) { %>
     <div class="page-cine__media">
-      <img src="<%= service.image_url %>" alt="<%= service.image_alt || '' %>"
-           width="<%= service.image_width || 1280 %>" height="<%= service.image_height || 720 %>"
-           fetchpriority="high" decoding="async">
+      <img src="<%= scene.url %>"<% if (scene.srcset) { %> srcset="<%= scene.srcset %>" sizes="100vw"<% } %> alt="<%= scene.alt %>"
+           width="<%= scene.width %>" height="<%= scene.height %>"
+           fetchpriority="high" decoding="async"<% if (scene.position) { %> style="object-position: <%= scene.position %>"<% } %>>
     </div>
     <div class="page-cine__shade" aria-hidden="true"></div>
     <% } %>
@@ -52,8 +52,8 @@
         </div>
       </div>
     </div>
-    <% if (service.image_url && service.image_is_stock) { %>
-    <p class="page-cine__credit">Illustrative image, not a photograph of the clinic</p>
+    <% if (scene && scene.caption) { %>
+    <p class="page-cine__credit"><%= scene.caption %></p>
     <% } %>
   </section>
 

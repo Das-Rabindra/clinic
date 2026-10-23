@@ -108,6 +108,27 @@ describe('/services/:slug', () => {
   });
 });
 
+describe('treatment page scenes', () => {
+  test('treatments a new photograph depicts use it, captioned; others keep their own image', async () => {
+    const want = {
+      'general-dentistry': ['hero-dental-exam-1600', 'Illustrative photograph'],
+      'dental-fillings': ['dentist-uv-curing-1600', 'Illustrative photograph'],
+      'tooth-extraction': ['dental-procedure-1600', 'Illustrative photograph'],
+      'wisdom-tooth': ['dental-procedure-1600', 'Illustrative photograph'],
+      'dental-implants': ['dental-implant-scene-1600', 'Illustration'],
+      'dental-emergency': ['dental-instruments-1600', 'Illustrative photograph'],
+    };
+    for (const [slug, [file, caption]] of Object.entries(want)) {
+      const body = (await srv.call(`/services/${slug}`)).body;
+      assert.ok(body.includes(`/img/stock/${file}.webp`), `${slug} uses ${file}`);
+      assert.ok(body.includes(`<p class="page-cine__credit">${caption}</p>`), `${slug} is captioned`);
+    }
+    // A treatment not on the list is untouched: no new photograph.
+    const rct = (await srv.call('/services/root-canal-treatment')).body;
+    assert.ok(!/\/img\/stock\/(hero-dental-exam|dentist-uv-curing|dental-procedure|dental-instruments)-/.test(rct.slice(rct.indexOf('<main'), rct.indexOf('CHAPTERS'))));
+  });
+});
+
 describe('treatment pages in a browser', () => {
   const btest = (name, fn) => test(name, async (t) => {
     if (!browser) return t.skip('Chromium could not launch');
