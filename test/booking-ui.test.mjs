@@ -341,3 +341,26 @@ describe('find or cancel a booking', () => {
     await p.close();
   });
 });
+
+describe('the /book page', () => {
+  btest('runs the same wizard, and ?treatment= arrives with the treatment chosen', async () => {
+    const p = await browser.newPage();
+    await p.setRequestInterception(true);
+    p.on('request', (req) => (req.method() === 'POST' ? req.abort() : req.continue()));
+    await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+    await p.goto(srv.base + '/book?treatment=root-canal-treatment', { waitUntil: 'networkidle0' });
+    // Step 2 (Date) with the treatment already chosen, and the query dropped.
+    await p.waitForSelector('.cal__day');
+    assert.match(await p.$eval('#bookingSteps', (e) => e.textContent), /Step 2 of 5/);
+    assert.equal(new URL(p.url()).search, '');
+    assert.equal(await p.$eval('h1', (e) => e.textContent.trim()), 'Book an appointment');
+    await p.close();
+  });
+
+  btest('without a treatment it opens on step 1', async () => {
+    const p = await browser.newPage();
+    await p.goto(srv.base + '/book', { waitUntil: 'networkidle0' });
+    await p.waitForSelector('input[name="bkService"]');
+    await p.close();
+  });
+});

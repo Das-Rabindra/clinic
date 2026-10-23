@@ -19,7 +19,7 @@
         <h1 id="pageTitle"><%= settings.services_title || 'Dental treatments offered at the clinic' %></h1>
         <% if (settings.services_lede) { %><p class="page-cine__lede"><%= settings.services_lede %></p><% } %>
         <div class="page-cine__actions">
-          <a class="button button--inverse" href="/#appointment" data-track="appointment_started"><%- ic('calendar') %>Book a consultation</a>
+          <a class="button button--inverse" href="/book" data-track="appointment_started"><%- ic('calendar') %>Book a consultation</a>
           <% if (tel) { %><a class="button button--ghost-light" href="<%= tel %>" data-track="call_clicked"><%- ic('phone') %>Call</a><% } %>
           <% if (whatsappUrl) { %><a class="button button--ghost-light" href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked"><%- ic('whatsapp') %>WhatsApp</a><% } %>
         </div>
@@ -68,7 +68,7 @@
         <h2 id="closingTitle" class="closing__title" data-reveal>Start with a <em class="display-em">consultation</em></h2>
         <p class="closing__body" data-reveal>Book a consultation and <%= clinic.doctor || 'the dentist' %> will examine your teeth, explain what is going on, and set out the options before any treatment is decided.</p>
         <div class="cluster closing__actions" data-reveal>
-          <a href="/#appointment" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book a consultation</a>
+          <a href="/book" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book a consultation</a>
           <button type="button" class="button button--ghost-light" data-callback-open><%- ic('callback') %>Request a call back</button>
         </div>
       </div>

@@ -592,15 +592,27 @@
     });
   });
 
-  /* Arriving with /#appointment?treatment=<slug>. The query lives in the
-     fragment so the homepage is never served under a duplicate URL. */
+  /* Arriving with a treatment already chosen: /book?treatment=<slug>, or the
+     homepage's /#appointment?treatment=<slug> (the query lives in the
+     fragment there so the homepage is never served under a duplicate URL).
+     Either way the query is dropped from the address once it is used. */
   function preselectFromHash() {
     var hash = window.location.hash || '';
     var q = hash.indexOf('?');
-    if (q === -1) return;
-    var slug = new URLSearchParams(hash.slice(q + 1)).get('treatment');
+    var slug = null;
+    if (q !== -1) {
+      slug = new URLSearchParams(hash.slice(q + 1)).get('treatment');
+      history.replaceState(null, '', window.location.pathname + window.location.search + hash.slice(0, q));
+    } else if (window.location.search) {
+      var params = new URLSearchParams(window.location.search);
+      slug = params.get('treatment');
+      if (slug) {
+        params.delete('treatment');
+        var rest = params.toString();
+        history.replaceState(null, '', window.location.pathname + (rest ? '?' + rest : '') + hash);
+      }
+    }
     var match = slug && SERVICES.filter(function (s) { return s.slug === slug; })[0];
-    history.replaceState(null, '', hash.slice(0, q));
     if (match) startWithService(match.id);
   }
 

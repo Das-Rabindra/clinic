@@ -32,7 +32,7 @@
         <%- ic('phone') %><span><%= clinic.phone %></span>
       </a>
       <% } %>
-      <a class="button button--primary button--small site-header__cta" href="<%= nav %>#appointment" data-track="appointment_started">Book appointment</a>
+      <a class="button button--primary button--small site-header__cta" href="<%= nav ? '/book' : '#appointment' %>" data-track="appointment_started">Book appointment</a>
       <button type="button" class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="navDrawer" aria-label="Open menu">
         <svg class="icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
         <svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
@@ -52,7 +52,7 @@
     <li><a class="nav-drawer__link" href="/contact">Contact &amp; directions <%- ic('arrow') %></a></li>
   </ul>
   <div class="nav-drawer__actions">
-    <a class="button button--primary button--block" href="<%= nav %>#appointment" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
+    <a class="button button--primary button--block" href="<%= nav ? '/book' : '#appointment' %>" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
     <% if (clinic.phone) { %>
     <a class="button button--secondary button--block" href="tel:<%= clinic.phone_intl || clinic.phone %>" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a>
     <% } %>

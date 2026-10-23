@@ -85,7 +85,7 @@
         <h2 id="closingTitle" class="closing__title" data-reveal>Visit the clinic <em class="display-em">in person</em></h2>
         <p class="closing__body" data-reveal><%= clinic.address %></p>
         <div class="cluster closing__actions" data-reveal>
-          <a href="/#appointment" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
+          <a href="/book" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
           <% if (clinic.directions_url) { %><a href="<%= clinic.directions_url %>" target="_blank" rel="noopener" class="button button--ghost-light" data-track="directions_clicked"><%- ic('directions') %>Get directions</a><% } %>
         </div>
       </div>

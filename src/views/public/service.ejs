@@ -6,7 +6,7 @@
 <body class="has-action-bar">
 <% var ic = function (n) { return include('partials/icon', { name: n }); }; %>
 <% var tel = clinic.phone ? 'tel:' + (clinic.phone_intl || clinic.phone) : null; %>
-<% var bookHref = '/#appointment' + (service.bookable ? '?treatment=' + service.slug : ''); %>
+<% var bookHref = '/book' + (service.bookable ? '?treatment=' + service.slug : ''); %>
 <%# The body's chapters, numbered in the order they actually appear — a
     treatment without a "when it may be needed" text simply has one fewer. %>
 <% var chapters = [];

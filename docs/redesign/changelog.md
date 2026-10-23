@@ -587,3 +587,29 @@ They are now pages of their own, in the same cinematic style.
 - **Code:** `weekHoursFor()` and `addressHtmlFor()` are now shared by
   /about and /contact.
 - **Checks:** `npm test` passes 287/287. The width sweep found nothing.
+
+## Booking page (2026-10-23)
+
+- **/book:** the booking wizard sits inside the opening night scene itself,
+  since booking is the page's whole purpose. Beside it are the breadcrumb,
+  "Book an appointment", the three steps, today's status and the
+  call/WhatsApp/call-back fallback. "Find or cancel" stays under the wizard.
+  Below the scene, "Good to know" covers where, when and changing plans.
+- **Same wizard everywhere:** the wizard and "find or cancel" markup moved
+  into `partials/booking-panel.ejs`, which both the homepage and /book use.
+  The hidden "Online booking" heading takes a level so heading order holds on
+  both.
+- **Deep links:** `/book?treatment=<slug>` opens on the Date step with that
+  treatment chosen, then drops the query from the address. The canonical URL
+  stays /book. The homepage's `/#appointment?treatment=` links (including
+  old shared ones) still work.
+- **Links:** Book buttons everywhere except the homepage now go to /book or
+  /book?treatment=. This covers treatment cards, treatment pages, the header
+  CTA, the phone action bar, the drawer, the footer and every closing scene.
+  On the homepage they still open the wizard in place.
+- **Sitemap:** /book is listed. The old "/book is not a route" test now
+  checks that it is listed and live.
+- **Fix:** text buttons inside a page scene were dark on night. They are now
+  light, except inside the white booking panel.
+- **Checks:** `npm test` passes 289/289, with new browser tests for /book
+  and the deep link.

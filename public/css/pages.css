@@ -290,3 +290,19 @@ html.has-lightbox { overflow: hidden; }
 .hours-scene__table { margin-top: 0; font-size: var(--text-body); }
 .hours-scene__table th, .hours-scene__table td { padding-block: var(--space-4); }
 @media (min-width: 1024px) { .hours-scene { grid-template-columns: 1fr 1.1fr; gap: var(--space-16); align-items: start; } }
+
+/* ── Book: the wizard inside the opening scene ─────────────────────────── */
+.book-scene { padding-bottom: var(--space-20, 5rem); }
+.book-scene .booking-layout { position: relative; }
+.book-scene h1 { font-size: clamp(2.4rem, 1.6rem + 3.2vw, 4.25rem); }
+.book-steps { list-style: none; margin-inline: 0; padding: 0; display: grid; gap: 0; border-top: 1px solid rgba(245, 242, 234, 0.18); max-width: 26rem; }
+.book-steps li { display: flex; align-items: baseline; gap: var(--space-4); padding-block: var(--space-3); border-bottom: 1px solid rgba(245, 242, 234, 0.18); color: var(--color-night-ink); }
+.book-steps__n { font-family: var(--font-display); font-style: italic; color: var(--color-mint); min-width: 1.75rem; }
+.book-scene .booking-layout__fallback { margin-top: var(--space-6); }
+.book-facts { margin-top: 0; }
+@media (min-width: 768px) { .book-facts { grid-template-columns: repeat(3, 1fr); column-gap: var(--space-8); } }
+@media (max-width: 1023px) { .book-scene .book-steps { display: none; } }
+/* Text buttons in a page scene sit on night, as they do in .section--night —
+   but not inside the white booking panel the /book scene also holds. */
+.page-cine .button--text { color: var(--color-night-ink); }
+.page-cine :is(.booking, .manage) .button--text { color: var(--color-primary); }

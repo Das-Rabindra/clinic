@@ -1,0 +1,58 @@
+<%#
+  The booking wizard and "find or cancel", shared by the homepage section and
+  /book. Rendered and driven by /js/booking.js against the API; it relies on
+  these ids, so keep them. Locals: servicesJson, clinic, whatsappUrl, and
+  headingLevel (2 on /book, where the panel sits right under the h1; 3 by
+  default, under the homepage section's h2).
+%>
+<% var ic = function (n) { return include('icon', { name: n }); }; %>
+<% var hl = typeof headingLevel !== 'undefined' && headingLevel ? headingLevel : 3; %>
+<% var tel = clinic.phone ? 'tel:' + (clinic.phone_intl || clinic.phone) : null; %>
+<div class="booking-layout__panel">
+  <!-- Booking wizard: rendered and driven by /js/booking.js against the API -->
+  <div class="booking" id="bookingShell" aria-labelledby="bookingHeading"
+       data-services='<%- servicesJson %>'
+       data-tel="<%= tel || '' %>" data-phone="<%= clinic.phone || '' %>" data-whatsapp="<%= whatsappUrl || '' %>">
+    <h<%= hl %> class="visually-hidden-ds" id="bookingHeading">Online booking</h<%= hl %>>
+    <div class="booking-progress" id="bookingSteps"></div>
+    <p class="visually-hidden-ds" id="bookingStatus" role="status" aria-live="polite"></p>
+    <div class="booking__body" id="bookingBody">
+      <noscript>
+        <p>Online booking needs JavaScript. Please call <strong><%= clinic.phone %></strong> or message the clinic on WhatsApp to book an appointment.</p>
+      </noscript>
+      <div class="booking__loading"><span class="spinner-ds" aria-hidden="true"></span><span>Loading booking…</span></div>
+    </div>
+    <div class="booking__foot" id="bookingFoot" hidden>
+      <button type="button" class="button button--secondary" id="bookBack">Back</button>
+      <button type="button" class="button button--primary" id="bookNext">Continue</button>
+    </div>
+  </div>
+
+  <%# Self-service on the existing lookup and cancel endpoints. Both need
+      the booking reference AND the mobile number it was made with. %>
+  <details class="manage" id="manage">
+    <summary class="manage__summary">Already booked? Find or cancel your appointment</summary>
+    <div class="manage__body">
+      <form id="manageForm" data-validate data-validate-js novalidate>
+        <p class="visually-hidden-ds" role="status" aria-live="polite" data-form-status></p>
+        <div class="manage__fields">
+          <div class="form-field">
+            <label class="form-label" for="mgRef">Booking reference</label>
+            <input class="input" id="mgRef" name="ref" autocomplete="off" autocapitalize="characters" spellcheck="false"
+                   placeholder="SDC-2026-00001" maxlength="30"
+                   data-rule="required" data-error-id="mgRefErr" data-message="Enter the reference from your confirmation." aria-describedby="mgRefErr">
+            <p class="form-error" id="mgRefErr"></p>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="mgPhone">Mobile number used to book</label>
+            <input class="input" id="mgPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20"
+                   data-rule="mobile" data-error-id="mgPhoneErr" data-message="Enter the 10-digit mobile number you booked with." aria-describedby="mgPhoneErr">
+            <p class="form-error" id="mgPhoneErr"></p>
+          </div>
+        </div>
+        <button type="submit" class="button button--secondary">Find my booking</button>
+      </form>
+      <div id="manageResult" class="manage__result"></div>
+    </div>
+  </details>
+</div>

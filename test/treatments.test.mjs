@@ -40,7 +40,7 @@ describe('/services', () => {
     assert.equal(cards, active.length);
     for (const s of active) {
       if (s.has_detail_page) assert.ok(body.includes(`class="card__link" href="/services/${s.slug}"`), s.slug);
-      if (s.bookable) assert.ok(body.includes(`href="/#appointment?treatment=${s.slug}"`), `${s.slug} Book is a real link`);
+      if (s.bookable) assert.ok(body.includes(`href="/book?treatment=${s.slug}"`), `${s.slug} Book is a real link`);
     }
     // The Book control used to be a <button> that did nothing off the homepage.
     assert.ok(!/<button[^>]*book-service/.test(body));
@@ -49,7 +49,7 @@ describe('/services', () => {
   test('has a consultation call to action and a logical heading order', async () => {
     const body = (await srv.call('/services')).body;
     assert.match(body, /Not sure what you need\?/);
-    assert.match(body, /href="\/#appointment"/);
+    assert.match(body, /href="\/book"/);
     assertHeadingOrder(body, '/services');
   });
 
@@ -75,7 +75,7 @@ describe('/services/:slug', () => {
     assert.match(body, /<a href="\/services">Treatments<\/a>/);
     assert.match(body, /<span aria-current="page">Root Canal Treatment<\/span>/);
     assert.match(body, /"@type":"BreadcrumbList"/);
-    assert.match(body, /href="\/#appointment\?treatment=root-canal-treatment"/);
+    assert.match(body, /href="\/book\?treatment=root-canal-treatment"/);
     assert.match(body, /href="tel:\+918847879686"/);
     assert.match(body, /href="https:\/\/wa\.me\/918847879686\?text=[^"]*Root%20Canal%20Treatment/);
     assert.match(body, /data-callback-open data-service="\d+" data-service-name="Root Canal Treatment"/);
@@ -114,7 +114,7 @@ describe('treatment pages in a browser', () => {
     await fn();
   });
 
-  btest('Book on /services opens the homepage wizard with that treatment chosen', async () => {
+  btest('Book on /services opens /book with that treatment chosen', async () => {
     const p = await browser.newPage();
     await p.setViewport({ width: 1280, height: 900 });
     await p.goto(srv.base + '/services', { waitUntil: 'networkidle0' });
@@ -123,7 +123,7 @@ describe('treatment pages in a browser', () => {
       p.click('.treatment-card .book-service'),
     ]);
     await p.waitForFunction(() => document.querySelector('.booking-progress__compact')?.textContent.includes('Date'), { timeout: 10000 });
-    assert.equal(new URL(p.url()).pathname, '/');
+    assert.equal(new URL(p.url()).pathname, '/book');
     await p.close();
   });
 

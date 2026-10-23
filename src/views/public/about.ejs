@@ -25,7 +25,7 @@
         <h1 id="pageTitle"><% if (cut > 0) { %><%= who.slice(0, cut) %> <em class="display-em"><%= who.slice(cut + 1) %></em><% } else { %><%= who %><% } %></h1>
         <p class="page-cine__lede"><%= [clinic.qualification, clinic.institution].filter(Boolean).join(' · ') %><% if (clinic.qualification || clinic.institution) { %><br><% } %><%= settings.name %>, <%= shortAddress %></p>
         <div class="page-cine__actions">
-          <a href="/#appointment" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
+          <a href="/book" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
           <% if (tel) { %><a href="<%= tel %>" class="button button--ghost-light" data-track="call_clicked"><%- ic('phone') %>Call</a><% } %>
         </div>
       </div>
@@ -78,7 +78,7 @@
       </figure>
       <ol class="clinic__facts about-room__facts" data-reveal-group>
         <li data-reveal><span class="clinic__num" aria-hidden="true">i.</span><div><h3>Opening hours</h3><p>Open <%= hoursSummary %>.</p></div></li>
-        <li data-reveal><span class="clinic__num" aria-hidden="true">ii.</span><div><h3>Book online</h3><p>Choose a treatment, a day and a time from the clinic's live availability.</p><a class="link link--arrow" href="/#appointment">Book an appointment <%- ic('arrow') %></a></div></li>
+        <li data-reveal><span class="clinic__num" aria-hidden="true">ii.</span><div><h3>Book online</h3><p>Choose a treatment, a day and a time from the clinic's live availability.</p><a class="link link--arrow" href="/book">Book an appointment <%- ic('arrow') %></a></div></li>
         <% if (doctor && doctor.languages) { %>
         <li data-reveal><span class="clinic__num" aria-hidden="true">iii.</span><div><h3>Languages</h3><p><%= doctor.languages %></p></div></li>
         <% } %>
@@ -163,7 +163,7 @@
         <h2 id="closingTitle" class="closing__title" data-reveal>Meet <%= clinic.doctor || 'the dentist' %> <em class="display-em">in person</em></h2>
         <p class="closing__body" data-reveal>Book online, or ask the clinic a question first &mdash; whichever you prefer.</p>
         <div class="cluster closing__actions" data-reveal>
-          <a href="/#appointment" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
+          <a href="/book" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
           <button type="button" class="button button--ghost-light" data-callback-open><%- ic('callback') %>Request a call back</button>
         </div>
       </div>

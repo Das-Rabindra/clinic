@@ -101,7 +101,7 @@ describe('treatment pages', () => {
 
   test('offers a booking link that pre-selects the treatment', async () => {
     const r = await srv.call('/services/dental-cleaning');
-    assert.ok(r.body.includes('/#appointment?treatment=dental-cleaning'));
+    assert.ok(r.body.includes('/book?treatment=dental-cleaning'));
   });
 
   test('an unknown slug is a 404, not an empty page', async () => {
@@ -140,8 +140,8 @@ describe('sitemap', () => {
     const r = await srv.call('/sitemap.xml');
     const locs = [...r.body.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
     assert.ok(locs.length >= 10);
-    // /book was advertised for months and has never been a route.
-    assert.ok(!locs.some((l) => l.endsWith('/book')), '/book is not a route');
+    // /book was once advertised before it existed; now it must be listed and live.
+    assert.ok(locs.some((l) => l.endsWith('/book')), '/book is listed');
     for (const loc of locs) {
       const path = new URL(loc).pathname;
       const res = await srv.call(path);
@@ -202,8 +202,8 @@ describe('request a call back', () => {
 describe('cross-page navigation', () => {
   test('anchors on a treatment page point back to the homepage', async () => {
     const r = await srv.call('/services/dental-fillings');
-    // A bare "#appointment" on a subpage scrolls nowhere; it must be "/#appointment".
-    assert.ok(r.body.includes('href="/#appointment"'));
+    // A bare "#appointment" on a subpage scrolls nowhere; Book goes to /book.
+    assert.ok(r.body.includes('href="/book"'));
     assert.ok(!r.body.includes('href="#appointment"'));
   });
 

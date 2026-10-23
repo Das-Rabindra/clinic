@@ -5,7 +5,7 @@
     tile           — large image with the title laid over it; homepage lead
     row            — editorial row: number, title, line, small image; homepage
 
-  Book is a real link to /#appointment?treatment=<slug>. On the homepage
+  Book is a real link to /book?treatment=<slug>. On the homepage
   booking.js intercepts it (.book-service) and opens the wizard in place;
   everywhere else it simply navigates there. It used to be a <button>, which
   did nothing on any page without the wizard.
@@ -30,7 +30,7 @@
 <% var actions = function () { %>
   <div class="card__footer">
     <% if (s.bookable) { %>
-    <a class="button button--primary button--small book-service" href="/#appointment?treatment=<%= s.slug %>"
+    <a class="button button--primary button--small book-service" href="/book?treatment=<%= s.slug %>"
        data-service="<%= s.id %>" data-service-name="<%= s.name %>" data-track="appointment_started">Book<span class="visually-hidden-ds"> <%= s.name %></span></a>
     <% } %>
     <button type="button" class="button button--text button--small" data-callback-open data-service="<%= s.id %>" data-service-name="<%= s.name %>">Request a call back<span class="visually-hidden-ds"> about <%= s.name %></span></button>

@@ -33,7 +33,7 @@
           <li><a href="/gallery">Inside the clinic</a></li>
           <li><a href="/testimonials">Patient testimonials</a></li>
           <li><a href="/faq">Questions patients ask</a></li>
-          <li><a href="<%= nav %>#appointment">Book an appointment</a></li>
+          <li><a href="<%= nav ? '/book' : '#appointment' %>">Book an appointment</a></li>
           <li><a href="/privacy">Privacy &amp; appointment policy</a></li>
         </ul>
       </nav>

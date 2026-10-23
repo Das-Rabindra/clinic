@@ -130,6 +130,14 @@ function dayHours(h) {
   };
 }
 
+/** The treatments as the booking wizard reads them, safe inside a '…' attribute. */
+function servicesJsonFor(services) {
+  return JSON.stringify(services.map(s => ({
+    id: s.id, name: s.name, slug: s.slug, duration: s.duration_min,
+    desc: s.short_desc, category: s.category_name, bookable: s.bookable === 1,
+  }))).replace(/'/g, '&#39;');
+}
+
 /** The weekly hours starting Monday, each with its display text. */
 function weekHoursFor(clinic) {
   return [1, 2, 3, 4, 5, 6, 0]
@@ -294,10 +302,7 @@ router.get('/', async (req, res) => {
     /* The hero headline as separate lines, for the line-by-line reveal. The
        admin's own line break decides where lines fall. */
     heroLines: String(settings.hero_title || settings.name).split(/\s*\n\s*/).filter(Boolean),
-    servicesJson: JSON.stringify(services.map(s => ({
-      id: s.id, name: s.name, slug: s.slug, duration: s.duration_min,
-      desc: s.short_desc, category: s.category_name, bookable: s.bookable === 1,
-    }))).replace(/'/g, '&#39;'),
+    servicesJson: servicesJsonFor(services),
     starsHtml, formatReviewDate,
   });
 });
@@ -517,6 +522,38 @@ router.get('/contact', async (req, res) => {
     },
     ogType: 'website',
     schemas: [seo.breadcrumbs(canonical, [{ name: 'Home', path: '/' }, { name: 'Contact', path: '/contact' }])],
+  });
+});
+
+/* ── Book ──────────────────────────────────────────────────────────────── */
+/* The booking wizard on a page of its own, the same wizard the homepage
+   carries. /book?treatment=<slug> arrives with the treatment chosen; the
+   canonical stays /book so the query never creates duplicate URLs. */
+router.get('/book', async (req, res) => {
+  const base = await baseLocals();
+  const { settings, clinic } = base;
+  const canonical = seo.canonicalUrl(settings);
+  const services = await servicesRepo.list({ activeOnly: true });
+  issuePublicToken(req, res);
+
+  res.render('public/book', {
+    ...base,
+    /* booking.css blocks render on purpose, as on the homepage: the wizard
+       is the first thing on the page and must not flash unstyled. */
+    pageCss: ['/css/home.css', '/css/booking.css', '/css/pages.css'],
+    servicesJson: servicesJsonFor(services),
+    hoursSummary: hoursSentence(clinic),
+    meta: {
+      title: `Book an appointment | ${settings.name}`,
+      description: `Book a dental appointment at ${settings.name} online: choose a treatment, a day and a time from the clinic's live availability.`,
+      canonical: `${canonical}/book`,
+      ogTitle: `Book an appointment | ${settings.name}`,
+      ogDescription: 'Choose a treatment, a day and a time from the clinic\'s live availability.',
+      ogUrl: `${canonical}/book`,
+      ogImage: null,
+    },
+    ogType: 'website',
+    schemas: [seo.breadcrumbs(canonical, [{ name: 'Home', path: '/' }, { name: 'Book', path: '/book' }])],
   });
 });
 

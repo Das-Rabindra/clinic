@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head') %>
+</head>
+<body class="has-action-bar">
+<% var ic = function (n) { return include('partials/icon', { name: n }); }; %>
+<% var tel = clinic.phone ? 'tel:' + (clinic.phone_intl || clinic.phone) : null; %>
+<a class="skip-to-content" href="#main">Skip to content</a>
+<%- include('partials/site-header') %>
+
+<main id="main">
+
+  <!-- ============ SCENE + WIZARD ============ -->
+  <%# The wizard is the page's purpose, so it sits in the opening scene
+      itself rather than below it. data-bar-yield: the phone action bar steps
+      aside while this is on screen, so it never covers Continue. %>
+  <section class="page-cine booking-night book-scene" id="appointment" data-hero data-bar-yield aria-labelledby="pageTitle">
+    <div class="container booking-layout">
+      <div class="booking-layout__intro page-cine__inner">
+        <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Book' }] }) %>
+        <p class="eyebrow-label">Book a visit</p>
+        <h1 id="pageTitle">Book an <em class="display-em">appointment</em></h1>
+        <p class="page-cine__lede">Choose a treatment, pick a date and reserve a time that suits you. The times shown come straight from the clinic&rsquo;s diary.</p>
+        <ol class="book-steps">
+          <li><span class="book-steps__n" aria-hidden="true">01</span>Choose a treatment</li>
+          <li><span class="book-steps__n" aria-hidden="true">02</span>Pick a day and a time</li>
+          <li><span class="book-steps__n" aria-hidden="true">03</span>Leave your name and mobile number</li>
+        </ol>
+        <p class="status-pill status-pill--<%= clinic.today.now.state %>"><span class="status-pill__dot" aria-hidden="true"></span><%= clinic.today.now.label %></p>
+        <div class="booking-layout__fallback">
+          <p class="form-label">Prefer to talk to someone?</p>
+          <div class="cluster">
+            <% if (tel) { %><a class="button button--inverse button--small" href="<%= tel %>" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
+            <% if (whatsappUrl) { %><a class="button button--ghost-light button--small" href="<%= whatsappUrl %>" target="_blank" rel="noopener" data-track="whatsapp_clicked"><%- ic('whatsapp') %>WhatsApp</a><% } %>
+            <button type="button" class="button button--text button--small" data-callback-open><%- ic('callback') %>Request a call back</button>
+          </div>
+        </div>
+      </div>
+
+      <%- include('partials/booking-panel', { headingLevel: 2 }) %>
+    </div>
+  </section>
+
+  <!-- ============ BEFORE YOUR VISIT ============ -->
+  <section class="section" aria-labelledby="beforeTitle">
+    <div class="container">
+      <div class="index-head" data-reveal-group>
+        <div>
+          <p class="eyebrow-label" data-reveal>Before your visit</p>
+          <h2 id="beforeTitle" data-reveal>Good to know</h2>
+        </div>
+      </div>
+      <ol class="clinic__facts book-facts" data-reveal-group>
+        <li data-reveal><span class="clinic__num" aria-hidden="true">i.</span><div><h3>Where</h3><p><%= clinic.address %></p><% if (clinic.directions_url) { %><a class="link link--arrow" href="<%= clinic.directions_url %>" target="_blank" rel="noopener" data-track="directions_clicked">Get directions <%- ic('arrow') %></a><% } %></div></li>
+        <li data-reveal><span class="clinic__num" aria-hidden="true">ii.</span><div><h3>When</h3><p>Open <%= hoursSummary %>.</p><a class="link link--arrow" href="/contact">Weekly hours <%- ic('arrow') %></a></div></li>
+        <li data-reveal><span class="clinic__num" aria-hidden="true">iii.</span><div><h3>Changing plans</h3><p>Your confirmation carries a booking reference. With the mobile number you booked with, it lets you look up or cancel the appointment above &mdash; or simply call or message the clinic.</p><a class="link link--arrow" href="/privacy">Appointment policy <%- ic('arrow') %></a></div></li>
+      </ol>
+    </div>
+  </section>
+
+</main>
+
+<%- include('partials/site-footer') %>
+<script src="/js/ds.js" defer></script>
+<script src="/js/site-ds.js" defer></script>
+<script src="/js/motion.js" defer></script>
+<script src="/js/booking.js" defer></script>
+</body>
+</html>

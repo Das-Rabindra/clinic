@@ -134,7 +134,7 @@
         <h2 id="closingTitle" class="closing__title" data-reveal>Book a <em class="display-em">visit</em></h2>
         <p class="closing__body" data-reveal>Choose a treatment, a day and a time from the clinic&rsquo;s live availability.</p>
         <div class="cluster closing__actions" data-reveal>
-          <a href="/#appointment" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
+          <a href="/book" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
           <% if (tel) { %><a href="<%= tel %>" class="button button--ghost-light" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
         </div>
       </div>

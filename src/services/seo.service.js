@@ -265,6 +265,7 @@ export async function sitemapXml(canonical) {
   const galleryNewest = day(await galleryRepo.newestUpdate());
   entries.push({ loc: `${canonical}/about`, lastmod: day(settings.updated_at), changefreq: 'monthly', priority: '0.6' });
   entries.push({ loc: `${canonical}/gallery`, lastmod: [day(settings.updated_at), galleryNewest].filter(Boolean).sort().pop() || null, changefreq: 'monthly', priority: '0.5' });
+  entries.push({ loc: `${canonical}/book`, lastmod: newest, changefreq: 'monthly', priority: '0.8' });
   entries.push({ loc: `${canonical}/contact`, lastmod: newest, changefreq: 'monthly', priority: '0.7' });
   entries.push({ loc: `${canonical}/faq`, lastmod: newest, changefreq: 'monthly', priority: '0.6' });
   /* Listed only once there is something on it: until then the page is

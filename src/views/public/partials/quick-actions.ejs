@@ -6,7 +6,7 @@
   aside while the booking form is on screen or a text field has focus.
 %>
 <nav class="action-bar" data-action-bar aria-label="Quick actions">
-  <a class="action-bar__item action-bar__item--primary" href="<%= nav %>#appointment" data-track="appointment_started"><%- ic('calendar') %>Appointment</a>
+  <a class="action-bar__item action-bar__item--primary" href="<%= nav ? '/book' : '#appointment' %>" data-track="appointment_started"><%- ic('calendar') %>Appointment</a>
   <% if (clinic.phone) { %>
   <a class="action-bar__item" href="tel:<%= clinic.phone_intl || clinic.phone %>" data-track="call_clicked"><%- ic('phone') %>Call</a>
   <% } %>
