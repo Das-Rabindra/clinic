@@ -1224,3 +1224,20 @@ illustrative photographs had been used 2–4 times each.
   shown on touch).
 - **Checks:** `npm test` passes 307/307. The sweep (home, /services) found
   nothing.
+
+## Homepage clinic chapter: opening narration (2026-10-24)
+
+- **Scope:** chapter 02 stays sage, the page's one mid-tone, and is made
+  cinematic through type (`.clinic--cine`, homepage only).
+- **Title:** large, with the story title's last clause in primary italic
+  ("A calm, *modern clinic*"), like the hero and the finale.
+- **Story:** set as a voice-over, large italic display text hung from a 2px
+  primary rule.
+- **Still:** the licensed implant illustration is framed with a shadow and
+  a slow push-in on hover. Its caption reads "— ILLUSTRATION", set like the
+  hero's.
+- **Facts:** hours, booking and languages run beneath as three acts across
+  the full width, with large numerals, on desktop. The rows align to the
+  top, so the act without a link doesn't drop.
+- **Checks:** `npm test` passes 307/307, and the homepage sweep found
+  nothing.

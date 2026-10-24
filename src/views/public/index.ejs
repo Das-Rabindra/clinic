@@ -122,12 +122,18 @@
   <!-- ============ 02 · THE CLINIC ============ -->
   <%# The clinic's own story, then facts it has entered itself (hours from the
       weekly grid, languages from the doctor record). Nothing here is a claim
-      written for the page. The still life is illustrative and says so. %>
-  <section class="section section--sage chapter-section" aria-labelledby="clinicTitle">
+      written for the page. The still life is illustrative and says so.
+      Cinematic through type (.clinic--cine): the title's last clause takes the
+      italic accent, the story is set as narration, the still is framed and
+      captioned like a film still, and the facts run beneath as three acts. %>
+  <% var st = settings.story_title || 'The clinic';
+     var sk = st.lastIndexOf(','), stHead = st, stTail = '';
+     if (sk > 0 && sk < st.length - 1) { stHead = st.slice(0, sk + 1); stTail = st.slice(sk + 1).trim(); } %>
+  <section class="section section--sage chapter-section clinic--cine" aria-labelledby="clinicTitle">
     <div class="container clinic">
       <div class="clinic__lead" data-reveal-group>
         <% chapter('02', 'The clinic'); %>
-        <h2 id="clinicTitle" class="clinic__title" data-reveal><%= settings.story_title || 'The clinic' %></h2>
+        <h2 id="clinicTitle" class="clinic__title" data-reveal><%= stHead %><% if (stTail) { %> <em class="display-em"><%= stTail %></em><% } %></h2>
         <% if (settings.story_body) { %><p class="clinic__story" data-reveal><%= settings.story_body %></p><% } %>
       </div>
       <figure class="clinic__still">
@@ -135,7 +141,7 @@
           <img src="/img/stock/dental-implant-1024.webp" srcset="/img/stock/dental-implant-640.webp 640w, /img/stock/dental-implant-1024.webp 1024w, /img/stock/dental-implant-1600.webp 1600w"
                sizes="(min-width: 1024px) 40vw, 100vw" alt="" width="1024" height="696" loading="lazy" decoding="async">
         </div>
-        <figcaption class="illustrative-note">Illustration</figcaption>
+        <figcaption class="illustrative-note"><span class="clinic__caption-mark" aria-hidden="true"></span>Illustration</figcaption>
       </figure>
       <ol class="clinic__facts" data-reveal-group>
         <li data-reveal><span class="clinic__num" aria-hidden="true">i.</span><div><h3>Opening hours</h3><p>Open <%= hoursSummary %>.</p><a class="link link--arrow" href="#location">Weekly hours <%- ic('arrow') %></a></div></li>

@@ -523,3 +523,28 @@
 .treatments--cine .more-treatments a .icon { opacity: 0; transform: translateX(-4px); transition: opacity var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out); }
 .treatments--cine .more-treatments a:is(:hover, :focus-visible) .icon { opacity: 1; transform: none; }
 @media (hover: none) { .treatments--cine .more-treatments a .icon { opacity: 1; transform: none; } }
+
+/* ── 02 · The clinic: opening narration (homepage: .clinic--cine) ──────── */
+.clinic--cine .clinic__title { font-size: clamp(2.6rem, 1.6rem + 4vw, 5rem); line-height: 1.02; letter-spacing: -0.025em; font-weight: var(--weight-regular); max-width: 12ch; }
+.clinic--cine .clinic__title em { color: var(--color-primary); }
+/* The story as a voice-over. */
+.clinic--cine .clinic__story {
+  margin-top: var(--space-8); padding-left: var(--space-6); border-left: 2px solid var(--color-primary);
+  font-style: italic; font-size: clamp(1.25rem, 1.1rem + 0.7vw, 1.65rem); line-height: 1.55; color: var(--color-text);
+}
+/* The still, framed and captioned like a film still. */
+.clinic--cine .clinic__still-frame { box-shadow: 0 30px 70px -35px rgba(8, 42, 39, 0.5); }
+.clinic--cine .clinic__still-frame img { transition: transform 2200ms var(--ease-cinema); }
+.clinic--cine .clinic__still:hover .clinic__still-frame img { transform: scale(1.04); }
+.clinic--cine .illustrative-note { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-3); letter-spacing: 0.12em; text-transform: uppercase; }
+.clinic__caption-mark { width: 2.5rem; height: 1px; background: currentColor; opacity: 0.6; }
+/* The facts as three acts across the frame. */
+.clinic--cine .clinic__facts li { grid-template-columns: 3.25rem 1fr; }
+.clinic--cine .clinic__num { font-size: clamp(1.8rem, 1.5rem + 1vw, 2.4rem); }
+.clinic--cine .clinic__facts h3 { font-size: clamp(1.3rem, 1.2rem + 0.4vw, 1.55rem); font-weight: var(--weight-regular); }
+@media (min-width: 1024px) {
+  .clinic--cine.section .clinic { grid-template-columns: 1.15fr 1fr; grid-template-areas: 'lead still' 'facts facts'; align-items: center; row-gap: var(--space-16); }
+  .clinic--cine .clinic__still { position: static; }
+  .clinic--cine .clinic__facts { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); column-gap: var(--space-10); border-top: 1px solid color-mix(in srgb, var(--color-text) 14%, transparent); }
+  .clinic--cine .clinic__facts li { border-bottom: 0; padding-block: var(--space-8) 0; grid-template-columns: 1fr; gap: var(--space-3); align-content: start; }
+}
