@@ -289,9 +289,6 @@
 .closing__title { font-size: clamp(2.2rem, 1.5rem + 3vw, 4.25rem); line-height: 1.04; letter-spacing: -0.02em; font-weight: var(--weight-regular); max-width: 16ch; margin-top: var(--space-4); }
 .closing__body { margin-top: var(--space-6); font-size: var(--text-body-lg); color: var(--color-night-muted); max-width: 32rem; }
 .closing__actions { margin-top: var(--space-8); }
-.closing__still { margin: 0; }
-.closing__frame { overflow: hidden; border-radius: var(--radius-md); }
-.closing__frame img { width: 100%; aspect-ratio: 1; object-fit: cover; }
 @media (min-width: 1024px) { .closing__grid { grid-template-columns: 1.2fr 1fr; gap: var(--space-16); } }
 
 .site-footer__credit { display: block; margin-top: var(--space-1); font-size: 0.75rem; color: var(--color-night-muted); }

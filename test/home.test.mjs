@@ -278,7 +278,7 @@ describe('cinematic layer', () => {
     if (cardStock) assert.match(body, /<p class="illustrative-note cards-note">Photographs are illustrative<\/p>/);
     // "Illustration" for a render, "Illustrative photograph" for a photo; the
     // hero's caption is set like a film still's.
-    const notes = (body.match(/class="(?:illustrative-note|cine-hero__caption)"[^>]*>(?:<span[^>]*><\/span>)?(?:Illustrative photograph|Illustration)</g) || []).length;
+    const notes = (body.match(/class="(?:illustrative-note|cine-hero__caption|finale__credit)"[^>]*>(?:<span[^>]*><\/span>)?(?:Illustrative photograph|Illustration)</g) || []).length;
     assert.ok(stock > 0);
     assert.equal(notes, stock, 'one caption per stock image');
     // A shared link shows the clinic's own room, never stock people.

@@ -1186,3 +1186,21 @@ illustrative photographs had been used 2–4 times each.
     primary bar.
 - **Checks:** `npm test` passes 307/307, and the sweep (home, contact,
   about) found nothing.
+
+## Homepage closing scene: the finale (2026-10-24)
+
+- **Backdrop:** the smile photograph (still its only use on the site)
+  moves from a small framed still to a full-bleed graded backdrop, with
+  the hero's grain and a vignette.
+- **Opening:** letterbox bars part as it comes into view
+  (`data-reveal="letterbox"`; static under reduced motion).
+- **Title card:** centred, the cta title set large. The clause after its
+  last comma (else its last two words) is in mint italic, like the hero's
+  last line.
+- **Caption:** "Illustrative photograph" sits in the corner. The caption
+  test now counts it.
+- **Contrast:** every line is ≥ 5.11:1 at 390/768/1440/1920px.
+- **Clean-up:** the old `closing__still` and `closing__frame` styles are
+  removed.
+- **Checks:** `npm test` passes 307/307, and the homepage sweep found
+  nothing.

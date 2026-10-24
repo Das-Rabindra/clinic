@@ -384,25 +384,33 @@
   </section>
 
   <!-- ============ CLOSING SCENE (night) ============ -->
-  <section class="section section--night closing" id="contact" aria-labelledby="closingTitle">
-    <div class="container closing__grid">
-      <div class="closing__copy" data-reveal-group>
-        <p class="eyebrow-label" data-reveal>Ready when you are</p>
-        <h2 id="closingTitle" class="closing__title" data-reveal><%= settings.cta_title || 'Book a visit' %></h2>
-        <% if (settings.cta_body) { %><p class="closing__body" data-reveal><%= settings.cta_body %></p><% } %>
-        <div class="cluster closing__actions" data-reveal>
-          <a href="#appointment" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
-          <% if (tel) { %><a href="<%= tel %>" class="button button--ghost-light" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
-        </div>
-      </div>
-      <figure class="closing__still">
-        <div class="closing__frame" data-reveal="image">
-          <img src="/img/stock/smile-exam-1024.webp" srcset="/img/stock/smile-exam-640.webp 640w, /img/stock/smile-exam-1024.webp 1024w, /img/stock/smile-exam-1600.webp 1600w"
-               sizes="(min-width: 1024px) 40vw, 100vw" alt="" width="1024" height="910" loading="lazy" decoding="async">
-        </div>
-        <figcaption class="illustrative-note">Illustrative photograph</figcaption>
-      </figure>
+  <%# The finale: the last scene before the end credits (the footer). The
+      photograph fills the frame behind a centred title card, opening like
+      the hero, as letterbox bars part when it comes into view. It is the
+      smile photograph's only use on the site, captioned as illustrative.
+      The title's last clause (after its last comma, else its last two
+      words) takes the italic accent, as the hero's last line does. %>
+  <% var ct = settings.cta_title || 'Book a visit';
+     var k = ct.lastIndexOf(','), head, tail;
+     if (k > 0 && k < ct.length - 1) { head = ct.slice(0, k + 1); tail = ct.slice(k + 1).trim(); }
+     else { var w = ct.split(' '); head = w.slice(0, -2).join(' '); tail = w.slice(-2).join(' '); } %>
+  <section class="section section--night closing closing--finale" id="contact" aria-labelledby="closingTitle">
+    <div class="finale__media" data-reveal="letterbox">
+      <img src="/img/stock/smile-exam-1024.webp" srcset="/img/stock/smile-exam-640.webp 640w, /img/stock/smile-exam-1024.webp 1024w, /img/stock/smile-exam-1600.webp 1600w"
+           sizes="100vw" alt="" width="1024" height="910" loading="lazy" decoding="async">
     </div>
+    <div class="finale__shade" aria-hidden="true"></div>
+    <div class="finale__grain" aria-hidden="true"></div>
+    <div class="container finale__inner" data-reveal-group>
+      <p class="eyebrow-label" data-reveal>Ready when you are</p>
+      <h2 id="closingTitle" class="finale__title" data-reveal><% if (head) { %><%= head %> <% } %><em class="display-em"><%= tail %></em></h2>
+      <% if (settings.cta_body) { %><p class="finale__body" data-reveal><%= settings.cta_body %></p><% } %>
+      <div class="cluster finale__actions" data-reveal>
+        <a href="#appointment" class="button button--inverse" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
+        <% if (tel) { %><a href="<%= tel %>" class="button button--ghost-light" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
+      </div>
+    </div>
+    <p class="finale__credit">Illustrative photograph</p>
   </section>
 
 </main>
