@@ -1241,3 +1241,21 @@ illustrative photographs had been used 2–4 times each.
   top, so the act without a link doesn't drop.
 - **Checks:** `npm test` passes 307/307, and the homepage sweep found
   nothing.
+
+## Homepage dentist chapter: the lead (2026-10-24)
+
+- **Scope:** chapter 01 stays light; `.profile--cine` applies to the
+  homepage only, so About, which shares the profile and facts styles, is
+  unchanged.
+- **Portrait:** the real portrait carries a night name card over its lower
+  edge (name in the display face, qualification in mint), with a shadow
+  and a slow push-in on hover.
+- **Title:** larger, with the last clause in primary italic (after the last
+  comma, else the last two words).
+- **Quote:** the About copy is a large italic pull-quote under a giant
+  sage quotation mark, spaced clear of the title.
+- **Credentials:** read as film credits, with the role right-aligned in
+  spaced capitals and the detail in the display face beside it. They stack
+  on phones.
+- **Checks:** `npm test` passes 307/307. The sweep (home, about) found
+  nothing.

@@ -90,7 +90,15 @@
   <% } %>
 
   <!-- ============ 01 · THE DENTIST ============ -->
-  <section class="section chapter-section" id="about" aria-labelledby="aboutTitle">
+  <%# The lead, introduced like a film's cast (.profile--cine, homepage only):
+      the real portrait carries a name card, the title takes the italic accent
+      on its last clause (after its last comma, else its last two words), the
+      About copy is a pull-quote, and the credentials read as credits. %>
+  <% var at = settings.about_title || clinic.doctor || '';
+     var ak = at.lastIndexOf(','), atHead, atTail;
+     if (ak > 0 && ak < at.length - 1) { atHead = at.slice(0, ak + 1); atTail = at.slice(ak + 1).trim(); }
+     else { var aw = at.split(' '); atHead = aw.slice(0, -2).join(' '); atTail = aw.slice(-2).join(' '); } %>
+  <section class="section chapter-section profile--cine" id="about" aria-labelledby="aboutTitle">
     <div class="container profile">
       <figure class="profile__photo">
         <div class="profile__frame" data-reveal="image">
@@ -100,12 +108,12 @@
             <div class="profile__placeholder"><%- ic('camera') %><span>Photograph of <%= clinic.doctor || 'the dentist' %> coming soon</span></div>
           <% } %>
         </div>
-        <% if (clinic.doctor) { %><figcaption class="profile__caption"><%= clinic.doctor %><% if (clinic.qualification) { %> · <%= clinic.qualification %><% } %></figcaption><% } %>
+        <% if (clinic.doctor) { %><figcaption class="profile__caption"><strong><%= clinic.doctor %></strong><% if (clinic.qualification) { %><span><%= clinic.qualification %></span><% } %></figcaption><% } %>
       </figure>
       <div class="profile__body" data-reveal-group>
         <% chapter('01', 'The dentist'); %>
-        <h2 id="aboutTitle" class="profile__title" data-reveal><%= settings.about_title || clinic.doctor %></h2>
-        <% if (settings.about_body) { %><blockquote class="profile__quote" data-reveal><p><%= settings.about_body %></p></blockquote><% } %>
+        <h2 id="aboutTitle" class="profile__title" data-reveal><% if (atHead) { %><%= atHead %> <% } %><em class="display-em"><%= atTail %></em></h2>
+        <% if (settings.about_body) { %><blockquote class="profile__quote" data-reveal><span class="profile__mark" aria-hidden="true">&ldquo;</span><p><%= settings.about_body %></p></blockquote><% } %>
         <% if (showDoctorBio) { %><p class="prose" data-reveal><%= doctor.bio %></p><% } %>
         <dl class="facts-list" data-reveal>
           <% if (clinic.qualification) { %><div><dt>Qualification</dt><dd><%= clinic.qualification %></dd></div><% } %>

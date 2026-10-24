@@ -548,3 +548,33 @@
   .clinic--cine .clinic__facts { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); column-gap: var(--space-10); border-top: 1px solid color-mix(in srgb, var(--color-text) 14%, transparent); }
   .clinic--cine .clinic__facts li { border-bottom: 0; padding-block: var(--space-8) 0; grid-template-columns: 1fr; gap: var(--space-3); align-content: start; }
 }
+
+/* ── 01 · The dentist: the lead (homepage only: .profile--cine) ────────── */
+/* The portrait carries a name card over its lower edge. */
+.profile--cine .profile__photo { position: relative; }
+.profile--cine .profile__frame { box-shadow: 0 34px 80px -36px rgba(8, 42, 39, 0.55); }
+.profile--cine .profile__frame img { transition: transform 2200ms var(--ease-cinema); }
+.profile--cine .profile__photo:hover .profile__frame img { transform: scale(1.03); }
+.profile--cine .profile__caption {
+  position: absolute; left: var(--space-4); right: var(--space-4); bottom: var(--space-4); margin: 0;
+  display: flex; flex-direction: column; gap: 2px; padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md); background: rgba(12, 57, 54, 0.92); color: var(--color-night-ink);
+  box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.5);
+}
+.profile--cine .profile__caption strong { font-family: var(--font-display); font-weight: var(--weight-regular); font-size: 1.15rem; }
+.profile--cine .profile__caption span { font-size: var(--text-small); letter-spacing: 0.08em; color: var(--color-mint); }
+/* Title and pull-quote. */
+.profile--cine .profile__title { font-size: clamp(2.4rem, 1.5rem + 3.4vw, 4.5rem); line-height: 1.03; letter-spacing: -0.025em; font-weight: var(--weight-regular); }
+.profile--cine .profile__title em { color: var(--color-primary); }
+.profile--cine .profile__quote { position: relative; isolation: isolate; margin-top: var(--space-10); padding: clamp(2.75rem, 2rem + 2.5vw, 4rem) 0 0 0; border-left: 0; }
+.profile__mark { position: absolute; z-index: -1; top: -0.1em; left: -0.06em; font-family: var(--font-display); font-style: italic; font-size: clamp(7rem, 5rem + 6vw, 11rem); line-height: 1; color: var(--color-accent-sage); pointer-events: none; }
+.profile--cine .profile__quote p { font-size: clamp(1.3rem, 1.12rem + 0.8vw, 1.75rem); line-height: 1.5; }
+/* Credentials as credits: role right, name left, about a centre line. */
+.profile--cine .facts-list { border-top: 0; margin-top: var(--space-12); }
+.profile--cine .facts-list > div { border-bottom: 0; padding-block: var(--space-2); }
+.profile--cine .facts-list dt { letter-spacing: 0.2em; }
+.profile--cine .facts-list dd { font-family: var(--font-display); font-size: clamp(1.1rem, 1.02rem + 0.35vw, 1.3rem); }
+@media (min-width: 480px) {
+  .profile--cine .facts-list > div { grid-template-columns: 11rem 1fr; column-gap: var(--space-6); }
+  .profile--cine .facts-list dt { text-align: right; }
+}
