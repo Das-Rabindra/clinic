@@ -1204,3 +1204,23 @@ illustrative photographs had been used 2–4 times each.
   removed.
 - **Checks:** `npm test` passes 307/307, and the homepage sweep found
   nothing.
+
+## Homepage treatments: a programme (2026-10-24)
+
+- **Scope:** chapter 03 stays light, between the sage clinic chapter and the
+  night gallery. Cinematic through type and motion, scoped to
+  `.treatments--cine`, so /services and "Related treatments" are unchanged.
+- **Lead tiles:** poster-tall (28–38rem), with a slow 2.2s push-in on hover
+  or focus and larger titles. The deep text overlay is unchanged.
+- **Rows:** a numbered programme with large numerals and titles.
+  - A mint underline draws under the title on hover or focus.
+  - With a mouse, each row's still rests desaturated and slightly enlarged,
+    and comes to full colour as the row is pointed at or focused.
+  - Touch devices (`hover: none`) always show full colour. That includes
+    headless test browsers, so the effect was checked with a mouse-type
+    device emulated.
+- **Also treated:** set as closing credits: centred, spaced capitals
+  heading, names in the display face, arrows appearing on hover (always
+  shown on touch).
+- **Checks:** `npm test` passes 307/307. The sweep (home, /services) found
+  nothing.
