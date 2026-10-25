@@ -1364,3 +1364,17 @@ chapters now use the homepage treatments, reusing the scoped classes:
   large italic numerals.
 - **Checks:** `npm test` passes 308/308, including the booking UI browser
   tests. The sweep found nothing.
+
+## Treatment pages, cinematic (2026-10-25)
+
+- **Scene:** film grain over the treatment photo
+  (`.tx-scene--cine .tx-scene__grain`). The caption is set like a film
+  still ("— ILLUSTRATIVE …"), and its wording is unchanged.
+- **Chapters:** larger italic numerals and titles. The first chapter ("What
+  it is") is italic narration hung from a primary rule.
+- **Contact card:** a night title card (`.tx-aside__card--night`):
+  doctor's name in the display face, mint ring on the photo, night status
+  pill, inverse Book and ghost-light call-back buttons.
+- **Questions:** the shared numbered `.qa` styles, with ids unchanged.
+- **Tests:** the caption assertion now allows the mark. `npm test` passes
+  308/308, and the sweep (root canal, emergency, braces) found nothing.

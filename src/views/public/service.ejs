@@ -24,7 +24,7 @@
   <%# The photograph behind the title (see treatmentScene() in the route),
       shaded where the type sits. A stock image says so on the scene itself —
       presented without that, it reads as the clinic's own work. %>
-  <section class="page-cine<%= scene ? ' page-cine--photo' : '' %>" data-hero aria-labelledby="txTitle">
+  <section class="page-cine<%= scene ? ' page-cine--photo' : '' %> tx-scene--cine" data-hero aria-labelledby="txTitle">
     <% if (scene) { %>
     <%# A flip goes on the wrapper: the image's own transform belongs to the
         push-in animation, which would override it. %>
@@ -34,6 +34,7 @@
            fetchpriority="high" decoding="async"<% if (scene.position) { %> style="object-position: <%= scene.position %>"<% } %>>
     </div>
     <div class="page-cine__shade" aria-hidden="true"></div>
+    <div class="tx-scene__grain" aria-hidden="true"></div>
     <% } %>
     <div class="container">
       <div class="page-cine__inner">
@@ -55,7 +56,7 @@
       </div>
     </div>
     <% if (scene && scene.caption) { %>
-    <p class="page-cine__credit"><%= scene.caption %></p>
+    <p class="page-cine__credit tx-scene__credit"><span class="tx-scene__mark" aria-hidden="true"></span><%= scene.caption %></p>
     <% } %>
   </section>
 
@@ -88,7 +89,7 @@
 
       <%# Sticky contact card: the dentist, where, today's status and the ways to act. %>
       <aside class="tx-aside" aria-labelledby="asideTitle">
-        <div class="card tx-aside__card">
+        <div class="card tx-aside__card tx-aside__card--night">
           <div class="card__body">
             <h2 class="visually-hidden-ds" id="asideTitle">Book or ask about <%= service.name %></h2>
             <div class="tx-aside__doctor">
@@ -105,8 +106,8 @@
               <div><dt>Today</dt><dd><span class="status-pill status-pill--<%= clinic.today.now.state %>"><span class="status-pill__dot" aria-hidden="true"></span><%= clinic.today.now.label %></span></dd></div>
             </dl>
             <div class="tx-aside__actions">
-              <a href="<%= bookHref %>" class="button button--primary button--block" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
-              <button type="button" class="button button--secondary button--block" data-callback-open data-service="<%= service.id %>" data-service-name="<%= service.name %>"><%- ic('callback') %>Request a call back</button>
+              <a href="<%= bookHref %>" class="button button--inverse button--block" data-track="appointment_started"><%- ic('calendar') %>Book an appointment</a>
+              <button type="button" class="button button--ghost-light button--block" data-callback-open data-service="<%= service.id %>" data-service-name="<%= service.name %>"><%- ic('callback') %>Request a call back</button>
               <% if (tel) { %><a href="<%= tel %>" class="button button--text button--block" data-track="call_clicked"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
             </div>
           </div>
@@ -123,12 +124,12 @@
         <p class="chapter" data-reveal><span class="chapter__index"><%= String(chapters.length + 1).padStart(2, '0') %></span><span class="chapter__rule" aria-hidden="true"></span><span class="chapter__name">Good to know</span></p>
         <h2 id="faqTitle" data-reveal>Questions patients ask</h2>
       </div>
-      <div class="accordion" data-accordion>
+      <div class="accordion qa" data-accordion>
         <% faqs.forEach(function (f, i) { %>
         <div class="accordion__item">
           <h3 class="accordion__heading">
             <button type="button" class="accordion__trigger" aria-expanded="false" aria-controls="faq-a-<%= i %>" id="faq-q-<%= i %>">
-              <%= f.question %><span class="accordion__icon"><%- ic('plus') %></span>
+              <span class="qa__n" aria-hidden="true"><%= String(i + 1).padStart(2, '0') %></span><span class="qa__q"><%= f.question %></span><span class="accordion__icon"><%- ic('plus') %></span>
             </button>
           </h3>
           <div class="accordion__panel" id="faq-a-<%= i %>" role="region" aria-labelledby="faq-q-<%= i %>" data-collapsed>

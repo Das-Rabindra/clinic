@@ -421,3 +421,30 @@
 .book-facts .clinic__num { font-size: clamp(1.8rem, 1.5rem + 1vw, 2.4rem); }
 .book-facts h3 { font-size: clamp(1.3rem, 1.2rem + 0.4vw, 1.55rem); font-weight: var(--weight-regular); }
 @media (min-width: 768px) { .book-facts li { grid-template-columns: 1fr; gap: var(--space-3); align-content: start; } }
+
+/* ── Treatment pages, cinematic (.tx-scene--cine and friends) ─────────── */
+.tx-scene__grain {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.08; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.tx-scene__credit { display: inline-flex; align-items: center; gap: var(--space-3); letter-spacing: 0.12em; text-transform: uppercase; }
+.tx-scene__mark { width: 2.5rem; height: 1px; background: currentColor; opacity: 0.6; }
+@media (max-width: 767px) { .tx-scene__mark { display: none; } .tx-scene__credit { letter-spacing: 0.06em; } }
+
+/* Chapters: larger numerals and titles; the first as narration. */
+.tx-detail .tx-chapter__num { font-size: clamp(1.9rem, 1.5rem + 1.3vw, 2.8rem); }
+.tx-detail .tx-chapter h2 { font-size: clamp(1.8rem, 1.4rem + 1.5vw, 2.6rem); }
+.tx-detail .tx-chapter:first-child p {
+  padding-left: var(--space-6); border-left: 2px solid var(--color-primary);
+  font-family: var(--font-display); font-style: italic; font-size: clamp(1.2rem, 1.08rem + 0.6vw, 1.5rem); line-height: 1.6; color: var(--color-text);
+}
+
+/* The contact card as a night title card. */
+.tx-aside__card--night { background: var(--color-night); border-color: rgba(245, 242, 234, 0.12); color: var(--color-night-ink); box-shadow: 0 30px 70px -30px rgba(8, 42, 39, 0.6); }
+.tx-aside__card--night .text-muted, .tx-aside__card--night .tx-aside__meta dt { color: var(--color-night-muted); }
+.tx-aside__card--night .tx-aside__doctor strong { font-family: var(--font-display); font-weight: var(--weight-regular); font-size: 1.15rem; }
+.tx-aside__card--night .tx-aside__doctor img { box-shadow: 0 0 0 2px rgba(158, 216, 198, 0.5); }
+.tx-aside__card--night .status-pill { background: rgba(245, 242, 234, 0.08); border-color: rgba(245, 242, 234, 0.22); color: var(--color-night-ink); }
+.tx-aside__card--night .status-pill--open .status-pill__dot { background: var(--color-mint); }
+.tx-aside__card--night .button--text { color: var(--color-night-ink); }
+.tx-aside__card--night :focus-visible { outline-color: var(--color-focus-inverse); }

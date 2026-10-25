@@ -121,7 +121,7 @@ describe('treatment page scenes', () => {
       const img = (scene.match(/<img src="([^"]+)"/) || [])[1] || null;
       if (want[slug]) {
         assert.equal(img, `/img/stock/${want[slug]}-1600.webp`, `${slug} uses ${want[slug]}`);
-        assert.match(scene, /<p class="page-cine__credit">Illustrative photograph<\/p>/, `${slug} is captioned`);
+        assert.match(scene, /<p class="page-cine__credit[^"]*">(?:<span[^>]*><\/span>)?Illustrative photograph<\/p>/, `${slug} is captioned`);
       } else {
         assert.ok(!img || !img.startsWith('/img/stock/'), `${slug} keeps its own image, not ${img}`);
       }
