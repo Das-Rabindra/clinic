@@ -1405,3 +1405,16 @@ chapters now use the homepage treatments, reusing the scoped classes:
   section's first paragraph as a display-face lead.
 - **Last updated:** set as an end card ("— LAST UPDATED SEPTEMBER 2026.").
 - **Checks:** `npm test` passes 308/308, and the sweep found nothing.
+
+## 404 page: a lost reel (2026-10-25)
+
+- **Leader:** a film-leader countdown is drawn faintly behind the title
+  (decorative, `aria-hidden`): a double ring, a crosshair and a giant
+  italic "404" in translucent mint. A conic sweep goes round once on
+  arrival (`@property --sweep`) and stays still under reduced motion. The
+  scene's own decorative ring is hidden here.
+- **Scene and list:** film grain, and the popular treatments use the
+  shared programme rows (`.treatments--cine`).
+- **Status:** still answers 404.
+- **Checks:** `npm test` passes 308/308. The sweep found nothing beyond the
+  expected 404 status message.

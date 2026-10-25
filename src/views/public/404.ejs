@@ -9,8 +9,18 @@
 <%- include('partials/site-header') %>
 
 <main id="main">
-  <section class="page-cine<%= scenePhoto ? ' page-cine--photo' : '' %>" data-hero aria-labelledby="pageTitle">
+  <%# A lost reel: a film-leader countdown — ring, crosshair and a giant
+      italic 404 — drawn faintly behind the title; the ring sweeps once on
+      arrival (still under reduced motion). Decorative only. %>
+  <section class="page-cine<%= scenePhoto ? ' page-cine--photo' : '' %> lost-reel" data-hero aria-labelledby="pageTitle">
     <% if (scenePhoto) { %><%- include('partials/scene-photo', { photo: scenePhoto }) %><% } %>
+    <div class="tx-scene__grain" aria-hidden="true"></div>
+    <div class="leader" aria-hidden="true">
+      <span class="leader__ring"></span>
+      <span class="leader__sweep"></span>
+      <span class="leader__cross"></span>
+      <span class="leader__num">404</span>
+    </div>
     <div class="container">
       <div class="page-cine__inner">
         <p class="eyebrow-label">Page not found</p>
@@ -26,7 +36,7 @@
     <% if (scenePhoto && scenePhoto.caption) { %><p class="page-cine__credit"><%= scenePhoto.caption %></p><% } %>
   </section>
 
-  <section class="section" aria-labelledby="popularTitle">
+  <section class="section treatments--cine" aria-labelledby="popularTitle">
     <div class="container">
       <div class="index-head" data-reveal>
         <h2 id="popularTitle">Treatments patients look for most</h2>

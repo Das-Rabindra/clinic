@@ -457,3 +457,28 @@
 .policy-page .policy-index a { line-height: 1.35; }
 .policy-updated { display: flex; align-items: center; gap: var(--space-3); letter-spacing: 0.08em; text-transform: uppercase; }
 .policy-updated__mark { width: 2.5rem; height: 1px; background: currentColor; opacity: 0.6; }
+
+/* ── 404: a lost reel (film-leader countdown behind the title) ────────── */
+.lost-reel { min-height: min(80svh, 720px); display: flex; align-items: center; }
+.lost-reel > .container { position: relative; z-index: 1; }
+.leader {
+  position: absolute; z-index: 0; top: 50%; right: max(var(--gutter), 6vw); transform: translateY(-46%);
+  width: clamp(18rem, 12rem + 26vw, 34rem); aspect-ratio: 1; pointer-events: none; color: rgba(158, 216, 198, 0.22);
+}
+.leader__ring, .leader__ring::before { position: absolute; inset: 0; border-radius: 50%; border: 2px solid currentColor; }
+.leader__ring::before { content: ''; inset: 9%; border-width: 1px; }
+.leader__cross::before, .leader__cross::after { content: ''; position: absolute; background: currentColor; }
+.leader__cross::before { left: 50%; top: -6%; bottom: -6%; width: 1px; }
+.leader__cross::after { top: 50%; left: -6%; right: -6%; height: 1px; }
+.leader__sweep { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(rgba(158, 216, 198, 0.16) 0deg, rgba(158, 216, 198, 0) 0deg); }
+.motion .leader__sweep { animation: leader-sweep 1800ms var(--ease-cinema) 200ms both; }
+@property --sweep { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@keyframes leader-sweep { from { --sweep: 0deg; } to { --sweep: 360deg; } }
+.motion .leader__sweep { background: conic-gradient(rgba(158, 216, 198, 0.14) var(--sweep), rgba(158, 216, 198, 0) var(--sweep)); }
+.leader__num {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: var(--font-display); font-style: italic; font-size: clamp(5rem, 3rem + 7vw, 10rem); line-height: 1;
+  color: rgba(158, 216, 198, 0.3);
+}
+@media (max-width: 767px) { .leader { right: -18%; top: 30%; opacity: 0.7; } }
+.lost-reel:not(.page-cine--photo)::after { display: none; }   /* the leader replaces the scene ring */
