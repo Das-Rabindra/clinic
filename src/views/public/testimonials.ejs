@@ -49,28 +49,34 @@
         </div>
         <% if (clinic.reviews_url) { %><a class="link link--arrow" href="<%= clinic.reviews_url %>" target="_blank" rel="noopener" data-reveal>Read them on Google <%- ic('arrow') %></a><% } %>
       </div>
-      <div class="testimony-wall">
+      <%# The homepage's press-quote wall: the first quote leads as a large
+          pull-quote, the rest follow — here, all of them. %>
+      <div class="quote-wall" data-reveal-group>
         <% reviews.reviews.forEach(function (r, i) { %>
-        <figure class="testimony" data-reveal>
-          <span class="testimony__mark" aria-hidden="true">&ldquo;</span>
-          <span class="stars" role="img" aria-label="<%= r.rating %> out of 5"><%- starsHtml(r.rating) %></span>
-          <% if (r.text) { %><blockquote class="testimony__text"><p><%= r.text %></p></blockquote><% } %>
-          <figcaption class="testimony__by">
-            <strong><%= r.author_name %></strong>
-            <span><% if (r.source === 'manual') { %>Shared with the clinic<% } else { %>Google review<% } %><% if (r.reviewed_at) { %> · <%= formatReviewDate(r.reviewed_at) %><% } %></span>
-          </figcaption>
-        </figure>
+        <article class="card review-card" data-testimony data-reveal>
+          <div class="card__body">
+            <span class="review-card__mark" aria-hidden="true">&ldquo;</span>
+            <span class="stars" role="img" aria-label="<%= r.rating %> out of 5"><%- starsHtml(r.rating) %></span>
+            <% if (r.text) { %><blockquote class="review-card__text"><p><%= r.text %></p></blockquote><% } %>
+            <footer class="review-card__author">
+              <strong><%= r.author_name %></strong>
+              <span class="text-small text-muted"><% if (r.source === 'manual') { %>Shared with the clinic<% } else { %>Google review<% } %><% if (r.reviewed_at) { %> · <%= formatReviewDate(r.reviewed_at) %><% } %></span>
+            </footer>
+          </div>
+        </article>
         <% }) %>
       </div>
     </div>
   </section>
   <% } else { %>
   <!-- ============ NOT YET ============ -->
-  <section class="section" aria-labelledby="soonTitle">
-    <div class="container testimony-soon" data-reveal-group>
+  <%# An intertitle, like the cards between a silent film's scenes: centred,
+      a giant mark behind, the promise beneath. Nothing invented. %>
+  <section class="section intertitle-section" aria-labelledby="soonTitle">
+    <div class="container testimony-soon intertitle" data-reveal-group>
       <span class="testimony-soon__mark" aria-hidden="true">&ldquo;</span>
       <% chapter('01', 'In their words'); %>
-      <h2 id="soonTitle" data-reveal>Testimonials coming soon</h2>
+      <h2 id="soonTitle" data-reveal>Testimonials <em class="display-em">coming soon</em></h2>
       <p data-reveal>This page will fill as patients share their experience. It will only ever show reviews synced from Google and testimonials patients have agreed to have published &mdash; never wording written for them.</p>
     </div>
   </section>
@@ -85,7 +91,7 @@
           <h2 id="shareTitle" data-reveal>Share your experience</h2>
         </div>
       </div>
-      <ol class="share-ways">
+      <ol class="share-ways share-ways--acts">
         <% if (clinic.reviews_url || reviewQr) { %>
         <li class="share-way" data-reveal>
           <span class="tx-chapter__num" aria-hidden="true">i.</span>

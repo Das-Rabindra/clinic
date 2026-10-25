@@ -1311,3 +1311,18 @@ chapters now use the homepage treatments, reusing the scoped classes:
   `preloadItalic` is the default in `baseLocals`.
 - **Checks:** `npm test` passes 308/308. The sweep (gallery, about, faq)
   found nothing.
+
+## Testimonials page: press quotes and an intertitle (2026-10-25)
+
+- **Without reviews (today):** "Testimonials *coming soon*" is set as a
+  centred intertitle, like the cards between a silent film's scenes. It has
+  a giant sage quotation mark behind it, the title large with the italic
+  accent, and the honest promise beneath. Nothing invented.
+- **With reviews:** the homepage's press-quote wall (`.quote-wall` /
+  `.review-card`, with the first quote as a large pull-quote), showing all
+  reviews. Cards carry `data-testimony` for tests.
+- **Share your experience:** the two ways are two numbered acts side by
+  side on desktop, with large numerals.
+- **Tests:** the testimonials tests now look for `data-testimony` and the
+  accented "coming soon". `npm test` passes 308/308, and the sweep found
+  nothing.

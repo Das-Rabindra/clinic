@@ -94,13 +94,13 @@ describe('/testimonials', () => {
     const r = await srv.call('/testimonials');
     assert.equal(r.status, 200);
     assertHeadingOrder(r.body, '/testimonials');
-    assert.match(r.body, /Testimonials coming soon/);
+    assert.match(r.body, /Testimonials <em[^>]*>coming soon<\/em>/);
     // Each illustrative photograph is used once across the site; this page
     // opens on the plain night scene.
     assert.match(r.body, /class="page-cine[^"]*" [^>]*data-hero/);
     assert.ok(!/class="page-cine page-cine--photo/.test(r.body), 'no scene photograph');
     assert.match(r.body, /<meta name="robots" content="noindex, follow">/);
-    assert.ok(!r.body.includes('class="testimony"'), 'no testimony cards');
+    assert.ok(!r.body.includes('data-testimony'), 'no testimony cards');
     assert.ok(!r.body.includes('rating-hero'), 'no rating without reviews');
     assert.ok(!r.body.includes('AggregateRating'));
     assert.ok(!(await srv.call('/sitemap.xml')).body.includes('/testimonials'));
@@ -112,7 +112,7 @@ describe('/testimonials', () => {
     try {
       const r = await srv.call('/testimonials');
       assertHeadingOrder(r.body, '/testimonials with a review');
-      assert.match(r.body, /class="testimony"/);
+      assert.match(r.body, /data-testimony/);
       assert.ok(r.body.includes('Test wording for the suite.'));
       assert.match(r.body, /<meta name="robots" content="index, follow">/);
       assert.ok((await srv.call('/sitemap.xml')).body.includes('/testimonials'));

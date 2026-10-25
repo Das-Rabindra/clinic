@@ -363,3 +363,19 @@
 .gallery-room .gallery-wall figcaption strong { color: var(--color-night-ink); }
 .gallery-room .gallery-wall__desc { color: var(--color-night-muted); }
 .gallery-room .gallery-pair__tag { left: calc(var(--space-4) + var(--space-3)); top: calc(var(--space-4) + var(--space-3)); background: rgba(8, 42, 39, 0.9); color: var(--color-mint); }
+
+/* ── Testimonials page: press quotes and an intertitle ───────────────────
+   The wall reuses the homepage's .quote-wall/.review-card (home.css). */
+.intertitle-section { padding-block: clamp(5rem, 3rem + 8vw, 9rem); }
+.intertitle { max-width: 46rem; margin-inline: auto; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.intertitle .chapter { justify-content: center; }
+.intertitle .testimony-soon__mark { top: -0.32em; left: 50%; right: auto; transform: translateX(-50%); font-size: clamp(14rem, 9rem + 16vw, 26rem); }
+.intertitle h2 { font-size: clamp(2.6rem, 1.6rem + 4vw, 4.75rem); line-height: 1.03; letter-spacing: -0.025em; }
+.intertitle h2 em { color: var(--color-primary); }
+.intertitle p:not(.chapter) { margin-inline: auto; }
+/* The two ways to share, as two acts. */
+.share-ways--acts .tx-chapter__num { font-size: clamp(2rem, 1.6rem + 1.2vw, 2.8rem); }
+@media (min-width: 1024px) {
+  .share-ways--acts { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--space-12); }
+  .share-ways--acts .share-way { grid-template-columns: 4rem 1fr auto; border-bottom: 0; }
+}
