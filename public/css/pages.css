@@ -391,3 +391,11 @@
 .faq-group__head h2 { font-size: clamp(1.9rem, 1.4rem + 1.8vw, 2.8rem); }
 .faq-group .qa .accordion__trigger { font-size: clamp(1.1rem, 1rem + 0.45vw, 1.35rem); }
 @media (max-width: 1023px) { .faq-index__mark { display: none; } }
+
+/* ── Contact: the homepage's location shot and acts ───────────────────── */
+.reach-grid--acts .reach { position: relative; padding-top: var(--space-6); }
+.reach__n { font-family: var(--font-display); font-style: italic; font-size: clamp(2rem, 1.6rem + 1.2vw, 2.8rem); line-height: 1; color: var(--color-primary); }
+.reach-grid--acts .reach__icon { position: absolute; top: var(--space-6); right: var(--space-6); width: 40px; height: 40px; }
+.reach-grid--acts .reach h3 { margin-top: var(--space-1); font-size: clamp(1.5rem, 1.3rem + 0.8vw, 2.1rem); }
+.reach-grid--acts .reach__lines a { font-size: clamp(1.7rem, 1.4rem + 1vw, 2.3rem); }
+.hours-scene__title em { color: var(--color-primary); }

@@ -41,9 +41,11 @@
           <h2 id="reachTitle" data-reveal>Call, message or ask for a call back</h2>
         </div>
       </div>
-      <div class="reach-grid" data-reveal-group>
+      <div class="reach-grid reach-grid--acts" data-reveal-group>
+        <% var actN = 0, roman = ['i.', 'ii.', 'iii.', 'iv.']; %>
         <% if (tel) { %>
         <div class="reach" data-reveal>
+          <span class="reach__n" aria-hidden="true"><%= roman[actN++] %></span>
           <span class="reach__icon" aria-hidden="true"><%- ic('phone') %></span>
           <h3>Call</h3>
           <ul class="reach__lines">
@@ -54,6 +56,7 @@
         <% } %>
         <% if (whatsappUrl) { %>
         <div class="reach" data-reveal>
+          <span class="reach__n" aria-hidden="true"><%= roman[actN++] %></span>
           <span class="reach__icon" aria-hidden="true"><%- ic('whatsapp') %></span>
           <h3>WhatsApp</h3>
           <p>Message the clinic on <%= clinic.phone %>.</p>
@@ -61,6 +64,7 @@
         </div>
         <% } %>
         <div class="reach" data-reveal>
+          <span class="reach__n" aria-hidden="true"><%= roman[actN++] %></span>
           <span class="reach__icon" aria-hidden="true"><%- ic('callback') %></span>
           <h3>Request a call back</h3>
           <p>Leave your name and number and the clinic will ring you back.</p>
@@ -68,6 +72,7 @@
         </div>
         <% if (clinic.email) { %>
         <div class="reach" data-reveal>
+          <span class="reach__n" aria-hidden="true"><%= roman[actN++] %></span>
           <span class="reach__icon" aria-hidden="true"><%- ic('chat') %></span>
           <h3>Email</h3>
           <ul class="reach__lines"><li><a href="mailto:<%= clinic.email %>"><%= clinic.email %></a></li></ul>
@@ -78,20 +83,28 @@
   </section>
 
   <!-- ============ 02 · FIND US ============ -->
-  <section class="section section--surface" aria-labelledby="findTitle">
+  <%# The homepage's location shot (.visit--cine): graded map, vignette and
+      a title card; the pin is not printed as coordinates (it awaits the owner). %>
+  <section class="section section--surface visit--cine" aria-labelledby="findTitle">
     <div class="container visit__grid">
       <div class="visit__map" data-reveal="image">
         <iframe class="contact-bento__frame" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
           data-src="<%= clinic.map_embed_url %>"
           title="Map showing <%= clinic.name %>, <%= shortAddress %>"></iframe>
+        <div class="visit__vignette" aria-hidden="true"></div>
+        <div class="visit__card">
+          <span class="visit__card-pin" aria-hidden="true"><%- ic('pin') %></span>
+          <span class="visit__card-text"><strong><%= clinic.name %></strong><span><%= shortAddress %></span></span>
+          <a class="button button--inverse button--small" href="<%= clinic.directions_url %>" target="_blank" rel="noopener" data-track="directions_clicked"><%- ic('directions') %>Directions</a>
+        </div>
       </div>
       <div class="visit__info" data-reveal-group>
         <% chapter('02', 'Find us'); %>
         <h2 id="findTitle" data-reveal><%= settings.location_title || 'Finding the clinic' %></h2>
         <% if (settings.location_body) { %><p class="text-muted" data-reveal><%= settings.location_body %></p><% } %>
         <div class="visit__block" data-reveal>
-          <h3 class="visit__label"><%- ic('pin') %>Address</h3>
-          <address class="contact-bento__lines"><%- addressHtml %></address>
+          <h3 class="visit__label"><span class="visit__n" aria-hidden="true">i.</span>Address</h3>
+          <address class="contact-bento__lines visit__address"><%- addressHtml %></address>
           <div class="cluster">
             <a class="button button--primary button--small" href="<%= clinic.directions_url %>" target="_blank" rel="noopener" data-track="directions_clicked"><%- ic('directions') %>Get directions</a>
           </div>
@@ -102,11 +115,11 @@
   </section>
 
   <!-- ============ 03 · HOURS ============ -->
-  <section class="section" aria-labelledby="hoursTitle">
+  <section class="section visit--cine" aria-labelledby="hoursTitle">
     <div class="container hours-scene">
       <div data-reveal-group>
         <% chapter('03', 'Opening hours'); %>
-        <h2 id="hoursTitle" class="hours-scene__title" data-reveal>When the clinic is open</h2>
+        <h2 id="hoursTitle" class="hours-scene__title" data-reveal>When the clinic is <em class="display-em">open</em></h2>
         <p class="hours-scene__sum" data-reveal>Open <%= hoursSummary %>.</p>
         <p class="status-pill status-pill--<%= clinic.today.now.state %>" data-reveal><span class="status-pill__dot" aria-hidden="true"></span><%= clinic.today.now.label %></p>
       </div>

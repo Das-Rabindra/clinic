@@ -1339,3 +1339,15 @@ chapters now use the homepage treatments, reusing the scoped classes:
   "?" sits behind the topic index on desktop.
 - **Checks:** `npm test` passes 308/308. The sweep (faq, home) found
   nothing, and the homepage FAQ still opens.
+
+## Contact page: acts, location shot, schedule (2026-10-25)
+
+- **01 Reach:** the cards are numbered acts (large italic i./ii./iii.,
+  titles in the display face, phone numbers set large), with the icon moved
+  to the corner.
+- **02 Find us:** the homepage's location shot (`.visit--cine`): graded,
+  vignetted map with the night title card and Directions, the address as a
+  title, numbered. The pin is not printed as coordinates.
+- **03 Hours:** "When the clinic is *open*", with today marked by the sage
+  band and primary bar.
+- **Checks:** `npm test` passes 308/308, and the sweep found nothing.
