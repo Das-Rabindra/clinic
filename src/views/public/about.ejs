@@ -9,6 +9,12 @@
 <% var chapter = function (num, name) { %><p class="chapter" data-reveal><span class="chapter__index"><%= num %></span><span class="chapter__rule" aria-hidden="true"></span><span class="chapter__name"><%= name %></span></p><% }; %>
 <%# The dentist's name split so its last word can take the italic accent. %>
 <% var who = clinic.doctor || settings.name; var cut = who.lastIndexOf(' '); %>
+<%# A title with its last clause (after the last comma, else its last two
+    words) in the italic accent, as on the homepage. %>
+<% var accent = function (t) { t = t || ''; var k = t.lastIndexOf(',');
+     if (k > 0 && k < t.length - 1) return [t.slice(0, k + 1), t.slice(k + 1).trim()];
+     var w = t.split(' '); return [w.slice(0, -2).join(' '), w.slice(-2).join(' ')]; }; %>
+<% var at = accent(settings.about_title || clinic.doctor), st = accent(settings.story_title || 'The clinic'); %>
 <a class="skip-to-content" href="#main">Skip to content</a>
 <%- include('partials/site-header') %>
 
@@ -41,14 +47,14 @@
   </section>
 
   <!-- ============ 01 · THE DENTIST ============ -->
-  <section class="section chapter-section" aria-labelledby="dentistTitle">
+  <section class="section chapter-section profile--cine" aria-labelledby="dentistTitle">
     <div class="container about-dentist" data-reveal-group>
       <div class="about-dentist__lead">
         <% chapter('01', 'The dentist'); %>
-        <h2 id="dentistTitle" class="profile__title" data-reveal><%= settings.about_title || clinic.doctor %></h2>
+        <h2 id="dentistTitle" class="profile__title" data-reveal><% if (at[0]) { %><%= at[0] %> <% } %><em class="display-em"><%= at[1] %></em></h2>
       </div>
       <div class="about-dentist__body">
-        <% if (settings.about_body) { %><blockquote class="profile__quote" data-reveal><p><%= settings.about_body %></p></blockquote><% } %>
+        <% if (settings.about_body) { %><blockquote class="profile__quote" data-reveal><span class="profile__mark" aria-hidden="true">&ldquo;</span><p><%= settings.about_body %></p></blockquote><% } %>
         <% if (showDoctorBio) { %><p class="prose about-dentist__bio" data-reveal><%= doctor.bio %></p><% } %>
         <dl class="facts-list" data-reveal>
           <% if (clinic.qualification) { %><div><dt>Qualification</dt><dd><%= clinic.qualification %></dd></div><% } %>
@@ -62,13 +68,14 @@
   </section>
 
   <!-- ============ 02 · THE CLINIC ============ -->
-  <%# The clinic's own photograph, full width — the one real room on the site. %>
-  <section class="section section--sage chapter-section" aria-labelledby="clinicTitle">
+  <%# The clinic's own photograph, full width — the one real room on the site,
+      framed and captioned like a film still; the story as narration. %>
+  <section class="section section--sage chapter-section clinic--cine" aria-labelledby="clinicTitle">
     <div class="container">
       <div class="split-heading" data-reveal-group>
         <div>
           <% chapter('02', 'The clinic'); %>
-          <h2 id="clinicTitle" data-reveal><%= settings.story_title || 'The clinic' %></h2>
+          <h2 id="clinicTitle" class="clinic__title" data-reveal><% if (st[0]) { %><%= st[0] %> <% } %><em class="display-em"><%= st[1] %></em></h2>
         </div>
         <% if (settings.story_body) { %><p class="clinic__story" data-reveal><%= settings.story_body %></p><% } %>
       </div>
@@ -77,7 +84,7 @@
           <img src="<%= clinicPhoto.url %>" srcset="<%= clinicPhoto.srcset %>" sizes="(min-width: 1280px) 1200px, calc(100vw - 32px)"
                alt="<%= clinicPhoto.alt %>" width="<%= clinicPhoto.width %>" height="<%= clinicPhoto.height %>" loading="lazy" decoding="async">
         </div>
-        <figcaption>The treatment room</figcaption>
+        <figcaption class="about-room__caption"><span class="clinic__caption-mark" aria-hidden="true"></span>The treatment room</figcaption>
       </figure>
       <ol class="clinic__facts about-room__facts" data-reveal-group>
         <li data-reveal><span class="clinic__num" aria-hidden="true">i.</span><div><h3>Opening hours</h3><p>Open <%= hoursSummary %>.</p></div></li>
@@ -89,47 +96,51 @@
     </div>
   </section>
 
-  <!-- ============ 03 · INSIDE ============ -->
+  <!-- ============ 03 · INSIDE (night) ============ -->
+  <%# The homepage's screening room: the clinic's own photographs as lit,
+      uncropped stills, each opening full size in the viewer. %>
   <% if (galleryPreview.length) { %>
-  <section class="section chapter-section" aria-labelledby="insideTitle">
+  <section class="section section--night chapter-section gallery-night" aria-labelledby="insideTitle">
     <div class="container">
       <div class="index-head" data-reveal-group>
         <div>
           <% chapter('03', 'Inside the clinic'); %>
           <h2 id="insideTitle" data-reveal>From the gallery</h2>
         </div>
-        <a class="link link--arrow" href="/gallery" data-reveal>All <%= galleryCount %> photographs <%- ic('arrow') %></a>
       </div>
-      <div class="about-strip">
-        <% galleryPreview.forEach(function (g) { %>
-        <figure class="about-strip__item">
-          <a class="about-strip__frame" href="/gallery" data-reveal="image" tabindex="-1" aria-hidden="true">
-            <img src="<%= g.thumb_url || g.image_url %>" alt="" width="<%= g.thumb_url ? 480 : (g.width || 1200) %>" height="<%= g.thumb_url ? 480 : (g.height || 1200) %>" loading="lazy" decoding="async">
+      <div class="screens screens--<%= Math.min(galleryPreview.length, 3) %>">
+        <% galleryPreview.forEach(function (g, i) { var ss = mediaSrcset(g.image_url, g.width, g.medium_url, g.medium_width); %>
+        <figure class="screens__item<%= i === 0 ? ' screens__item--lead' : '' %>">
+          <a class="screen" href="<%= g.image_url %>" data-lightbox data-caption="<%= g.title %>" data-reveal="image">
+            <img src="<%= g.medium_url || g.image_url %>"<% if (ss) { %> srcset="<%= ss %>" sizes="<%= i === 0 ? '(min-width: 768px) 55vw, 100vw' : '(min-width: 768px) 40vw, 100vw' %>"<% } %> alt="<%= g.image_alt || g.title %>"
+                 width="<%= g.width || 1200 %>" height="<%= g.height || 1200 %>" loading="lazy" decoding="async">
+            <span class="screen__zoom" aria-hidden="true"><%- ic('plus') %></span>
           </a>
-          <figcaption><%= g.title %></figcaption>
+          <figcaption><span class="screens__n" aria-hidden="true"><%= String(i + 1).padStart(2, '0') %></span><span><%= g.title %></span></figcaption>
         </figure>
         <% }) %>
       </div>
+      <p class="section-foot"><a class="button button--ghost-light" href="/gallery">All <%= galleryCount %> photographs <%- ic('arrow') %></a></p>
     </div>
   </section>
   <% } %>
 
   <!-- ============ 04 · FIND US ============ -->
-  <section class="section section--surface chapter-section" aria-labelledby="findTitle">
+  <section class="section section--surface chapter-section visit--cine" aria-labelledby="findTitle">
     <div class="container about-find">
       <div data-reveal-group>
         <% chapter(galleryPreview.length ? '04' : '03', 'Find us'); %>
         <h2 id="findTitle" class="profile__title" data-reveal><%= settings.location_title || 'Visit the clinic' %></h2>
         <% if (settings.location_body) { %><p class="text-muted about-find__lede" data-reveal><%= settings.location_body %></p><% } %>
         <div class="visit__block" data-reveal>
-          <h3 class="visit__label"><%- ic('pin') %>Address</h3>
-          <address class="contact-bento__lines"><%- addressHtml %></address>
+          <h3 class="visit__label"><span class="visit__n" aria-hidden="true">i.</span>Address</h3>
+          <address class="contact-bento__lines visit__address"><%- addressHtml %></address>
           <div class="cluster">
             <a class="button button--primary button--small" href="<%= clinic.directions_url %>" target="_blank" rel="noopener" data-track="directions_clicked"><%- ic('directions') %>Get directions</a>
           </div>
         </div>
         <div class="visit__block" data-reveal>
-          <h3 class="visit__label"><%- ic('phone') %>Call or message</h3>
+          <h3 class="visit__label"><span class="visit__n" aria-hidden="true">ii.</span>Call or message</h3>
           <ul class="contact-list">
             <% if (tel) { %><li><a href="<%= tel %>" data-track="call_clicked"><%= clinic.phone %></a><span class="text-small text-muted">Main line<% if (whatsappUrl) { %> and WhatsApp<% } %></span></li><% } %>
             <% if (clinic.phone_secondary) { %><li><a href="tel:<%= clinic.phone_secondary_intl || clinic.phone_secondary %>" data-track="call_clicked"><%= clinic.phone_secondary %></a><span class="text-small text-muted">Second line</span></li><% } %>
@@ -137,7 +148,7 @@
         </div>
       </div>
       <div class="visit__block about-find__hours" data-reveal>
-        <h3 class="visit__label"><%- ic('clock') %>Opening hours</h3>
+        <h3 class="visit__label"><span class="visit__n" aria-hidden="true">iii.</span>Opening hours</h3>
         <p class="status-pill status-pill--<%= clinic.today.now.state %>"><span class="status-pill__dot" aria-hidden="true"></span><%= clinic.today.now.label %></p>
         <table class="hours-table-ds">
           <caption class="visually-hidden-ds">Weekly opening hours</caption>
@@ -175,9 +186,11 @@
 
 </main>
 
+<%- include('partials/lightbox') %>
 <%- include('partials/site-footer') %>
 <script src="/js/ds.js" defer></script>
 <script src="/js/site-ds.js" defer></script>
 <script src="/js/motion.js" defer></script>
+<script src="/js/gallery.js" defer></script>
 </body>
 </html>

@@ -1275,3 +1275,21 @@ illustrative photographs had been used 2–4 times each.
 - **Checks:** `npm test` passes 308/308, and the homepage sweep found
   nothing.
 - With this, every homepage section is on the cinematic design.
+
+## About: the homepage's cinematic chapters (2026-10-25)
+
+About keeps its opening scene (night, the real portrait) and its four
+chapters now use the homepage treatments, reusing the scoped classes:
+
+| Chapter | Treatment |
+|---|---|
+| 01 The dentist | `.profile--cine`: accented title, pull-quote under a giant sage mark, credentials as credits |
+| 02 The clinic | `.clinic--cine`: "A calm, *modern clinic*", the story as narration, the real treatment-room photograph framed with a shadow and push-in, captioned "— THE TREATMENT ROOM", facts as three acts |
+| 03 Inside the clinic | The night screening room: own photographs as lit, uncropped, numbered stills opening in the viewer (`partials/lightbox`, `/js/gallery.js`) |
+| 04 Find us | `.visit--cine`: numbered blocks, the address as a title, today marked in the hours table |
+
+- **Photos:** only the clinic's own photographs are involved; no stock
+  photograph is added, so the one-use rule holds.
+- **Clean-up:** the old `.about-strip` styles are removed.
+- **Checks:** `npm test` passes 308/308. The sweep (about, home) found
+  nothing.

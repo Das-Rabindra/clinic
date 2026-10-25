@@ -182,12 +182,6 @@
 @media (min-width: 768px) {
   .about-room__facts { grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); column-gap: var(--space-8); }
 }
-.about-strip { display: grid; gap: var(--gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
-.about-strip__item { margin: 0; }
-.about-strip__frame { display: block; overflow: hidden; border-radius: var(--radius-md); background: var(--color-accent-sand); }
-.about-strip__frame img { width: 100%; aspect-ratio: 1; object-fit: cover; transition: transform 1200ms var(--ease-cinema); }
-.about-strip__frame:hover img { transform: scale(1.04); }
-.about-strip figcaption { margin-top: var(--space-3); font-size: var(--text-small); color: var(--color-text-muted); }
 .about-find { display: grid; gap: var(--space-10); }
 .about-find > * { min-width: 0; }
 .about-find__lede { margin-top: var(--space-4); max-width: 34rem; }
@@ -339,3 +333,15 @@
   }
   .book-scene.page-cine--photo .page-cine__credit { bottom: calc(100% - var(--header-height) - 16svh + 0.75rem); }
 }
+
+/* ── About, on the homepage's cinematic chapters ─────────────────────────
+   Reuses .profile--cine, .clinic--cine, .screens and .visit--cine from
+   home.css; only About's own layout needs these. */
+.about-dentist .profile__quote { margin-top: var(--space-6); }
+.about-room .about-room__caption { display: flex; align-items: center; gap: var(--space-3); letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.75rem; }
+.clinic--cine .about-room__frame { box-shadow: 0 30px 70px -35px rgba(8, 42, 39, 0.5); }
+.clinic--cine .about-room__frame img { transition: transform 2200ms var(--ease-cinema); }
+.clinic--cine .about-room:hover .about-room__frame img { transform: scale(1.03); }
+.clinic--cine .split-heading h2.clinic__title { max-width: 14ch; }
+.visit--cine .about-find__hours { margin-top: var(--space-8); }
+@media (min-width: 1024px) { .visit--cine .about-find__hours { margin-top: 0; } }
