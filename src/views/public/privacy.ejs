@@ -8,8 +8,9 @@
 <%- include('partials/site-header') %>
 
 <main id="main">
-  <section class="page-cine<%= scenePhoto ? ' page-cine--photo' : '' %>" data-hero aria-labelledby="pageTitle">
+  <section class="page-cine<%= scenePhoto ? ' page-cine--photo' : '' %> policy-scene" data-hero aria-labelledby="pageTitle">
     <% if (scenePhoto) { %><%- include('partials/scene-photo', { photo: scenePhoto }) %><% } %>
+    <div class="tx-scene__grain" aria-hidden="true"></div>
     <div class="container">
       <div class="page-cine__inner">
         <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Privacy' }] }) %>
@@ -22,7 +23,22 @@
   </section>
 
   <section class="section">
-    <div class="container">
+    <div class="container faq-page policy-page">
+      <%# A contents list beside the policy: sticky on a wide screen, a row of
+          links on a phone, like the FAQ page's topics. %>
+      <nav class="faq-index policy-index" aria-label="Sections">
+        <span class="faq-index__mark" aria-hidden="true">&sect;</span>
+        <p class="faq-index__label">Contents</p>
+        <ol>
+          <li><a href="#pc-1"><span class="faq-index__n" aria-hidden="true">01</span>What this website collects</a></li>
+          <li><a href="#pc-2"><span class="faq-index__n" aria-hidden="true">02</span>What it is used for</a></li>
+          <li><a href="#pc-3"><span class="faq-index__n" aria-hidden="true">03</span>Messages on WhatsApp</a></li>
+          <li><a href="#pc-4"><span class="faq-index__n" aria-hidden="true">04</span>Photographs</a></li>
+          <li><a href="#pc-5"><span class="faq-index__n" aria-hidden="true">05</span>Cancelling or changing an appointment</a></li>
+          <li><a href="#pc-6"><span class="faq-index__n" aria-hidden="true">06</span>How long information is kept</a></li>
+          <li><a href="#pc-7"><span class="faq-index__n" aria-hidden="true">07</span>Asking about your information</a></li>
+        </ol>
+      </nav>
     <div class="policy-chapters">
       <section class="policy-chapter" data-reveal aria-labelledby="pc-1">
         <span class="tx-chapter__num" aria-hidden="true">01</span>
@@ -100,7 +116,7 @@
           </ul>
         </div>
       </section>
-      <p class="policy-updated text-small text-muted">Last updated <%= updatedAt %>.</p>
+      <p class="policy-updated text-small text-muted"><span class="policy-updated__mark" aria-hidden="true"></span>Last updated <%= updatedAt %>.</p>
     </div>
     </div>
   </section>

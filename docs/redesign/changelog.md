@@ -1391,3 +1391,17 @@ chapters now use the homepage treatments, reusing the scoped classes:
 - **Checks:** `npm test` passes 308/308. The sweep (services, home) found
   nothing, and the hover effect was checked with a mouse-type device
   emulated.
+
+## Privacy page: contents and chapters (2026-10-25)
+
+- **Wording:** the policy text and `PRIVACY_UPDATED` are unchanged; this is
+  layout only.
+- **Scene:** film grain on the plain night scene.
+- **Contents:** a list of the seven sections sits beside the policy, reusing
+  the FAQ topic index (`.faq-index`): sticky on desktop with a giant sage
+  "§" behind it, a row of links on phones. Sections have `scroll-margin`,
+  so a jump clears the header.
+- **Sections:** larger italic chapter numbers and headings, with each
+  section's first paragraph as a display-face lead.
+- **Last updated:** set as an end card ("— LAST UPDATED SEPTEMBER 2026.").
+- **Checks:** `npm test` passes 308/308, and the sweep found nothing.

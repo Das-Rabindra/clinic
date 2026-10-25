@@ -448,3 +448,12 @@
 .tx-aside__card--night .status-pill--open .status-pill__dot { background: var(--color-mint); }
 .tx-aside__card--night .button--text { color: var(--color-night-ink); }
 .tx-aside__card--night :focus-visible { outline-color: var(--color-focus-inverse); }
+
+/* ── Privacy: contents beside the policy, sections as chapters ────────── */
+.policy-page .policy-chapter { scroll-margin-top: calc(var(--header-height) + var(--space-4)); }
+.policy-page .policy-chapter .tx-chapter__num { font-size: clamp(1.8rem, 1.5rem + 1vw, 2.4rem); }
+.policy-page .policy-chapter h2 { font-size: clamp(1.7rem, 1.35rem + 1.3vw, 2.4rem); }
+.policy-page .policy-chapter__body > p:first-child { font-family: var(--font-display); font-size: clamp(1.15rem, 1.06rem + 0.4vw, 1.35rem); line-height: 1.6; color: var(--color-text); }
+.policy-page .policy-index a { line-height: 1.35; }
+.policy-updated { display: flex; align-items: center; gap: var(--space-3); letter-spacing: 0.08em; text-transform: uppercase; }
+.policy-updated__mark { width: 2.5rem; height: 1px; background: currentColor; opacity: 0.6; }
