@@ -291,6 +291,11 @@ async function baseLocals({ navBase = '/' } = {}) {
     jsonForScript,
     /* Pages render the plain night scene unless their route gives a photo. */
     scenePhoto: null,
+    /* Every page's opening title now carries an italic accent, so the italic
+       face is preloaded everywhere: with font-display: optional, a page that
+       did not preload it set the accent in the fallback italic for the whole
+       first visit — visibly smaller on devices without Georgia. */
+    preloadItalic: true,
     /* srcset for an uploaded image: its mid-size variant and the full image,
        or '' before the scheduled job has made the variant. */
     mediaSrcset: (url, width, mediumUrl, mediumWidth) =>

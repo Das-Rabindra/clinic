@@ -1293,3 +1293,21 @@ chapters now use the homepage treatments, reusing the scoped classes:
 - **Clean-up:** the old `.about-strip` styles are removed.
 - **Checks:** `npm test` passes 308/308. The sweep (about, home) found
   nothing.
+
+## Gallery page: one screening room; italic preloaded everywhere (2026-10-25)
+
+- **Night chapters:** each category chapter is a night section, alternating
+  with `--color-night-deep` so chapters stay distinct, from the opening
+  scene to the credits.
+- **Screens:** every photograph is a lit, uncropped "screen" in the
+  masonry wall, with a radial glow, a drop shadow and a ringed zoom button.
+- **Pairs:** before & after keep their tags, restyled for night.
+- **Captions:** mint numerals and night-ink captions, with the consent note
+  in night-muted.
+- **Fix, italic accent:** pages without the italic preload set their title
+  accent in the fallback italic for the whole first visit, because fonts
+  are `font-display: optional`. The fallback looked visibly smaller where
+  Georgia is missing. Every page title now has an italic accent, so
+  `preloadItalic` is the default in `baseLocals`.
+- **Checks:** `npm test` passes 308/308. The sweep (gallery, about, faq)
+  found nothing.

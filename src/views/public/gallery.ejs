@@ -42,7 +42,10 @@
 
   <!-- ============ CHAPTERS, ONE PER CATEGORY ============ -->
   <% groups.forEach(function (grp, gi) { %>
-  <section class="section<%= gi % 2 ? ' section--surface' : '' %> chapter-section" aria-labelledby="grp-<%= gi %>">
+  <%# One screening room from the opening scene to the credits: each
+      chapter on night, alternating with the deeper night so chapters stay
+      distinct; every photograph a lit, uncropped "screen". %>
+  <section class="section section--night chapter-section gallery-room<%= gi % 2 ? ' gallery-room--deep' : '' %>" aria-labelledby="grp-<%= gi %>">
     <div class="container">
       <div class="index-head" data-reveal-group>
         <div>
