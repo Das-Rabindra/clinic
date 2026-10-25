@@ -15,7 +15,7 @@
   <%# The wizard is the page's purpose, so it sits in the opening scene
       itself rather than below it. data-bar-yield: the phone action bar steps
       aside while this is on screen, so it never covers Continue. %>
-  <section class="page-cine<%= scenePhoto ? ' page-cine--photo' : '' %> booking-night book-scene" id="appointment" data-hero data-bar-yield aria-labelledby="pageTitle">
+  <section class="page-cine<%= scenePhoto ? ' page-cine--photo' : '' %> booking-night book-scene book-scene--cine" id="appointment" data-hero data-bar-yield aria-labelledby="pageTitle">
     <% if (scenePhoto) { %><%- include('partials/scene-photo', { photo: scenePhoto }) %><% } %>
     <div class="container booking-layout">
       <div class="booking-layout__intro page-cine__inner">

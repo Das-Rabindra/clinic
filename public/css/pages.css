@@ -399,3 +399,25 @@
 .reach-grid--acts .reach h3 { margin-top: var(--space-1); font-size: clamp(1.5rem, 1.3rem + 0.8vw, 2.1rem); }
 .reach-grid--acts .reach__lines a { font-size: clamp(1.7rem, 1.4rem + 1vw, 2.3rem); }
 .hours-scene__title em { color: var(--color-primary); }
+
+/* ── Book: the booking form as the lit screen (.book-scene--cine) ────────
+   Styling only: the wizard's markup and ids (booking.js) are untouched. */
+.book-scene--cine::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(55% 60% at 72% 40%, rgba(158, 216, 198, 0.12), rgba(158, 216, 198, 0) 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
+}
+.book-scene--cine .booking { box-shadow: 0 0 0 1px rgba(158, 216, 198, 0.18), 0 30px 90px -20px rgba(158, 216, 198, 0.22), 0 30px 80px -30px rgba(0, 0, 0, 0.6); }
+/* The three steps as a running order: stops on a thin line. */
+.book-scene--cine .book-steps { position: relative; border-top: 0; padding-left: var(--space-2); }
+.book-scene--cine .book-steps::before { content: ''; position: absolute; left: calc(var(--space-2) + 0.85rem); top: 1.4rem; bottom: 1.4rem; width: 1px; background: rgba(158, 216, 198, 0.35); }
+.book-scene--cine .book-steps li { border-bottom: 0; gap: var(--space-4); padding-block: var(--space-3); }
+.book-scene--cine .book-steps__n {
+  position: relative; display: grid; place-items: center; flex: 0 0 1.75rem; min-width: 1.75rem; height: 1.75rem; border-radius: 50%;
+  background: var(--color-night); border: 1px solid rgba(158, 216, 198, 0.5); font-size: 0.8rem; font-style: normal;
+}
+/* Good to know, as three acts. */
+.book-facts .clinic__num { font-size: clamp(1.8rem, 1.5rem + 1vw, 2.4rem); }
+.book-facts h3 { font-size: clamp(1.3rem, 1.2rem + 0.4vw, 1.55rem); font-weight: var(--weight-regular); }
+@media (min-width: 768px) { .book-facts li { grid-template-columns: 1fr; gap: var(--space-3); align-content: start; } }

@@ -1351,3 +1351,16 @@ chapters now use the homepage treatments, reusing the scoped classes:
 - **03 Hours:** "When the clinic is *open*", with today marked by the sage
   band and primary bar.
 - **Checks:** `npm test` passes 308/308, and the sweep found nothing.
+
+## Book page: the form as the lit screen (2026-10-25)
+
+- **Styling only** (`.book-scene--cine`): the wizard's markup and ids,
+  which `booking.js` and its browser tests rely on, are untouched.
+- **Scene:** film grain and a faint projector glow behind the form.
+- **Panel:** the white booking panel has a mint halo and a hairline ring.
+- **Steps:** the three steps are a running order, numbered stops on a thin
+  mint line.
+- **Good to know:** where, when and changing plans as three acts with
+  large italic numerals.
+- **Checks:** `npm test` passes 308/308, including the booking UI browser
+  tests. The sweep found nothing.
