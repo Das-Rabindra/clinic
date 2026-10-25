@@ -469,32 +469,6 @@
 .finale__credit { position: absolute; right: var(--gutter); bottom: var(--space-4); margin: 0; font-size: 0.75rem; letter-spacing: 0.04em; color: var(--color-night-muted); }
 @media (max-width: 479px) { .finale__actions .button { flex: 1 1 100%; } }
 
-/* ── 03 · Treatments: a programme (homepage only: .treatments--cine) ───── */
-/* Lead tiles as posters. */
-.treatments--cine .treatment-card--tile { min-height: clamp(28rem, 20rem + 18vw, 38rem); }
-.treatments--cine .treatment-card__tile-media img { transition: transform 2200ms var(--ease-cinema); }
-.treatments--cine .treatment-card--tile:is(:hover, :focus-within) .treatment-card__tile-media img { transform: scale(1.06); }
-.treatments--cine .treatment-card--tile .card__title { font-size: clamp(1.9rem, 1.4rem + 1.6vw, 2.75rem); letter-spacing: -0.015em; }
-
-/* The rest as a numbered programme. */
-.treatments--cine .treatment-row { padding-block: var(--space-10); transition: background var(--duration-base) var(--ease-out); }
-.treatments--cine .treatment-row__num { font-size: clamp(2rem, 1.6rem + 1.4vw, 3rem); line-height: 1; }
-.treatments--cine .treatment-row .card__title { font-size: clamp(1.8rem, 1.4rem + 1.4vw, 2.6rem); letter-spacing: -0.015em; }
-.treatments--cine .treatment-row .card__link {
-  background: linear-gradient(var(--color-mint), var(--color-mint)) 0 100% / 0 2px no-repeat;
-  transition: background-size 700ms var(--ease-cinema), color var(--duration-fast) var(--ease-out);
-}
-.treatments--cine .treatment-row:is(:hover, :focus-within) .card__link { background-size: 100% 2px; color: var(--color-primary); }
-@media (min-width: 768px) {
-  .treatments--cine .treatment-row { grid-template-columns: 5.5rem 1fr 18rem; }
-  .treatments--cine .treatment-row__media { aspect-ratio: 16 / 10; }
-}
-@media (hover: hover) and (min-width: 768px) {
-  /* The still rests dimmed and comes to life with the row. */
-  .treatments--cine .treatment-row__media img { filter: grayscale(0.7) brightness(0.92); transform: scale(1.08); transition: filter 900ms var(--ease-cinema), transform 1400ms var(--ease-cinema); }
-  .treatments--cine .treatment-row:is(:hover, :focus-within) .treatment-row__media img { filter: none; transform: scale(1); }
-}
-
 /* The remaining treatments as closing credits. */
 .treatments--cine .more-treatments { margin-top: var(--space-16); text-align: center; }
 .treatments--cine .more-treatments__title { letter-spacing: 0.24em; }

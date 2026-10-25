@@ -1378,3 +1378,16 @@ chapters now use the homepage treatments, reusing the scoped classes:
 - **Questions:** the shared numbered `.qa` styles, with ids unchanged.
 - **Tests:** the caption assertion now allows the mark. `npm test` passes
   308/308, and the sweep (root canal, emergency, braces) found nothing.
+
+## Treatments page (/services): a programme (2026-10-25)
+
+- **Shared styles:** the homepage's `.treatments--cine` styles (poster
+  tiles; numbered rows whose stills rest desaturated and come to colour on
+  hover or focus, with the mint underline) moved to `layout.css`, so
+  /services uses them too. The homepage-only credits list stays in
+  `home.css`.
+- **Scene:** film grain and the film-still caption ("— ILLUSTRATIVE
+  PHOTOGRAPH"), as on the treatment pages.
+- **Checks:** `npm test` passes 308/308. The sweep (services, home) found
+  nothing, and the hover effect was checked with a mouse-type device
+  emulated.

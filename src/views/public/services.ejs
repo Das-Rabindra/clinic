@@ -11,8 +11,8 @@
 
 <main id="main">
   <!-- ============ SCENE ============ -->
-  <section class="page-cine<%= scenePhoto ? ' page-cine--photo' : '' %>" data-hero aria-labelledby="pageTitle">
-    <% if (scenePhoto) { %><%- include('partials/scene-photo', { photo: scenePhoto }) %><% } %>
+  <section class="page-cine<%= scenePhoto ? ' page-cine--photo' : '' %> tx-scene--cine" data-hero aria-labelledby="pageTitle">
+    <% if (scenePhoto) { %><%- include('partials/scene-photo', { photo: scenePhoto }) %><div class="tx-scene__grain" aria-hidden="true"></div><% } %>
     <div class="container">
       <div class="page-cine__inner">
         <%- include('partials/breadcrumbs', { trail: [{ name: 'Home', href: '/' }, { name: 'Treatments' }] }) %>
@@ -26,14 +26,14 @@
         </div>
       </div>
     </div>
-    <% if (scenePhoto && scenePhoto.caption) { %><p class="page-cine__credit"><%= scenePhoto.caption %></p><% } %>
+    <% if (scenePhoto && scenePhoto.caption) { %><p class="page-cine__credit tx-scene__credit"><span class="tx-scene__mark" aria-hidden="true"></span><%= scenePhoto.caption %></p><% } %>
   </section>
 
   <!-- ============ INDEX ============ -->
   <%# Same composition as the homepage: two lead treatments as large tiles,
       the rest as numbered editorial rows, so the list reads as an index
       rather than a wall of identical cards. %>
-  <section class="section" aria-labelledby="allTitle">
+  <section class="section treatments--cine" aria-labelledby="allTitle">
     <div class="container">
       <div class="index-head" data-reveal>
         <h2 id="allTitle">All treatments</h2>
