@@ -579,3 +579,65 @@ legend {
 .toast.ok { background: var(--night-deep); border-left-color: #7FD1A0; }
 .toast.err { background: #5A2219; border-left-color: #F2A08F; }
 .toast.warn { background: #4A3812; border-left-color: #F2B84B; }
+
+/* --------------------------------------------------------------------------
+   Cinematic layer, part three: the dashboard. The figures are a marquee:
+   five night tiles with grain and a glow, the numbers in Lora. The panels
+   below are numbered chapters, and "Quick actions" is the one night panel,
+   the projection booth. .stat and .g-2-1 appear only on the dashboard.
+   -------------------------------------------------------------------------- */
+.stat {
+  position: relative; overflow: hidden; isolation: isolate;
+  border-color: rgba(158, 216, 198, 0.16);
+  background:
+    radial-gradient(90% 70% at 50% 0%, rgba(158, 216, 198, 0.16), rgba(158, 216, 198, 0) 70%),
+    var(--night-deep);
+  box-shadow: 0 16px 34px -24px rgba(7, 38, 36, 0.6);
+}
+.stat::before, .g-2-1 > div:last-child > .card:first-child::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.09; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.stat-label { color: var(--mint); }
+.stat-value { color: var(--night-ink); font-size: 34px; font-weight: 400; letter-spacing: -0.01em; }
+.stat-note { color: var(--night-muted); }
+/* Accent and warning read as a lit top edge rather than a side bar. */
+.stat.accent, .stat.warn { border-left: 1px solid rgba(158, 216, 198, 0.16); }
+.stat.accent { box-shadow: inset 0 3px 0 var(--mint), 0 16px 34px -24px rgba(7, 38, 36, 0.6); }
+.stat.warn { box-shadow: inset 0 3px 0 #F2A08F, 0 16px 34px -24px rgba(7, 38, 36, 0.6); }
+
+/* Panels as numbered chapters: an index over a short mint rule. */
+.g-2-1 { counter-reset: dash; }
+.g-2-1 .card h2::before {
+  counter-increment: dash; content: counter(dash, decimal-leading-zero);
+  display: block; width: max-content; padding-right: 38px; margin-bottom: 7px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; font-weight: 500; letter-spacing: 0.14em; color: var(--primary);
+  background: linear-gradient(var(--mint), var(--mint)) right center / 28px 1px no-repeat;
+}
+.g-2-1 .card h2 { font-size: 19px; font-weight: 400; letter-spacing: -0.01em; }
+.g-2-1 .day-row { border-left: 3px solid var(--mint); }
+
+/* Quick actions: the night panel. */
+.g-2-1 > div:last-child > .card:first-child {
+  position: relative; overflow: hidden; isolation: isolate; border-color: transparent;
+  background:
+    radial-gradient(80% 60% at 50% 0%, rgba(158, 216, 198, 0.16), rgba(158, 216, 198, 0) 70%),
+    var(--night);
+  box-shadow: 0 0 0 1px rgba(158, 216, 198, 0.18), 0 24px 50px -28px rgba(7, 38, 36, 0.7);
+}
+.g-2-1 > div:last-child > .card:first-child h2 { color: var(--night-ink); }
+.g-2-1 > div:last-child > .card:first-child h2::before { color: var(--mint); }
+.g-2-1 > div:last-child > .card:first-child .card-sub { color: var(--night-muted); }
+.g-2-1 > div:last-child > .card:first-child .btn-primary { background: var(--mint); color: var(--night-deep); }
+.g-2-1 > div:last-child > .card:first-child .btn-primary:hover { background: #7FC7B1; }
+.g-2-1 > div:last-child > .card:first-child .btn-ghost { background: transparent; border-color: rgba(158, 216, 198, 0.32); color: var(--night-ink); }
+.g-2-1 > div:last-child > .card:first-child .btn-ghost:hover { background: rgba(158, 216, 198, 0.1); border-color: var(--mint); }
+.g-2-1 > div:last-child > .card:first-child :focus-visible { outline-color: var(--mint); }
+/* On a phone the marquee is a compact grid, not five full-width tiles:
+   Today across the top, the other four two by two. */
+@media (max-width: 760px) {
+  .grid.g5:has(> .stat) { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid.g5:has(> .stat) > .stat:first-child { grid-column: 1 / -1; }
+  .stat { padding: 13px 14px; }
+  .stat-value { font-size: 28px; }
+}

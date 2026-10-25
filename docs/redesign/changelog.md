@@ -1454,3 +1454,18 @@ chapters now use the homepage treatments, reusing the scoped classes:
 - **Unchanged:** no JS, route, data or server changes.
 - **Checks:** `npm test` passes 308/308. Six admin pages and a modal were
   checked locally at 1440px and 390px, with no console errors.
+
+## Admin: dashboard cards (2026-10-25)
+
+- **Figures:** a marquee of five night tiles with grain and a mint glow.
+  Labels are mint mono and the numbers are large Lora in night ink.
+  "Needs attention" shows as a lit top edge, mint or coral, instead of a
+  side bar. On phones the tiles form a compact grid: Today across the top,
+  the other four two by two, instead of five full-width tiles.
+- **Panels:** numbered chapters ("01 ——", via a CSS counter), headings in
+  Lora, and today's appointment rows edged in mint.
+- **Quick actions:** the one night panel, with grain. The primary action
+  is mint and the rest are mint-outlined. The focus outline is mint there.
+- **Scope:** CSS only. `.stat` and `.g-2-1` appear only on the dashboard.
+- **Checks:** `npm test` passes 308/308. The dashboard was checked locally
+  at 1440px and 390px.
