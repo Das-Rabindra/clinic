@@ -578,3 +578,16 @@
   .profile--cine .facts-list > div { grid-template-columns: 11rem 1fr; column-gap: var(--space-6); }
   .profile--cine .facts-list dt { text-align: right; }
 }
+
+/* ── Urgent care: the hero's lower third (.urgent--cine) ─────────────────── */
+.urgent--cine { background: var(--color-night); border-bottom: 1px solid rgba(245, 242, 234, 0.1); color: var(--color-night-muted); }
+.urgent--cine .urgent__row { padding-block: var(--space-5); }
+.urgent--cine .urgent__text { align-items: baseline; }
+.urgent--cine strong { margin-right: var(--space-2); font-family: var(--font-display); font-weight: var(--weight-regular); font-size: 1.2rem; color: var(--color-amber); }
+.urgent__live { position: relative; flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; background: var(--color-amber); transform: translateY(-1px); }
+.urgent__live::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: var(--color-amber); opacity: 0.6; }
+.motion .urgent__live::after { animation: urgent-pulse 2200ms var(--ease-out) infinite; }
+@keyframes urgent-pulse { 0% { transform: scale(1); opacity: 0.6; } 80%, 100% { transform: scale(2.8); opacity: 0; } }
+.urgent--cine .button--text { color: var(--color-night-ink); }
+.urgent--cine :focus-visible { outline-color: var(--color-focus-inverse); }
+@media (min-width: 1024px) { .urgent--cine .urgent__text { max-width: 42rem; } .urgent--cine .urgent__row { flex-wrap: nowrap; } }

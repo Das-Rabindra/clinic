@@ -67,12 +67,14 @@
   </section>
 
   <!-- ============ URGENT CARE ============ -->
-  <%# Hours here come from the live weekly grid, break included. %>
+  <%# Hours here come from the live weekly grid, break included. Set as the
+      hero's lower third: night, continuing the opening scene, with a "live"
+      dot that pulses (still under reduced motion). %>
   <% if (emergency) { %>
-  <aside class="urgent" aria-labelledby="urgentTitle">
+  <aside class="urgent urgent--cine" aria-labelledby="urgentTitle">
     <div class="container urgent__row">
       <div class="urgent__text">
-        <%- ic('alert') %>
+        <span class="urgent__live" aria-hidden="true"></span>
         <p><strong id="urgentTitle">In pain today?</strong>
           <% if (todayHoursDisplay) { %>
             The clinic is open today <%= todayHoursDisplay.text.replace(' – ', ' to ') %><% if (todayHoursDisplay.breakText) { %>, closed <%= todayHoursDisplay.breakText.replace('Closed ', '').replace(' – ', ' to ') %><% } %>, and keeps time free for urgent problems.
@@ -82,7 +84,7 @@
         </p>
       </div>
       <div class="urgent__actions">
-        <% if (tel) { %><a class="button button--primary button--small" href="<%= tel %>" data-track="emergency_call"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
+        <% if (tel) { %><a class="button button--inverse button--small" href="<%= tel %>" data-track="emergency_call"><%- ic('phone') %>Call <%= clinic.phone %></a><% } %>
         <a class="button button--text button--small" href="/services/<%= emergency.slug %>">What counts as an emergency</a>
       </div>
     </div>

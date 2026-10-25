@@ -1259,3 +1259,19 @@ illustrative photographs had been used 2–4 times each.
   on phones.
 - **Checks:** `npm test` passes 307/307. The sweep (home, about) found
   nothing.
+
+## Homepage urgent care: the hero's lower third (2026-10-25)
+
+- **Band:** the pale amber warning strip under the hero is now a night band
+  (`.urgent--cine`) continuing the opening scene, like a broadcast lower
+  third.
+- **Live dot:** a pulsing amber "live" dot (still under reduced motion)
+  sits beside "In pain today?" in the display face in amber. Today's hours,
+  from the live grid, are in night-muted.
+- **Buttons:** Call is an inverse button and the emergency link is
+  night-ink. On desktop all of it stays on one row.
+- **Token:** new `--color-amber` #F2B84B, with a contrast rule against
+  `--color-night` at 7.09:1, so the token test now covers it.
+- **Checks:** `npm test` passes 308/308, and the homepage sweep found
+  nothing.
+- With this, every homepage section is on the cinematic design.

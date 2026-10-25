@@ -121,6 +121,7 @@
   --color-night-ink: #F5F2EA;     /* 11.3:1 on night */
   --color-night-muted: #B8CCC6;   /* 7.5:1 on night */
   --color-mint: #9ED8C6;          /* accent on night only: 7.9:1 */
+  --color-amber: #F2B84B;   /* urgent care on night: 7.1:1 */
 
   /* Disabled — exempt from contrast rules, kept readable anyway (4.52:1) */
   --color-disabled-bg: #ECEBE5;

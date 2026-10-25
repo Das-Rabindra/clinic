@@ -55,6 +55,7 @@ export const CONTRAST_RULES = [
   { fg: '--color-night-ink', bg: '--color-night', min: 4.5 },
   { fg: '--color-night-muted', bg: '--color-night', min: 4.5 },
   { fg: '--color-mint', bg: '--color-night', min: 4.5 },
+  { fg: '--color-amber', bg: '--color-night', min: 4.5 },
   { fg: '--color-focus-inverse', bg: '--color-night', min: 3 },
   // The footer's end credits.
   { fg: '--color-night-ink', bg: '--color-night-deep', min: 4.5 },
