@@ -1433,3 +1433,24 @@ chapters now use the homepage treatments, reusing the scoped classes:
   motion. No admin JS, route, data or server changes.
 - **Checks:** `npm test` passes 308/308. Login (desktop and 390px) and the
   dashboard were checked locally with a local-only QA account.
+
+## Admin: tables and forms (2026-10-25)
+
+- **Tables:** the head row is a night title bar with mint mono labels and a
+  mint mark at the start. Rows stay light. Hovering a row lights it faintly
+  in mint and marks it with a deep-green bar.
+- **Calendar:** the weekday strip is a night bar, and today is lit in mint.
+- **Figures and headings:** dashboard figures, day names, modal titles and
+  disclosure headings use Lora. Empty states read as an italic intertitle.
+- **Forms:** a focused field gets the sign-in card's mint halo. Fieldset
+  legends are chapter titles: mono, deep green, over a short mint rule.
+  Checkboxes and switches use the site's deep green.
+- **Buttons:** primary is night, and the accent is mint with night text.
+- **Modals and the photo picker:** they open over a night scrim, with a mint
+  halo round the box.
+- **Toasts:** lower thirds on night with a coloured edge.
+- **Accessibility:** the focus outline and active tab use deep green instead
+  of honey, which fell below 3:1 on white. There is no new motion.
+- **Unchanged:** no JS, route, data or server changes.
+- **Checks:** `npm test` passes 308/308. Six admin pages and a modal were
+  checked locally at 1440px and 390px, with no console errors.
