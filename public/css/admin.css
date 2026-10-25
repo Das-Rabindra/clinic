@@ -469,3 +469,43 @@ table.data tbody tr:hover{background:rgba(124,152,133,.05);}
 }
 .t-link{ font-size:11px; color:var(--muted); text-decoration:none; }
 .t-link:hover{ text-decoration:underline; }
+
+/* ==========================================================================
+   Cinematic layer — matched to the public site's design system (ds.css):
+   the night greens, mint, and Lora for display type. Confined to the sign-in
+   scene, the sidebar and the page titles; the working surfaces (tables,
+   forms, lists) stay light, dense and still, because this is a daily tool.
+   ========================================================================== */
+@font-face { font-family: 'Lora'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(/fonts/lora-var-latin.woff2) format('woff2'); }
+@font-face { font-family: 'Lora'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(/fonts/lora-var-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Lora'; font-style: italic; font-weight: 400 600; font-display: swap; src: url(/fonts/lora-italic-var-latin.woff2) format('woff2'); }
+:root { --night: #0C3936; --night-deep: #072624; --night-ink: #F5F2EA; --night-muted: #B8CCC6; --mint: #9ED8C6; --primary: #155E59; }
+h1, h2, h3, h4 { font-family: 'Lora', Georgia, serif; font-weight: 500; }
+
+/* Sign-in: the night scene, the card as the lit screen. */
+.login-wrap--cine {
+  position: relative; isolation: isolate; overflow: hidden;
+  background:
+    radial-gradient(60% 55% at 50% 40%, rgba(158, 216, 198, 0.14), rgba(158, 216, 198, 0) 70%),
+    radial-gradient(130% 100% at 50% 50%, rgba(7, 38, 36, 0) 50%, rgba(7, 38, 36, 0.7) 100%),
+    var(--night);
+}
+.login-grain {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.08; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.login-wrap--cine .login-card { border-color: transparent; box-shadow: 0 0 0 1px rgba(158, 216, 198, 0.2), 0 30px 90px -20px rgba(158, 216, 198, 0.25), 0 30px 80px -30px rgba(0, 0, 0, 0.6); }
+.login-card h1 { font-size: 30px; font-weight: 400; letter-spacing: -0.01em; }
+.login-card h1 em { font-style: italic; color: var(--primary); }
+.login-brand strong { font-family: 'Lora', Georgia, serif; font-weight: 500; }
+
+/* The sidebar in the site's night, the current page marked in mint. */
+.sidebar { background: linear-gradient(180deg, var(--night) 0%, var(--night-deep) 100%); }
+.sb-brand strong { font-family: 'Lora', Georgia, serif; font-weight: 500; font-size: 15.5px; }
+.sb-brand span, .sb-group h5 { color: var(--mint); opacity: 0.75; }
+.sb-link.active { background: rgba(158, 216, 198, 0.12); border-left-color: var(--mint); }
+.sb-badge { background: var(--mint); color: var(--night-deep); }
+
+/* Page titles in the display face. */
+.topbar h1 { font-size: 22px; font-weight: 400; letter-spacing: -0.01em; }
+.card h2 { font-weight: 500; }

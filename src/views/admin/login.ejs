@@ -10,7 +10,8 @@
 <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
-<div class="login-wrap">
+<div class="login-wrap login-wrap--cine">
+  <div class="login-grain" aria-hidden="true"></div>
   <div class="login-card">
     <div class="login-brand">
       <img src="<%= faviconUrl %>" alt="">
@@ -21,7 +22,7 @@
     </div>
 
     <% if (mode === 'reset') { %>
-      <h1>Set a new password</h1>
+      <h1>Set a new <em>password</em></h1>
       <p class="sub">Choose a password with at least 12 characters.</p>
       <form id="resetForm" novalidate>
         <input type="hidden" id="token" value="<%= token %>">
@@ -41,7 +42,7 @@
       <p style="text-align:center; margin-top:18px; font-size:12.5px;"><a href="/admin/login">Back to sign in</a></p>
 
     <% } else { %>
-      <h1>Sign in</h1>
+      <h1>Sign <em>in</em></h1>
       <p class="sub">Access the clinic dashboard, appointments and website content.</p>
       <form id="loginForm" novalidate>
         <input type="hidden" id="next" value="<%= next %>">

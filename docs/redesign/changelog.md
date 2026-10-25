@@ -1418,3 +1418,18 @@ chapters now use the homepage treatments, reusing the scoped classes:
 - **Status:** still answers 404.
 - **Checks:** `npm test` passes 308/308. The sweep found nothing beyond the
   expected 404 status message.
+
+## Admin: matched to the site (2026-10-25)
+
+- **Sign-in and reset:** a night scene with film grain, a mint glow and a
+  vignette. The card is the lit screen, with a faint mint halo. Headings
+  read "Sign *in*" and "Set a new *password*".
+- **Sidebar:** the site's night greens (night to night-deep). The current
+  page is marked in mint instead of honey, with mint badges and group labels.
+- **Display type:** Lora for headings, the brand name and the topbar page
+  title. `@font-face` rules are in `admin.css` because `ds.css` is not
+  linked: its base styles would override admin's.
+- **Unchanged:** tables, forms and lists stay light, dense and without
+  motion. No admin JS, route, data or server changes.
+- **Checks:** `npm test` passes 308/308. Login (desktop and 390px) and the
+  dashboard were checked locally with a local-only QA account.
