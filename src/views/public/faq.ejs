@@ -39,6 +39,7 @@
   <section class="section" aria-label="Questions by topic">
     <div class="container faq-page">
       <nav class="faq-index" aria-label="Topics">
+        <span class="faq-index__mark" aria-hidden="true">?</span>
         <p class="faq-index__label">Topics</p>
         <ol>
           <% groups.forEach(function (g, gi) { %>
@@ -54,12 +55,12 @@
             <h2 id="fg-<%= gi %>"><%= g.title %></h2>
             <% if (g.href) { %><a class="link link--arrow" href="<%= g.href %>">About this treatment <%- ic('arrow') %></a><% } %>
           </div>
-          <div class="accordion" data-accordion>
+          <div class="accordion qa" data-accordion>
             <% g.faqs.forEach(function (f, i) { var k = gi + '-' + i; %>
             <div class="accordion__item">
               <h3 class="accordion__heading">
                 <button type="button" class="accordion__trigger" aria-expanded="false" aria-controls="faq-a-<%= k %>" id="faq-q-<%= k %>">
-                  <%= f.question %><span class="accordion__icon"><%- ic('plus') %></span>
+                  <span class="qa__n" aria-hidden="true"><%= String(i + 1).padStart(2, '0') %></span><span class="qa__q"><%= f.question %></span><span class="accordion__icon"><%- ic('plus') %></span>
                 </button>
               </h3>
               <div class="accordion__panel" id="faq-a-<%= k %>" role="region" aria-labelledby="faq-q-<%= k %>" data-collapsed>

@@ -1326,3 +1326,16 @@ chapters now use the homepage treatments, reusing the scoped classes:
 - **Tests:** the testimonials tests now look for `data-testimony` and the
   accented "coming soon". `npm test` passes 308/308, and the sweep found
   nothing.
+
+## FAQ page: numbered questions, topics as chapters (2026-10-25)
+
+- **Shared styles:** the homepage's numbered-question styles (`.qa`) moved
+  from `home.css` to `layout.css`, so /faq (which loads only `pages.css`)
+  can use them. The homepage is unchanged.
+- **Questions:** all 64 across 16 topics are numbered and set large, with
+  the ringed plus that fills primary when open and the answer hanging from
+  a 2px rule. The numbers are `aria-hidden`.
+- **Topics:** headings carry large italic chapter numbers, and a giant sage
+  "?" sits behind the topic index on desktop.
+- **Checks:** `npm test` passes 308/308. The sweep (faq, home) found
+  nothing, and the homepage FAQ still opens.

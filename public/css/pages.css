@@ -379,3 +379,15 @@
   .share-ways--acts { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--space-12); }
   .share-ways--acts .share-way { grid-template-columns: 4rem 1fr auto; border-bottom: 0; }
 }
+
+/* ── FAQ page: the homepage's numbered questions, topics as chapters ──── */
+.faq-index { position: relative; isolation: isolate; }
+.faq-index__mark {
+  position: absolute; z-index: -1; top: -0.5em; right: -0.05em;
+  font-family: var(--font-display); font-style: italic; font-size: clamp(9rem, 6rem + 8vw, 15rem); line-height: 1;
+  color: var(--color-accent-sage); pointer-events: none;
+}
+.faq-group__head .tx-chapter__num { font-size: clamp(1.8rem, 1.5rem + 1vw, 2.4rem); }
+.faq-group__head h2 { font-size: clamp(1.9rem, 1.4rem + 1.8vw, 2.8rem); }
+.faq-group .qa .accordion__trigger { font-size: clamp(1.1rem, 1rem + 0.45vw, 1.35rem); }
+@media (max-width: 1023px) { .faq-index__mark { display: none; } }
